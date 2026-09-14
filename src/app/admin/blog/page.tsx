@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { ImageDropzone } from "@/components/admin/ImageDropzone";
 
 type Post = {
   _id: string;
@@ -53,10 +54,10 @@ export default function AdminBlogPage() {
   return (
     <div className="grid gap-10 lg:grid-cols-2">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">Blog</h1>
+        <h1 className="display text-3xl">Blog</h1>
         <ul className="mt-4 space-y-3">
           {posts.map((p) => (
-            <li key={p._id} className="rounded-xl border border-[var(--line)] p-3">
+            <li key={p._id} className="border border-[var(--line)] p-3">
               <p className="font-medium">{p.title}</p>
               <p className="text-sm text-[var(--fg-muted)]">
                 /{p.slug} · {p.published ? "Published" : "Draft"}
@@ -73,7 +74,7 @@ export default function AdminBlogPage() {
         </ul>
       </div>
       <form onSubmit={onCreate} className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">New post</h2>
+        <h2 className="display text-2xl">New post</h2>
         <input
           className="input"
           placeholder="Title"
@@ -87,12 +88,15 @@ export default function AdminBlogPage() {
           value={form.excerpt}
           onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
         />
-        <input
-          className="input"
-          placeholder="Cover image URL"
-          value={form.coverImage}
-          onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
-        />
+        <div>
+          <p className="field-label">Cover image</p>
+          <ImageDropzone
+            values={form.coverImage ? [form.coverImage] : []}
+            onChange={(urls) => setForm({ ...form, coverImage: urls[0] || "" })}
+            alt={form.title}
+            label="Drop cover image here"
+          />
+        </div>
         <textarea
           className="input min-h-40"
           placeholder="Body HTML"

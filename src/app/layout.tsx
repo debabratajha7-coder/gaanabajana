@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Syne, Outfit } from "next/font/google";
+import { Syne, Outfit, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -18,6 +18,12 @@ const body = Outfit({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+const brand = Cormorant_Garamond({
+  variable: "--font-brand",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -40,7 +46,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${display.variable} ${body.variable} h-full`}
+      className={`${display.variable} ${body.variable} ${brand.variable} h-full`}
     >
       <body className="flex min-h-full flex-col antialiased">
         <CartProvider>

@@ -1,9 +1,25 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { ImageDropzone } from "@/components/admin/ImageDropzone";
 
 type Settings = Record<string, string | number>;
 type Page = { key: string; title: string; body: string };
+
+const TEXT_KEYS = [
+  "storeName",
+  "tagline",
+  "phone",
+  "email",
+  "whatsapp",
+  "heroHeadline",
+  "heroSubheadline",
+  "heroCtaLabel",
+  "heroCtaHref",
+  "freeShippingThreshold",
+  "shippingFee",
+  "pickupLocationName",
+] as const;
 
 export default function AdminCmsPage() {
   const [settings, setSettings] = useState<Settings>({});
@@ -71,47 +87,43 @@ export default function AdminCmsPage() {
   return (
     <div className="space-y-12">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">CMS / Texts</h1>
+        <h1 className="display text-3xl">CMS / Texts</h1>
         {msg && <p className="mt-2 text-sm text-[var(--success)]">{msg}</p>}
       </div>
 
       <form onSubmit={saveSettings} className="grid gap-3 md:grid-cols-2">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl md:col-span-2">
-          Site settings & hero
-        </h2>
-        {[
-          "storeName",
-          "tagline",
-          "phone",
-          "email",
-          "whatsapp",
-          "heroHeadline",
-          "heroSubheadline",
-          "heroCtaLabel",
-          "heroCtaHref",
-          "heroImage",
-          "freeShippingThreshold",
-          "shippingFee",
-          "pickupLocationName",
-        ].map((key) => (
+        <h2 className="display text-2xl md:col-span-2">Site settings & hero</h2>
+        {TEXT_KEYS.map((key) => (
           <div key={key}>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-[var(--fg-muted)]">
+            <label className="field-label" htmlFor={key}>
               {key}
             </label>
             <input
+              id={key}
               className="input"
               value={String(settings[key] ?? "")}
               onChange={(e) => setSettings({ ...settings, [key]: e.target.value })}
             />
           </div>
         ))}
+        <div className="md:col-span-2">
+          <p className="field-label">Hero image</p>
+          <ImageDropzone
+            values={settings.heroImage ? [String(settings.heroImage)] : []}
+            onChange={(urls) =>
+              setSettings({ ...settings, heroImage: urls[0] || "" })
+            }
+            alt="Hero"
+            label="Drop hero image here"
+          />
+        </div>
         <button className="btn btn-primary md:col-span-2" type="submit">
           Save settings
         </button>
       </form>
 
       <form onSubmit={savePage} className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">Page content</h2>
+        <h2 className="display text-2xl">Page content</h2>
         <select
           className="input"
           value={activeKey}

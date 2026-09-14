@@ -107,6 +107,14 @@ img {
   font-weight: 700;
 }
 
+.brand-mark {
+  font-family: var(--font-brand), "Times New Roman", serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  font-style: italic;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

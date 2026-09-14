@@ -71,12 +71,14 @@ export async function PUT(req: Request) {
     await connectDB();
     if (body.type === "category") {
       const category = await Category.findByIdAndUpdate(body.id, body.data, {
-        new: true,
+        returnDocument: "after",
       });
       return NextResponse.json({ category });
     }
     if (body.type === "brand") {
-      const brand = await Brand.findByIdAndUpdate(body.id, body.data, { new: true });
+      const brand = await Brand.findByIdAndUpdate(body.id, body.data, {
+        returnDocument: "after",
+      });
       return NextResponse.json({ brand });
     }
     return NextResponse.json({ error: "type required" }, { status: 400 });

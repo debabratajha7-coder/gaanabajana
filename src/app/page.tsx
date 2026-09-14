@@ -9,7 +9,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroStage } from "@/components/home/HeroStage";
-import { brandLogo, categoryImage } from "@/lib/catalog-media";
+import { categoryImage } from "@/lib/catalog-media";
 
 export const dynamic = "force-dynamic";
 
@@ -143,27 +143,16 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 border-l border-t border-[var(--line)] sm:grid-cols-3 md:grid-cols-5">
               {brands.map((b) => {
                 const slug = b.slug;
-                const logo = brandLogo(slug);
                 return (
                   <Link
                     key={String(b._id)}
                     href={`/brands/${slug}`}
-                    className="flex aspect-[5/3] items-center justify-center border-b border-r border-[var(--line)] bg-[var(--bg-elevated)] px-4 transition hover:bg-[var(--bg-soft)]"
+                    className="group flex aspect-[5/3] items-center justify-center border-b border-r border-[var(--line)] bg-[var(--bg-elevated)] px-4 transition hover:bg-[var(--bg-soft)]"
                     title={b.name}
                   >
-                    {logo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={logo}
-                        alt={b.name}
-                        className="max-h-10 w-auto max-w-[70%] object-contain brightness-0 invert opacity-80 transition group-hover:opacity-100"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className="display text-lg tracking-wide text-[var(--fg-muted)]">
-                        {b.name}
-                      </span>
-                    )}
+                    <span className="brand-mark text-center text-[clamp(1.15rem,2.4vw,1.65rem)] text-[var(--fg-muted)] transition group-hover:text-[var(--fg)]">
+                      {b.name}
+                    </span>
                   </Link>
                 );
               })}
