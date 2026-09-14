@@ -63,15 +63,15 @@ export default async function CollectionPage({
     .lean();
 
   return (
-    <div className="container-gb py-10">
-      <p className="text-sm uppercase tracking-[0.18em] text-[var(--fg-muted)]">
-        Collection
-      </p>
-      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl md:text-5xl">
+    <div className="container-gb py-10 sm:py-12">
+      <p className="eyebrow">Collection</p>
+      <h1 className="display mt-2 text-3xl sm:text-4xl md:text-5xl">
         {category.name}
       </h1>
       {category.description && (
-        <p className="mt-3 max-w-2xl text-[var(--fg-muted)]">{category.description}</p>
+        <p className="mt-3 max-w-2xl text-sm text-[var(--fg-muted)] sm:text-base">
+          {category.description}
+        </p>
       )}
 
       {children.length > 0 && (
@@ -80,7 +80,7 @@ export default async function CollectionPage({
             <a
               key={String(c._id)}
               href={`/collections/${c.slug}`}
-              className="rounded-full border border-[var(--line)] px-3 py-1.5 text-sm text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              className="rounded-full border border-[var(--line)] px-3.5 py-1.5 text-sm text-[var(--fg-muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
               {c.name}
             </a>
@@ -88,7 +88,7 @@ export default async function CollectionPage({
         </div>
       )}
 
-      <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
         {products.map((p) => (
           <ProductCard
             key={String(p._id)}
@@ -107,7 +107,12 @@ export default async function CollectionPage({
         ))}
       </div>
       {products.length === 0 && (
-        <p className="mt-10 text-[var(--fg-muted)]">No products in this collection yet.</p>
+        <div className="mt-12 text-center">
+          <p className="text-[var(--fg-muted)]">Nothing in this collection yet.</p>
+          <Link href="/" className="btn btn-ghost mt-6">
+            Back home
+          </Link>
+        </div>
       )}
     </div>
   );

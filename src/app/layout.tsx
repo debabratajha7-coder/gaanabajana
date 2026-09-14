@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -43,10 +44,12 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col antialiased">
         <CartProvider>
-          <Header categories={categories} settings={settings} />
-          <main className="flex-1">{children}</main>
-          <Footer settings={settings} />
-          <MobileBottomNav />
+          <ToastProvider>
+            <Header categories={categories} settings={settings} />
+            <main className="flex-1">{children}</main>
+            <Footer settings={settings} />
+            <MobileBottomNav />
+          </ToastProvider>
         </CartProvider>
       </body>
     </html>

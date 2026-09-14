@@ -6,6 +6,8 @@ import { Brand } from "@/models/Brand";
 import { BlogPost } from "@/models/BlogPost";
 import { getSiteSettings } from "@/models/SiteSettings";
 import { ProductCard } from "@/components/product/ProductCard";
+import { Reveal } from "@/components/ui/Reveal";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -43,25 +45,25 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="relative min-h-[100svh] overflow-hidden md:min-h-[88vh]">
+      <section className="relative min-h-[100svh] overflow-hidden md:min-h-[92vh]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={settings.heroImage}
           alt=""
           className="animate-hero-zoom absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/65 to-black/25 md:bg-gradient-to-r md:from-black/85 md:via-black/55 md:to-black/20" />
-        <div className="container-gb relative flex min-h-[100svh] flex-col justify-end pb-24 pt-24 md:min-h-[88vh] md:justify-center md:pb-0">
-          <p className="animate-fade-up font-[family-name:var(--font-display)] text-[clamp(2.75rem,12vw,7.5rem)] leading-[0.95] tracking-wide text-white">
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-black/55 to-black/25 md:bg-gradient-to-r md:from-[var(--bg)] md:via-black/60 md:to-transparent" />
+        <div className="container-gb relative flex min-h-[100svh] flex-col justify-end pb-28 pt-28 md:min-h-[92vh] md:justify-center md:pb-10">
+          <p className="animate-fade-up display text-[clamp(3rem,13vw,7.75rem)] tracking-[-0.03em] text-white">
             Gaanbajana
           </p>
-          <h1 className="animate-fade-up-delay mt-4 max-w-xl text-lg text-[var(--fg)] sm:text-xl md:text-2xl">
+          <h1 className="animate-fade-up-delay mt-5 max-w-xl text-lg text-[var(--fg)] sm:text-xl md:text-2xl">
             {settings.heroHeadline}
           </h1>
-          <p className="animate-fade-up-delay mt-3 max-w-lg text-sm text-[var(--fg-muted)] sm:text-base">
+          <p className="animate-fade-up-delay-2 mt-3 max-w-md text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
             {settings.heroSubheadline}
           </p>
-          <div className="animate-fade-up-delay mt-7 flex flex-wrap gap-3">
+          <div className="animate-fade-up-delay-2 mt-8 flex flex-wrap gap-3">
             <Link href={settings.heroCtaHref} className="btn btn-primary">
               {settings.heroCtaLabel}
             </Link>
@@ -72,128 +74,125 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="container-gb py-12 sm:py-16">
-        <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--fg-muted)] sm:text-sm">
-              Explore
-            </p>
-            <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl md:text-4xl">
-              Shop by category
-            </h2>
-          </div>
-        </div>
-        <div className="scroll-row md:grid md:grid-cols-4 md:gap-4 md:overflow-visible">
-          {parents.slice(0, 8).map((c) => (
-            <Link
-              key={String(c._id)}
-              href={`/collections/${c.slug}`}
-              className="group relative aspect-[4/3] w-[72vw] max-w-[280px] overflow-hidden rounded-2xl border border-[var(--line)] md:w-auto md:max-w-none"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={
-                  c.image ||
-                  "https://images.unsplash.com/photo-1510915361894-db8b50135cf0?auto=format&fit=crop&w=800&q=80"
-                }
-                alt={c.name}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-              <span className="absolute bottom-3 left-3 font-[family-name:var(--font-display)] text-lg sm:bottom-4 sm:left-4 sm:text-xl">
-                {c.name}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="border-y border-[var(--line)] bg-[color-mix(in_oklab,var(--bg-elevated)_85%,transparent)] py-12 backdrop-blur-sm sm:py-16">
-        <div className="container-gb">
-          <div className="mb-6 flex items-end justify-between gap-3 sm:mb-8">
-            <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl md:text-4xl">
-              Bestsellers
-            </h2>
-            <Link href="/collections/guitars" className="shrink-0 text-sm text-[var(--accent)]">
-              View all
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-            {featured.map((p) => (
-              <ProductCard
-                key={String(p._id)}
-                product={{
-                  _id: String(p._id),
-                  title: p.title,
-                  slug: p.slug,
-                  price: p.price,
-                  mrp: p.mrp,
-                  images: p.images,
-                  ratingAvg: p.ratingAvg,
-                  ratingCount: p.ratingCount,
-                  brand: p.brand as { name?: string },
-                  onSale: p.onSale,
-                }}
-              />
+      <section className="container-gb section-gb">
+        <Reveal>
+          <SectionHeader eyebrow="Explore" title="Shop by category" />
+        </Reveal>
+        <Reveal delay={0.05}>
+          <div className="scroll-row md:grid md:grid-cols-4 md:gap-4 md:overflow-visible">
+            {parents.slice(0, 8).map((c) => (
+              <Link
+                key={String(c._id)}
+                href={`/collections/${c.slug}`}
+                className="group relative aspect-[4/3] w-[70vw] max-w-[260px] overflow-hidden rounded-2xl border border-[var(--line)] md:w-auto md:max-w-none"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={
+                    c.image ||
+                    "https://images.unsplash.com/photo-1510915361894-db8b50135cf0?auto=format&fit=crop&w=800&q=80"
+                  }
+                  alt={c.name}
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+                <span className="absolute bottom-3.5 left-3.5 display text-lg sm:text-xl">
+                  {c.name}
+                </span>
+              </Link>
             ))}
           </div>
+        </Reveal>
+      </section>
+
+      <section className="border-y border-[var(--line)] bg-[color-mix(in_oklab,var(--bg-elevated)_80%,transparent)]">
+        <div className="container-gb section-gb">
+          <Reveal>
+            <SectionHeader
+              eyebrow="Curated"
+              title="Bestsellers"
+              href="/collections/guitars"
+            />
+          </Reveal>
+          <Reveal delay={0.06}>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+              {featured.map((p) => (
+                <ProductCard
+                  key={String(p._id)}
+                  product={{
+                    _id: String(p._id),
+                    title: p.title,
+                    slug: p.slug,
+                    price: p.price,
+                    mrp: p.mrp,
+                    images: p.images,
+                    ratingAvg: p.ratingAvg,
+                    ratingCount: p.ratingCount,
+                    brand: p.brand as { name?: string },
+                    onSale: p.onSale,
+                  }}
+                />
+              ))}
+            </div>
+          </Reveal>
+          {featured.length === 0 && (
+            <p className="text-center text-[var(--fg-muted)]">
+              Products will appear here once the catalog is connected.
+            </p>
+          )}
         </div>
       </section>
 
-      <section className="container-gb py-12 sm:py-16">
-        <h2 className="mb-6 font-[family-name:var(--font-display)] text-2xl sm:mb-8 sm:text-3xl">
-          Brands we stock
-        </h2>
-        <div className="scroll-row md:flex md:flex-wrap md:overflow-visible">
-          {brands.map((b) => (
-            <Link
-              key={String(b._id)}
-              href={`/brands/${b.slug}`}
-              className="rounded-full border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--fg-muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-            >
-              {b.name}
-            </Link>
-          ))}
-        </div>
+      <section className="container-gb section-gb">
+        <Reveal>
+          <SectionHeader eyebrow="Trusted names" title="Brands we stock" />
+        </Reveal>
+        <Reveal delay={0.05}>
+          <div className="scroll-row md:flex md:flex-wrap md:gap-3 md:overflow-visible">
+            {brands.map((b) => (
+              <Link
+                key={String(b._id)}
+                href={`/brands/${b.slug}`}
+                className="rounded-full border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--fg-muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                {b.name}
+              </Link>
+            ))}
+          </div>
+        </Reveal>
       </section>
 
       {posts.length > 0 && (
-        <section className="border-t border-[var(--line)] py-12 sm:py-16">
-          <div className="container-gb">
-            <div className="mb-6 flex items-end justify-between sm:mb-8">
-              <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl">
-                From the blog
-              </h2>
-              <Link href="/blog" className="text-sm text-[var(--accent)]">
-                All posts
-              </Link>
-            </div>
-            <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
-              {posts.map((post) => (
-                <Link
-                  key={String(post._id)}
-                  href={`/blog/${post.slug}`}
-                  className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] transition hover:-translate-y-0.5 hover:border-[color-mix(in_oklab,var(--accent)_40%,transparent)]"
-                >
-                  {post.coverImage && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={post.coverImage}
-                      alt=""
-                      className="aspect-[16/9] w-full object-cover"
-                      loading="lazy"
-                    />
-                  )}
-                  <div className="p-4 sm:p-5">
-                    <h3 className="font-[family-name:var(--font-display)] text-xl sm:text-2xl">
-                      {post.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-[var(--fg-muted)] sm:text-base">
-                      {post.excerpt}
-                    </p>
-                  </div>
-                </Link>
+        <section className="border-t border-[var(--line)]">
+          <div className="container-gb section-gb">
+            <Reveal>
+              <SectionHeader eyebrow="Learn" title="From the blog" href="/blog" />
+            </Reveal>
+            <div className="grid gap-5 md:grid-cols-2">
+              {posts.map((post, i) => (
+                <Reveal key={String(post._id)} delay={i * 0.06}>
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="group block overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] transition hover:border-[color-mix(in_oklab,var(--accent)_35%,transparent)]"
+                  >
+                    {post.coverImage && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={post.coverImage}
+                        alt=""
+                        className="aspect-[16/9] w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="p-5">
+                      <h3 className="display text-xl sm:text-2xl">{post.title}</h3>
+                      <p className="mt-2 text-sm text-[var(--fg-muted)] sm:text-base">
+                        {post.excerpt}
+                      </p>
+                    </div>
+                  </Link>
+                </Reveal>
               ))}
             </div>
           </div>
