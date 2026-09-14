@@ -3,10 +3,21 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Heart, Search, ShoppingBag, Menu, X, User } from "lucide-react";
+import {
+  Heart,
+  Search,
+  ShoppingBag,
+  Menu,
+  X,
+  User,
+  Package,
+  Tag,
+  LifeBuoy,
+  MapPin,
+} from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
 import { CartBadge } from "@/components/ui/CartBadge";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 
 type Cat = { _id: string; name: string; slug: string; parent?: string | null };
 type Settings = { phone?: string; storeName?: string };
@@ -20,6 +31,7 @@ export function Header({
 }) {
   const { count } = useCart();
   const pathname = usePathname();
+  const reduce = useReducedMotion();
   const headerRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(72);
@@ -74,6 +86,8 @@ export function Header({
   const parents = categories.filter((c) => !c.parent);
   const childrenOf = (id: string) =>
     categories.filter((c) => String(c.parent) === String(id));
+
+  const close = () => setOpen(false);
 
   function SearchField() {
     return (
@@ -146,11 +160,7 @@ export function Header({
           >
             <User className="h-5 w-5" />
           </Link>
-          <Link
-            href="/account/wishlist"
-            aria-label="Wishlist"
-            className="icon-btn"
-          >
+          <Link href="/account/wishlist" aria-label="Wishlist" className="icon-btn">
             <Heart className="h-5 w-5" />
           </Link>
           <Link href="/cart" className="icon-btn relative" aria-label="Cart">
@@ -197,73 +207,134 @@ export function Header({
             role="dialog"
             aria-modal="true"
             aria-label="Site menu"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, x: -28 }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, x: 0 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, x: -20 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             style={{ top: headerHeight }}
-            className="fixed inset-x-0 bottom-0 z-[60] overflow-y-auto bg-[var(--bg)] lg:hidden"
+            className="fixed inset-x-0 bottom-0 z-[60] overflow-y-auto border-t border-[var(--line)] bg-[var(--bg)] lg:hidden"
           >
-            <div className="container-gb space-y-6 py-6 pb-10">
-              <form
-                action="/search"
-                method="get"
-                onSubmit={() => setOpen(false)}
-              >
+            <div className="container-gb space-y-8 py-6 pb-12">
+              <form action="/search" method="get" onSubmit={close}>
                 <SearchField />
               </form>
 
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  href={user ? "/account" : "/login"}
-                  className="btn btn-ghost"
-                  onClick={() => setOpen(false)}
-                >
-                  {user ? "Account" : "Login"}
-                </Link>
-                <Link
-                  href="/account/wishlist"
-                  className="btn btn-ghost"
-                  onClick={() => setOpen(false)}
-                >
-                  Wishlist
-                </Link>
-                <Link href="/deals" className="btn btn-ghost" onClick={() => setOpen(false)}>
-                  Deals
-                </Link>
-                <Link
-                  href="/track-order"
-                  className="btn btn-ghost"
-                  onClick={() => setOpen(false)}
-                >
-                  Track order
-                </Link>
-              </div>
+              <section>
+                <p className="eyebrow mb-3">Account</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {user ? (
+                    <>
+                      <Link href="/account" className="btn btn-ghost" onClick={close}>
+                        <User className="h-4 w-4" /> Account
+                      </Link>
+                      <Link
+                        href="/account/orders"
+                        className="btn btn-ghost"
+                        onClick={close}
+                      >
+                        <Package className="h-4 w-4" /> Orders
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/login" className="btn btn-primary" onClick={close}>
+                        Login
+                      </Link>
+                      <Link href="/register" className="btn btn-ghost" onClick={close}>
+                        Register
+                      </Link>
+                    </>
+                  )}
+                  <Link
+                    href="/account/wishlist"
+                    className="btn btn-ghost"
+                    onClick={close}
+                  >
+                    <Heart className="h-4 w-4" /> Wishlist
+                  </Link>
+                  <Link href="/cart" className="btn btn-ghost relative" onClick={close}>
+                    <ShoppingBag className="h-4 w-4" /> Cart
+                    {count > 0 && (
+                      <span className="ml-1 text-[var(--accent)]">({count})</span>
+                    )}
+                  </Link>
+                </div>
+              </section>
 
-              <div className="space-y-5">
-                {parents.map((p) => (
-                  <div key={p._id} className="border-b border-[var(--line)] pb-4">
-                    <Link
-                      href={`/collections/${p.slug}`}
-                      className="display block py-1 text-xl"
-                      onClick={() => setOpen(false)}
-                    >
-                      {p.name}
-                    </Link>
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm text-[var(--fg-muted)]">
-                      {childrenOf(p._id).map((c) => (
-                        <Link
-                          key={c._id}
-                          href={`/collections/${c.slug}`}
-                          onClick={() => setOpen(false)}
-                          className="py-1.5"
-                        >
-                          {c.name}
-                        </Link>
-                      ))}
+              <section>
+                <p className="eyebrow mb-3">Shop</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/deals" className="btn btn-ghost" onClick={close}>
+                    <Tag className="h-4 w-4" /> Deals
+                  </Link>
+                  <Link href="/deals/sale" className="btn btn-ghost" onClick={close}>
+                    Sale
+                  </Link>
+                  <Link
+                    href="/deals/open-box"
+                    className="btn btn-ghost col-span-2"
+                    onClick={close}
+                  >
+                    Open box
+                  </Link>
+                </div>
+              </section>
+
+              <section>
+                <p className="eyebrow mb-3">Categories</p>
+                <div className="space-y-5">
+                  {parents.map((p) => (
+                    <div key={p._id} className="border-b border-[var(--line)] pb-4">
+                      <Link
+                        href={`/collections/${p.slug}`}
+                        className="display block py-1 text-xl"
+                        onClick={close}
+                      >
+                        {p.name}
+                      </Link>
+                      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm text-[var(--fg-muted)]">
+                        {childrenOf(p._id).map((c) => (
+                          <Link
+                            key={c._id}
+                            href={`/collections/${c.slug}`}
+                            onClick={close}
+                            className="py-1.5"
+                          >
+                            {c.name}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <p className="eyebrow mb-3">Help</p>
+                <div className="grid gap-1">
+                  <Link
+                    href="/track-order"
+                    className="flex items-center gap-3 border-b border-[var(--line)] py-3 text-sm"
+                    onClick={close}
+                  >
+                    <MapPin className="h-4 w-4 text-[var(--accent)]" /> Track order
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="flex items-center gap-3 border-b border-[var(--line)] py-3 text-sm"
+                    onClick={close}
+                  >
+                    <LifeBuoy className="h-4 w-4 text-[var(--accent)]" /> Contact
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="flex items-center gap-3 py-3 text-sm"
+                    onClick={close}
+                  >
+                    <LifeBuoy className="h-4 w-4 text-[var(--accent)]" /> Help
+                  </Link>
+                </div>
+              </section>
             </div>
           </motion.div>
         )}

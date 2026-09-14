@@ -8,6 +8,7 @@ import { getSiteSettings } from "@/models/SiteSettings";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { HeroStage } from "@/components/home/HeroStage";
 import { brandLogo, categoryImage } from "@/lib/catalog-media";
 
 export const dynamic = "force-dynamic";
@@ -48,34 +49,14 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="relative min-h-[100svh] overflow-hidden md:min-h-[92vh]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={settings.heroImage}
-          alt=""
-          className="animate-hero-zoom absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-black/55 to-black/25 md:bg-gradient-to-r md:from-[var(--bg)] md:via-black/60 md:to-transparent" />
-        <div className="container-gb relative flex min-h-[100svh] flex-col justify-end pb-28 pt-28 md:min-h-[92vh] md:justify-center md:pb-10">
-          <p className="animate-fade-up display text-[clamp(3rem,13vw,7.75rem)] tracking-[-0.03em] text-white">
-            Gaanbajana
-          </p>
-          <h1 className="animate-fade-up-delay mt-5 max-w-xl text-lg text-[var(--fg)] sm:text-xl md:text-2xl">
-            {settings.heroHeadline}
-          </h1>
-          <p className="animate-fade-up-delay-2 mt-3 max-w-md text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-            {settings.heroSubheadline}
-          </p>
-          <div className="animate-fade-up-delay-2 mt-8 flex flex-wrap gap-3">
-            <Link href={settings.heroCtaHref} className="btn btn-primary">
-              {settings.heroCtaLabel}
-            </Link>
-            <Link href="/deals" className="btn btn-ghost">
-              View deals
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroStage
+        image={settings.heroImage}
+        storeName={settings.storeName || "Gaanbajana"}
+        headline={settings.heroHeadline}
+        subheadline={settings.heroSubheadline}
+        ctaLabel={settings.heroCtaLabel}
+        ctaHref={settings.heroCtaHref}
+      />
 
       <section className="border-y border-[var(--line)]">
         <div className="container-gb section-gb">
@@ -94,11 +75,11 @@ export default async function HomePage() {
                   <img
                     src={categoryImage(c.slug, c.image)}
                     alt={c.name}
-                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    className="h-full w-full object-cover transition duration-[1.1s] ease-out group-hover:scale-110"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/25 to-transparent" />
-                  <span className="absolute bottom-3 left-3 display text-base sm:bottom-4 sm:left-4 sm:text-xl">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition duration-500 group-hover:via-black/40" />
+                  <span className="absolute bottom-3 left-3 display text-base transition duration-500 group-hover:-translate-y-0.5 sm:bottom-4 sm:left-4 sm:text-xl">
                     {c.name}
                   </span>
                 </Link>
