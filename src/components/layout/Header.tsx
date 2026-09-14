@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Heart,
   Search,
@@ -31,6 +31,7 @@ export function Header({
 }) {
   const { count } = useCart();
   const pathname = usePathname();
+  const router = useRouter();
   const reduce = useReducedMotion();
   const headerRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
@@ -89,16 +90,22 @@ export function Header({
 
   const close = () => setOpen(false);
 
+  function goSearch(e?: FormEvent) {
+    e?.preventDefault();
+    const query = q.trim();
+    close();
+    router.push(query ? `/search?q=${encodeURIComponent(query)}` : "/search");
+  }
+
   function SearchField() {
     return (
       <div className="search-group">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
         <input
           name="q"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search instruments"
-          className="input search-group-input pl-11"
+          className="input search-group-input px-4"
           aria-label="Search instruments"
         />
         <button type="submit" className="search-group-btn" aria-label="Search">
@@ -148,7 +155,7 @@ export function Header({
           </span>
         </Link>
 
-        <form action="/search" method="get" className="ml-auto hidden max-w-md flex-1 md:flex">
+        <form onSubmit={goSearch} className="ml-auto hidden max-w-md flex-1 md:flex">
           <SearchField />
         </form>
 
@@ -212,10 +219,10 @@ export function Header({
             exit={reduce ? { opacity: 0 } : { opacity: 0, x: -20 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             style={{ top: headerHeight }}
-            className="fixed inset-x-0 bottom-0 z-[60] overflow-y-auto border-t border-[var(--line)] bg-[var(--bg)] lg:hidden"
+            className="fixed inset-x-0 bottom-0 z-[60] overflow-y-auto border-t border-[var(--line)] bg-[var(--bg-elevated)] lg:hidden"
           >
             <div className="container-gb space-y-8 py-6 pb-12">
-              <form action="/search" method="get" onSubmit={close}>
+              <form onSubmit={goSearch}>
                 <SearchField />
               </form>
 
