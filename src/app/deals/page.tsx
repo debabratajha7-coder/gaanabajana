@@ -5,12 +5,39 @@ import { ProductCard } from "@/components/product/ProductCard";
 
 export const dynamic = "force-dynamic";
 
+async function loadSaleProducts(filter: Record<string, unknown>) {
+  try {
+    await connectDB();
+    return await Product.find({ isActive: true, ...filter })
+      .populate("brand", "name")
+      .limit(48)
+      .lean();
+  } catch {
+    return null;
+  }
+}
+
+function DbDown() {
+  return (
+    <div className="container-gb py-16 text-center">
+      <h1 className="font-[family-name:var(--font-display)] text-3xl">
+        Catalog temporarily unavailable
+      </h1>
+      <p className="mt-3 text-[var(--fg-muted)]">
+        Database not connected. See{" "}
+        <Link href="/api/health" className="text-[var(--accent)]">
+          /api/health
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}
+
 export default async function DealsPage() {
-  await connectDB();
-  const products = await Product.find({ isActive: true, onSale: true })
-    .populate("brand", "name")
-    .limit(24)
-    .lean();
+  const products = await loadSaleProducts({ onSale: true });
+  if (!products) return <DbDown />;
+
   return (
     <div className="container-gb py-12">
       <h1 className="font-[family-name:var(--font-display)] text-4xl">Deals</h1>

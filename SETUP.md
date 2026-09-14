@@ -62,9 +62,15 @@ Default admin (change after first login):
 1. Push the repo to GitHub (do **not** commit `.env.local`)
 2. Import in Vercel (or similar) → add env vars you filled for now:
    - `MONGODB_URI`, `JWT_SECRET`, `CLOUDINARY_*`, `RESEND_*`, `EMAIL_FROM`, `ADMIN_*` if needed
-3. Set `NEXT_PUBLIC_APP_URL` to your live domain (e.g. `https://gaanbajana.com`)
-4. Deploy and confirm the site loads
+3. Set `NEXT_PUBLIC_APP_URL` to your live domain (e.g. `https://gaanabajana.vercel.app`)
+4. **MongoDB Atlas → Network Access → Add IP → Allow Access from Anywhere (`0.0.0.0/0`)**  
+   Vercel uses many IPs; without this, catalog/API pages return errors.
+5. Redeploy after saving env vars (Deployments → … → Redeploy)
+6. Open `https://YOUR_DOMAIN/api/health` — `mongoOk` must be `true`
+7. From your laptop (with the same Atlas `MONGODB_URI` in `.env.local`), run `npm run seed` once if the hosted DB is empty
+8. Deploy and confirm products/categories appear on the home page
 
+If pages say “This page couldn’t load”, catalog routes are crashing because Mongo is missing or blocked — fix steps 2–4 first.
 ---
 
 ## Later (after live URL): Cashfree + Shiprocket
