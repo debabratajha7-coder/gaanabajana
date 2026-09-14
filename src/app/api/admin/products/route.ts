@@ -100,14 +100,15 @@ export async function GET(req: NextRequest) {
                 name: (product.brand as { name?: string }).name,
               }
             : null,
-          categories: (product.categories || []).map((c) => {
-            const cat = c as { _id: unknown; name?: string; parent?: unknown };
-            return {
-              _id: String(cat._id),
-              name: cat.name,
-              parent: cat.parent ? String(cat.parent) : null,
-            };
-          }),
+          categories: ((product.categories || []) as Array<{
+            _id: unknown;
+            name?: string;
+            parent?: unknown;
+          }>).map((c) => ({
+            _id: String(c._id),
+            name: c.name,
+            parent: c.parent ? String(c.parent) : null,
+          })),
         },
         reviews: reviews.map((r) => ({
           _id: String(r._id),
@@ -138,10 +139,13 @@ export async function GET(req: NextRequest) {
               name: (p.brand as { name?: string }).name,
             }
           : null,
-        categories: (p.categories || []).map((c) => {
-          const cat = c as { _id: unknown; name?: string };
-          return { _id: String(cat._id), name: cat.name };
-        }),
+        categories: ((p.categories || []) as Array<{
+          _id: unknown;
+          name?: string;
+        }>).map((c) => ({
+          _id: String(c._id),
+          name: c.name,
+        })),
       })),
     });
   } catch (e) {

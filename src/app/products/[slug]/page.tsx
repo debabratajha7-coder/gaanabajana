@@ -75,7 +75,15 @@ export default async function ProductPage({
         brand: brand
           ? { name: brand.name, slug: brand.slug }
           : null,
-        variants: (product.variants || []).map((v) => ({
+        variants: ((product.variants || []) as Array<{
+          sku: string;
+          name: string;
+          color?: string;
+          price: number;
+          mrp: number;
+          stock: number;
+          image?: string;
+        }>).map((v) => ({
           sku: v.sku,
           name: v.name,
           color: v.color,

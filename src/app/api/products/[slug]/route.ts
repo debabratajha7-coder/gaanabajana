@@ -29,10 +29,13 @@ export async function GET(
             slug: (product.brand as { slug?: string }).slug,
           }
         : null,
-      categories: (product.categories || []).map((c) => {
-        const cat = c as { name?: string; slug?: string };
-        return { name: cat.name, slug: cat.slug };
-      }),
+      categories: ((product.categories || []) as Array<{
+        name?: string;
+        slug?: string;
+      }>).map((c) => ({
+        name: c.name,
+        slug: c.slug,
+      })),
     },
     reviews: reviews.map((r) => ({
       rating: r.rating,
