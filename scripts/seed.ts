@@ -142,15 +142,23 @@ async function main() {
       ],
     },
     {
-      name: "Software & Plugins",
-      children: ["DAW Software", "Virtual Instruments", "Effect Plugins"],
-    },
-    {
       name: "Other",
       children: ["DJ Gear", "Wind Instruments", "Live Sound", "Indian Instruments"],
     },
     { name: "Deals", children: ["Sale", "Open Box Gear"] },
   ];
+
+  // Hide software category from the live shop if it was seeded earlier
+  await Category.updateMany(
+    {
+      $or: [
+        { slug: "software-plugins" },
+        { name: /software\s*&\s*plugins/i },
+        { slug: /^(daw-software|virtual-instruments|effect-plugins)$/ },
+      ],
+    },
+    { isActive: false }
+  );
 
   const categoryMap = new Map<string, string>();
   let sort = 0;

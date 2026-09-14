@@ -21,6 +21,7 @@
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-easy-crop": "^6.2.3",
     "slugify": "^1.6.9",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"

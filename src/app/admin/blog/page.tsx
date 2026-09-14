@@ -95,6 +95,7 @@ export default function AdminBlogPage() {
             onChange={(urls) => setForm({ ...form, coverImage: urls[0] || "" })}
             alt={form.title}
             label="Drop cover image here"
+            aspect={16 / 9}
           />
         </div>
         <textarea

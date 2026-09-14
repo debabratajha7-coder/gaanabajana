@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  /* Late-night studio: cool ink stage + warm copper brand accent */
-  --bg: #07090c;
-  --bg-elevated: #10151b;
-  --bg-soft: #171e26;
-  --fg: #eef3f6;
-  --fg-muted: #8f9eab;
-  --accent: #d9a05c;
-  --accent-deep: #b87a35;
-  --glow: #2dd4bf;
-  --line: rgba(238, 243, 246, 0.1);
-  --line-strong: rgba(238, 243, 246, 0.18);
+  /* Strict black & white storefront */
+  --bg: #050505;
+  --bg-elevated: #111111;
+  --bg-soft: #1a1a1a;
+  --fg: #f5f5f5;
+  --fg-muted: #9a9a9a;
+  --accent: #ffffff;
+  --accent-deep: #d4d4d4;
+  --glow: #ffffff;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.22);
   --danger: #e35d5d;
   --success: #5dba7a;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -37,11 +37,7 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(980px 520px at 12% -12%, rgba(45, 212, 191, 0.11), transparent 58%),
-    radial-gradient(820px 480px at 100% 0%, rgba(56, 100, 140, 0.16), transparent 52%),
-    radial-gradient(640px 360px at 70% 100%, rgba(217, 160, 92, 0.06), transparent 55%),
-    var(--bg);
+  background: var(--bg);
   background-attachment: fixed;
   color: var(--fg);
   font-family: var(--font-body), system-ui, sans-serif;
@@ -60,6 +56,88 @@ body {
 body[data-menu-open] .mobile-bottom-nav {
   visibility: hidden;
   pointer-events: none;
+}
+
+/* Light admin workspace — easier to read & type than the dark storefront */
+.admin-shell {
+  --bg: #f0f0f0;
+  --bg-elevated: #ffffff;
+  --bg-soft: #e8e8e8;
+  --fg: #111111;
+  --fg-muted: #666666;
+  --accent: #111111;
+  --accent-deep: #000000;
+  --line: rgba(0, 0, 0, 0.12);
+  --line-strong: rgba(0, 0, 0, 0.22);
+  --danger: #c43c3c;
+  --success: #2f8f55;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.admin-shell .btn-primary {
+  background: #111111;
+  color: #f5f5f5;
+  border-color: #111111;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 3px 0 #000000,
+    0 5px 12px rgba(0, 0, 0, 0.18);
+}
+
+.admin-shell .btn-primary:hover {
+  background: #2a2a2a;
+}
+
+.admin-shell .btn-primary:active {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 #000000,
+    0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.admin-shell .btn-ghost {
+  background: #fff;
+  color: var(--fg);
+  border-color: var(--line-strong);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 2px 0 rgba(0, 0, 0, 0.12),
+    0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.admin-shell .btn-ghost:hover {
+  border-color: #000;
+  color: #000;
+  background: #f5f5f5;
+}
+
+.admin-shell .input,
+.admin-shell select.input,
+.admin-shell textarea.input {
+  background: #fff;
+  color: #111111;
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.admin-shell .input::placeholder,
+.admin-shell textarea.input::placeholder {
+  color: #999999;
+}
+
+.admin-shell .input:focus,
+.admin-shell select.input:focus,
+.admin-shell textarea.input:focus {
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
+}
+
+.admin-shell .field-label {
+  color: #555555;
+}
+
+.admin-shell .eyebrow {
+  color: #333333;
 }
 
 a {
@@ -97,7 +175,7 @@ img {
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: color-mix(in oklab, var(--glow) 55%, var(--fg-muted));
+  color: #b0b0b0;
 }
 
 .display {
@@ -160,26 +238,26 @@ img {
 }
 
 .btn-primary {
-  background: #f5f7f9;
-  color: #12141a;
-  border-color: #dfe3e8;
+  background: #ffffff;
+  color: #050505;
+  border-color: #e5e5e5;
   /* Raised keycap ledge */
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.55) inset,
-    0 3px 0 #b8bec7,
-    0 5px 14px rgba(0, 0, 0, 0.35);
+    0 3px 0 #8a8a8a,
+    0 5px 14px rgba(0, 0, 0, 0.45);
 }
 
 .btn-primary:hover {
-  background: #eef1f4;
+  background: #ebebeb;
 }
 
 .btn-primary:active {
   transform: translateY(3px);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 0 0 #b8bec7,
-    0 1px 4px rgba(0, 0, 0, 0.28);
+    0 0 0 #8a8a8a,
+    0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .btn-ghost {
@@ -249,8 +327,8 @@ img {
 }
 
 .input:focus {
-  border-color: color-mix(in oklab, var(--accent) 65%, var(--line));
-  box-shadow: 0 0 0 3px rgba(217, 160, 92, 0.16);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
 }
 
 .field-label {
@@ -276,8 +354,8 @@ img {
 }
 
 .search-group:focus-within {
-  border-color: color-mix(in oklab, var(--accent) 65%, var(--line));
-  box-shadow: 0 0 0 3px rgba(217, 160, 92, 0.16);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
 }
 
 .search-group-input {
@@ -297,13 +375,13 @@ img {
   flex-shrink: 0;
   border: 0;
   border-left: 1px solid var(--line);
-  background: #f5f7f9;
-  color: #12141a;
+  background: #ffffff;
+  color: #050505;
   cursor: pointer;
   transform: translateY(0);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.55) inset,
-    0 2px 0 #b8bec7;
+    0 2px 0 #8a8a8a;
   transition:
     background 0.15s ease,
     color 0.15s ease,
@@ -312,15 +390,15 @@ img {
 }
 
 .search-group-btn:hover {
-  background: #eef1f4;
-  color: #12141a;
+  background: #ebebeb;
+  color: #050505;
 }
 
 .search-group-btn:active {
   transform: translateY(2px);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 0 0 #b8bec7;
+    0 0 0 #8a8a8a;
 }
 
 .surface {

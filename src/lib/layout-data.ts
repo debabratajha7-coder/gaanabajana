@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Category } from "@/models/Category";
 import { getSiteSettings } from "@/models/SiteSettings";
+import { filterPublicCategories } from "@/lib/public-catalog";
 
 export async function getLayoutData() {
   try {
@@ -9,13 +10,21 @@ export async function getLayoutData() {
       Category.find({ isActive: true }).sort({ sortOrder: 1 }).lean(),
       getSiteSettings(),
     ]);
-    return {
-      categories: categories.map((c) => ({
+    const publicCats = filterPublicCategories(
+      categories.map((c) => ({
         _id: String(c._id),
         name: c.name,
         slug: c.slug,
         parent: c.parent ? String(c.parent) : null,
-      })),
+      }))
+    );
+    const publicIds = new Set(publicCats.map((c) => c._id));
+    const categoriesForNav = publicCats.filter(
+      (c) => !c.parent || publicIds.has(c.parent)
+    );
+
+    return {
+      categories: categoriesForNav,
       settings: {
         storeName: settings.storeName,
         tagline: settings.tagline,
@@ -28,7 +37,6 @@ export async function getLayoutData() {
         heroImage: settings.heroImage,
         freeShippingThreshold: settings.freeShippingThreshold,
         shippingFee: settings.shippingFee,
-        // Plain object only — Mongoose subdocs can't be passed to Client Components
         social: {
           facebook: settings.social?.facebook ?? "",
           instagram: settings.social?.instagram ?? "",

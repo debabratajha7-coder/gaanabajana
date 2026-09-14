@@ -15,6 +15,14 @@ export interface ISiteSettings {
   heroCtaLabel: string;
   heroCtaHref: string;
   heroImage: string;
+  homeCategoriesEyebrow: string;
+  homeCategoriesTitle: string;
+  homeBestsellersEyebrow: string;
+  homeBestsellersTitle: string;
+  homeBrandsEyebrow: string;
+  homeBrandsTitle: string;
+  homeBlogEyebrow: string;
+  homeBlogTitle: string;
   social: {
     facebook?: string;
     instagram?: string;
@@ -49,6 +57,14 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       default:
         "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=2000&q=80",
     },
+    homeCategoriesEyebrow: { type: String, default: "Explore" },
+    homeCategoriesTitle: { type: String, default: "Shop by category" },
+    homeBestsellersEyebrow: { type: String, default: "Curated" },
+    homeBestsellersTitle: { type: String, default: "Bestsellers" },
+    homeBrandsEyebrow: { type: String, default: "Trusted names" },
+    homeBrandsTitle: { type: String, default: "Brands we stock" },
+    homeBlogEyebrow: { type: String, default: "Learn" },
+    homeBlogTitle: { type: String, default: "From the blog" },
     social: {
       facebook: String,
       instagram: String,

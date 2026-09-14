@@ -7,47 +7,29 @@ import {
   LayoutDashboard,
   Package,
   ShoppingBag,
-  Tags,
-  ImageIcon,
-  FileText,
+  LayoutGrid,
+  Tag,
+  Palette,
   Newspaper,
   Star,
+  Images,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const groups: {
-  label: string;
-  items: { href: string; label: string; icon: typeof LayoutDashboard }[];
-}[] = [
-  {
-    label: "Overview",
-    items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
-  },
-  {
-    label: "Commerce",
-    items: [
-      { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
-      { href: "/admin/products", label: "Products", icon: Package },
-    ],
-  },
-  {
-    label: "Catalog",
-    items: [
-      { href: "/admin/catalog", label: "Categories & Brands", icon: Tags },
-      { href: "/admin/media", label: "Media", icon: ImageIcon },
-    ],
-  },
-  {
-    label: "Content",
-    items: [
-      { href: "/admin/cms", label: "CMS / Texts", icon: FileText },
-      { href: "/admin/blog", label: "Blog", icon: Newspaper },
-    ],
-  },
-  {
-    label: "Trust",
-    items: [{ href: "/admin/reviews", label: "Reviews & Users", icon: Star }],
-  },
+const primary = [
+  { href: "/admin", label: "Home", icon: LayoutDashboard },
+  { href: "/admin/products", label: "Add a product", icon: Package },
+  { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/admin/shop-by-category", label: "Shop by category", icon: LayoutGrid },
+  { href: "/admin/brands", label: "Brands", icon: Tag },
+  { href: "/admin/website", label: "Site", icon: Palette },
+];
+
+const more = [
+  { href: "/admin/blog", label: "Blog posts", icon: Newspaper },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/media", label: "All photos", icon: Images },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -59,6 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [ok, setOk] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -69,25 +52,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       });
   }, [router]);
 
+  useEffect(() => {
+    if (more.some((m) => isActive(pathname, m.href))) setMoreOpen(true);
+  }, [pathname]);
+
   if (!ok) {
     return <div className="container-gb py-16">Checking admin access…</div>;
   }
 
-  const flat = groups.flatMap((g) => g.items);
+  const chips = [...primary, ...more];
 
   return (
-    <div className="border-t border-[var(--line)] bg-[var(--bg)]">
-      <div className="container-gb py-6 lg:grid lg:grid-cols-[240px_1fr] lg:gap-10 lg:py-8">
-        {/* Mobile chip nav */}
+    <div className="admin-shell -mt-0 min-h-[70vh] border-t border-[var(--line)] bg-[var(--bg)] text-[var(--fg)]">
+      <div className="container-gb py-6 lg:grid lg:grid-cols-[250px_1fr] lg:gap-10 lg:py-8">
         <nav className="mb-6 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-          {flat.map(({ href, label }) => (
+          {chips.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
               className={cn(
                 "shrink-0 border px-3 py-2 text-xs font-semibold tracking-wide",
                 isActive(pathname, href)
-                  ? "border-[var(--accent)] bg-[var(--bg-soft)] text-[var(--accent)]"
+                  ? "border-[var(--accent)] bg-[var(--bg-soft)] text-[var(--accent-deep)]"
                   : "border-[var(--line)] text-[var(--fg-muted)]"
               )}
             >
@@ -97,45 +83,73 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <aside className="hidden lg:block">
-          <div className="sticky top-28 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-muted)]">
-              Admin
+          <div className="sticky top-28 border border-[var(--line)] bg-[var(--bg-elevated)] p-4 shadow-sm">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-muted)]">
+              Store admin
             </p>
-            <nav className="space-y-5">
-              {groups.map((group) => (
-                <div key={group.label}>
-                  <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-                    {group.label}
-                  </p>
-                  <div className="grid gap-0.5">
-                    {group.items.map(({ href, label, icon: Icon }) => {
-                      const active = isActive(pathname, href);
-                      return (
-                        <Link
-                          key={href}
-                          href={href}
-                          className={cn(
-                            "relative flex items-center gap-2.5 px-3 py-2 text-sm transition",
-                            active
-                              ? "bg-[var(--bg-soft)] text-[var(--accent)]"
-                              : "text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]"
-                          )}
-                        >
-                          {active && (
-                            <span className="absolute inset-y-1 left-0 w-0.5 bg-[var(--accent)]" />
-                          )}
-                          <Icon className="h-4 w-4 shrink-0" />
-                          {label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+            <p className="mb-4 px-0 text-xs text-[var(--fg-muted)]">
+              Simple tools to update your shop.
+            </p>
+            <nav className="grid gap-0.5">
+              {primary.map(({ href, label, icon: Icon }) => {
+                const active = isActive(pathname, href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={cn(
+                      "relative flex items-center gap-2.5 px-3 py-2.5 text-sm transition",
+                      active
+                        ? "bg-[var(--bg-soft)] font-semibold text-[var(--accent-deep)]"
+                        : "text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]"
+                    )}
+                  >
+                    {active && (
+                      <span className="absolute inset-y-1 left-0 w-0.5 bg-[var(--accent)]" />
+                    )}
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {label}
+                  </Link>
+                );
+              })}
             </nav>
+
+            <button
+              type="button"
+              className="mt-4 flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--fg-muted)]"
+              onClick={() => setMoreOpen((v) => !v)}
+            >
+              More
+              <ChevronDown
+                className={cn("h-4 w-4 transition", moreOpen && "rotate-180")}
+              />
+            </button>
+            {moreOpen && (
+              <nav className="grid gap-0.5">
+                {more.map(({ href, label, icon: Icon }) => {
+                  const active = isActive(pathname, href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={cn(
+                        "relative flex items-center gap-2.5 px-3 py-2 text-sm transition",
+                        active
+                          ? "bg-[var(--bg-soft)] font-semibold text-[var(--accent-deep)]"
+                          : "text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]"
+                      )}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
+
             <Link
               href="/"
-              className="mt-6 block border-t border-[var(--line)] pt-4 text-xs text-[var(--fg-muted)] hover:text-[var(--accent)]"
+              className="mt-6 block border-t border-[var(--line)] pt-4 text-xs text-[var(--fg-muted)] hover:text-[var(--accent-deep)]"
             >
               ← Back to store
             </Link>

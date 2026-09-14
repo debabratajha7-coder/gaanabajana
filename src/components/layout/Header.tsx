@@ -144,7 +144,7 @@ export function Header({
 
         <Link href="/" className="min-w-0 shrink">
           <span className="display block truncate text-[1.35rem] text-[var(--fg)] sm:text-2xl md:text-[1.85rem]">
-            Gaanbajana
+            gaanbajana
           </span>
         </Link>
 

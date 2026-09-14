@@ -28,12 +28,12 @@ export function HeroStage({
     offset: ["start start", "end start"],
   });
 
-  const imageY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 80]);
-  const copyY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 40]);
+  const imageY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 60]);
+  const copyY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 28]);
   const copyOpacity = useTransform(
     scrollYProgress,
     [0, 0.55],
-    reduce ? [1, 1] : [1, 0.35]
+    reduce ? [1, 1] : [1, 0.4]
   );
 
   const ease = [0.22, 1, 0.36, 1] as const;
@@ -41,63 +41,66 @@ export function HeroStage({
   return (
     <section
       ref={ref}
-      className="relative min-h-[100svh] overflow-hidden md:min-h-[92vh]"
+      className="relative min-h-[100svh] overflow-hidden md:min-h-[88vh]"
     >
       <motion.div className="absolute inset-0" style={{ y: imageY }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={image}
           alt=""
-          className="animate-hero-zoom absolute inset-0 h-[115%] w-full object-cover object-center"
+          className="animate-hero-zoom absolute inset-0 h-[115%] w-full object-cover object-[center_30%] sm:object-center"
         />
       </motion.div>
 
-      {/* Bottom-weighted vignette — instruments stay visible on the left */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_20%,transparent_20%,rgba(0,0,0,0.35)_70%,rgba(7,9,12,0.92)_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-black/35 to-black/20" />
+      {/* Soft scrim only — keep the photo visible behind the type */}
+      <div className="pointer-events-none absolute inset-0 bg-black/25" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
 
       <motion.div
         style={{ y: copyY, opacity: copyOpacity }}
-        className="relative flex min-h-[100svh] flex-col justify-end px-[max(0.75rem,calc((100vw-1120px)/2))] pb-28 pt-28 md:min-h-[92vh] md:justify-end md:pb-16"
+        className="relative flex min-h-[100svh] flex-col justify-end px-[max(0.75rem,calc((100vw-1120px)/2))] pb-[calc(5.5rem+var(--safe-bottom))] pt-24 md:min-h-[88vh] md:pb-16"
       >
-        <div className="max-w-[min(100%,42rem)]">
+        <div className="w-full max-w-[min(100%,36rem)]">
           <motion.p
-            initial={reduce ? false : { opacity: 0, y: 28, clipPath: "inset(0 0 100% 0)" }}
-            animate={{ opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)" }}
-            transition={{ duration: 0.85, ease }}
-            className="display text-[clamp(3.25rem,12vw,8rem)] tracking-[-0.04em] text-white"
+            initial={reduce ? false : { opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, ease }}
+            className="display text-[clamp(2.35rem,9.5vw,5.5rem)] leading-[0.92] tracking-[-0.045em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.55)]"
           >
-            {storeName}
+            {storeName.toLowerCase()}
           </motion.p>
 
           <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 20 }}
+            initial={reduce ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.12, ease }}
-            className="mt-5 max-w-xl text-lg text-white/95 sm:text-xl md:text-2xl"
+            transition={{ duration: 0.65, delay: 0.1, ease }}
+            className="mt-4 max-w-xl text-base text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.45)] sm:mt-5 sm:text-xl md:text-2xl"
           >
             {headline}
           </motion.h1>
 
           <motion.p
-            initial={reduce ? false : { opacity: 0, y: 16 }}
+            initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.22, ease }}
-            className="mt-3 max-w-md text-sm leading-relaxed text-white/70 sm:text-base"
+            transition={{ duration: 0.6, delay: 0.18, ease }}
+            className="mt-2 max-w-md text-sm leading-relaxed text-white/80 [text-shadow:0_1px_10px_rgba(0,0,0,0.4)] sm:mt-3 sm:text-base"
           >
             {subheadline}
           </motion.p>
 
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 14 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.32, ease }}
-            className="mt-8 flex flex-wrap gap-3"
+            transition={{ duration: 0.55, delay: 0.26, ease }}
+            className="mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3"
           >
             <Link href={ctaHref} className="btn btn-primary">
               {ctaLabel}
             </Link>
-            <Link href="/deals" className="btn btn-ghost border-white/25 text-white hover:border-white hover:text-white">
+            <Link
+              href="/deals"
+              className="btn btn-ghost border-white/30 text-white hover:border-white hover:text-white"
+            >
               View deals
             </Link>
           </motion.div>

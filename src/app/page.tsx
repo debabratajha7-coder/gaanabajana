@@ -10,6 +10,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroStage } from "@/components/home/HeroStage";
 import { categoryImage } from "@/lib/catalog-media";
+import { filterPublicCategories } from "@/lib/public-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -44,8 +45,20 @@ export default async function HomePage() {
       heroImage:
         "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=2000&q=80",
       storeName: "Gaanbajana",
+      homeCategoriesEyebrow: "Explore",
+      homeCategoriesTitle: "Shop by category",
+      homeBestsellersEyebrow: "Curated",
+      homeBestsellersTitle: "Bestsellers",
+      homeBrandsEyebrow: "Trusted names",
+      homeBrandsTitle: "Brands we stock",
+      homeBlogEyebrow: "Learn",
+      homeBlogTitle: "From the blog",
     };
   }
+
+  const shopParents = filterPublicCategories(
+    parents.map((c) => ({ ...c, slug: c.slug, name: c.name }))
+  );
 
   return (
     <>
@@ -61,11 +74,14 @@ export default async function HomePage() {
       <section className="border-y border-[var(--line)]">
         <div className="container-gb section-gb">
           <Reveal>
-            <SectionHeader eyebrow="Explore" title="Shop by category" />
+            <SectionHeader
+              eyebrow={settings.homeCategoriesEyebrow || "Explore"}
+              title={settings.homeCategoriesTitle || "Shop by category"}
+            />
           </Reveal>
           <Reveal delay={0.05}>
             <div className="grid grid-cols-2 border-l border-t border-[var(--line)] md:grid-cols-4">
-              {parents.slice(0, 8).map((c) => (
+              {shopParents.slice(0, 8).map((c) => (
                 <Link
                   key={String(c._id)}
                   href={`/collections/${c.slug}`}
@@ -93,8 +109,8 @@ export default async function HomePage() {
         <div className="container-gb section-gb">
           <Reveal>
             <SectionHeader
-              eyebrow="Curated"
-              title="Bestsellers"
+              eyebrow={settings.homeBestsellersEyebrow || "Curated"}
+              title={settings.homeBestsellersTitle || "Bestsellers"}
               href="/collections/guitars"
             />
           </Reveal>
@@ -137,7 +153,10 @@ export default async function HomePage() {
       <section className="border-b border-[var(--line)]">
         <div className="container-gb section-gb">
           <Reveal>
-            <SectionHeader eyebrow="Trusted names" title="Brands we stock" />
+            <SectionHeader
+              eyebrow={settings.homeBrandsEyebrow || "Trusted names"}
+              title={settings.homeBrandsTitle || "Brands we stock"}
+            />
           </Reveal>
           <Reveal delay={0.05}>
             <div className="grid grid-cols-2 border-l border-t border-[var(--line)] sm:grid-cols-3 md:grid-cols-5">
@@ -165,7 +184,11 @@ export default async function HomePage() {
         <section>
           <div className="container-gb section-gb">
             <Reveal>
-              <SectionHeader eyebrow="Learn" title="From the blog" href="/blog" />
+              <SectionHeader
+                eyebrow={settings.homeBlogEyebrow || "Learn"}
+                title={settings.homeBlogTitle || "From the blog"}
+                href="/blog"
+              />
             </Reveal>
             <div className="grid border-l border-t border-[var(--line)] md:grid-cols-2">
               {posts.map((post, i) => (

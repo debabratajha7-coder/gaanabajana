@@ -94,7 +94,9 @@ export async function PUT(req: Request) {
     const body = productSchema.extend({ id: z.string() }).parse(await req.json());
     await connectDB();
     const { id, ...rest } = body;
-    const product = await Product.findByIdAndUpdate(id, rest, { new: true });
+    const product = await Product.findByIdAndUpdate(id, rest, {
+      returnDocument: "after",
+    });
     return NextResponse.json({ product });
   } catch (e) {
     return authErrorResponse(e);
