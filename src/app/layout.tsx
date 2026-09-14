@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { getLayoutData } from "@/lib/layout-data";
 
 const display = Fraunces({
@@ -35,12 +36,17 @@ export default async function RootLayout({
   const { categories, settings } = await getLayoutData();
 
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${display.variable} ${body.variable} h-full`}
+    >
       <body className="flex min-h-full flex-col antialiased">
         <CartProvider>
           <Header categories={categories} settings={settings} />
           <main className="flex-1">{children}</main>
           <Footer settings={settings} />
+          <MobileBottomNav />
         </CartProvider>
       </body>
     </html>

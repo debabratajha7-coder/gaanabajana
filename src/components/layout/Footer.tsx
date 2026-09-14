@@ -15,8 +15,8 @@ type Settings = {
 
 export function Footer({ settings }: { settings?: Settings }) {
   return (
-    <footer className="mt-auto border-t border-[var(--line)] bg-[var(--bg-elevated)]">
-      <div className="container-gb grid gap-10 py-14 md:grid-cols-4">
+    <footer className="mt-auto border-t border-[var(--line)] bg-[var(--bg-elevated)] pb-2">
+      <div className="container-gb grid gap-8 py-10 sm:gap-10 sm:py-14 md:grid-cols-4">
         <div className="md:col-span-1">
           <p className="font-[family-name:var(--font-display)] text-3xl">
             {settings?.storeName || "Gaanbajana"}

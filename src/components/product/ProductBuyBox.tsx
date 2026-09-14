@@ -65,42 +65,43 @@ export function ProductBuyBox({
   }
 
   return (
-    <div className="container-gb grid gap-10 py-10 lg:grid-cols-2">
+    <>
+    <div className="container-gb grid gap-6 py-6 sm:gap-10 sm:py-10 lg:grid-cols-2">
       <div className="space-y-3">
         <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image} alt={product.title} className="aspect-square w-full object-cover" />
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="scroll-row md:grid md:grid-cols-4 md:gap-2 md:overflow-visible">
           {product.images.map((img) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               key={img}
               src={img}
               alt=""
-              className="aspect-square rounded-xl border border-[var(--line)] object-cover"
+              className="aspect-square w-20 rounded-xl border border-[var(--line)] object-cover md:w-auto"
             />
           ))}
         </div>
       </div>
 
-      <div>
+      <div className="pb-24 lg:pb-0">
         {product.brand?.name && (
           <a
             href={`/brands/${product.brand.slug}`}
-            className="text-sm uppercase tracking-[0.16em] text-[var(--accent)]"
+            className="text-xs uppercase tracking-[0.16em] text-[var(--accent)] sm:text-sm"
           >
             {product.brand.name}
           </a>
         )}
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl md:text-5xl">
+        <h1 className="mt-2 font-[family-name:var(--font-display)] text-2xl sm:text-3xl md:text-5xl">
           {product.title}
         </h1>
         <p className="mt-2 text-sm text-[var(--fg-muted)]">
           ★ {product.ratingAvg?.toFixed(1)} ({product.ratingCount} reviews)
         </p>
-        <div className="mt-4 flex items-baseline gap-3">
-          <span className="text-3xl text-[var(--accent)]">{formatINR(variant.price)}</span>
+        <div className="mt-4 flex flex-wrap items-baseline gap-2 sm:gap-3">
+          <span className="text-2xl text-[var(--accent)] sm:text-3xl">{formatINR(variant.price)}</span>
           {variant.mrp > variant.price && (
             <span className="text-[var(--fg-muted)] line-through">
               {formatINR(variant.mrp)}
@@ -113,7 +114,7 @@ export function ProductBuyBox({
           )}
         </div>
         {product.shortDescription && (
-          <p className="mt-4 text-[var(--fg-muted)]">{product.shortDescription}</p>
+          <p className="mt-4 text-sm text-[var(--fg-muted)] sm:text-base">{product.shortDescription}</p>
         )}
 
         {product.variants.length > 1 && (
@@ -125,7 +126,7 @@ export function ProductBuyBox({
                   key={v.sku}
                   type="button"
                   onClick={() => setVariantIdx(i)}
-                  className={`rounded-full border px-3 py-1.5 text-sm ${
+                  className={`min-h-10 rounded-full border px-3 py-1.5 text-sm ${
                     i === variantIdx
                       ? "border-[var(--accent)] text-[var(--accent)]"
                       : "border-[var(--line)]"
@@ -139,7 +140,7 @@ export function ProductBuyBox({
           </div>
         )}
 
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-6 hidden items-center gap-3 lg:flex">
           <input
             type="number"
             min={1}
@@ -178,12 +179,12 @@ export function ProductBuyBox({
         {msg && <p className="mt-3 text-sm text-[var(--success)]">{msg}</p>}
 
         <div
-          className="prose-gb mt-10 border-t border-[var(--line)] pt-8"
+          className="prose-gb mt-8 border-t border-[var(--line)] pt-6 sm:mt-10 sm:pt-8"
           dangerouslySetInnerHTML={{ __html: product.description }}
         />
 
-        <div className="mt-10">
-          <h2 className="font-[family-name:var(--font-display)] text-2xl">Reviews</h2>
+        <div className="mt-8 sm:mt-10">
+          <h2 className="font-[family-name:var(--font-display)] text-xl sm:text-2xl">Reviews</h2>
           <div className="mt-4 space-y-4">
             {reviews.length === 0 && (
               <p className="text-[var(--fg-muted)]">No approved reviews yet.</p>
@@ -201,5 +202,45 @@ export function ProductBuyBox({
         </div>
       </div>
     </div>
+
+    <div
+      className="fixed inset-x-0 z-40 border-t border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_94%,transparent)] px-3 py-2 backdrop-blur-xl lg:hidden"
+      style={{ bottom: "calc(4.25rem + var(--safe-bottom))" }}
+    >
+      <div className="mx-auto flex max-w-lg items-center gap-2">
+        <button
+          type="button"
+          className="btn btn-ghost shrink-0 px-3"
+          onClick={toggleWishlist}
+          aria-label="Wishlist"
+        >
+          <Heart className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary flex-1"
+          onClick={() => {
+            addItem(
+              {
+                productId: product._id,
+                slug: product.slug,
+                title: product.title,
+                image,
+                price: variant.price,
+                mrp: variant.mrp,
+                variantName: variant.name,
+                sku: variant.sku,
+                weightKg: product.weightKg,
+              },
+              qty
+            );
+            setMsg("Added to cart");
+          }}
+        >
+          Add · {formatINR(variant.price)}
+        </button>
+      </div>
+    </div>
+    </>
   );
 }
