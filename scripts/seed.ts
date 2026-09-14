@@ -8,6 +8,7 @@ import { PageContent } from "../src/models/PageContent";
 import { SiteSettings } from "../src/models/SiteSettings";
 import { BlogPost } from "../src/models/BlogPost";
 import { slugify } from "../src/lib/utils";
+import { seedProductReviews } from "./seed-reviews";
 
 const PLACEHOLDER =
   "https://images.unsplash.com/photo-1510915361894-db8b50135cf0?auto=format&fit=crop&w=800&q=80";
@@ -510,10 +511,15 @@ async function main() {
       onSale: Boolean(p.onSale),
       openBox: Boolean(p.openBox),
       isActive: true,
-      ratingAvg: 4.2 + (i % 7) * 0.1,
-      ratingCount: 5 + i * 3,
+      ratingAvg: 0,
+      ratingCount: 0,
     });
   }
+
+  const reviewResult = await seedProductReviews();
+  console.log(
+    `Reviews: ${reviewResult.reviews} across ${reviewResult.products} products`
+  );
 
   const pages = [
     {

@@ -12,7 +12,7 @@ export async function GET() {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
-    const [ordersToday, revenueAgg, lowStock, recentOrders, customers] =
+    const [ordersToday, revenueAgg, lowStock, recentOrders, users, paidOrders] =
       await Promise.all([
         Order.countDocuments({ createdAt: { $gte: start } }),
         Order.aggregate([
@@ -24,15 +24,34 @@ export async function GET() {
           .limit(10)
           .lean(),
         Order.find().sort({ createdAt: -1 }).limit(8).lean(),
-        User.countDocuments({ role: "customer" }),
+        // Logged-in accounts (excludes admin + demo review seed accounts)
+        User.countDocuments({
+          role: "customer",
+          email: { $not: /@gaanbajana\.demo$/i },
+        }),
+        // Paid orders — used to derive customers who actually paid
+        Order.find({ paymentStatus: "paid" })
+          .select("user shippingAddress.email")
+          .lean(),
       ]);
+
+    // Customer = someone who completed payment (account or guest email)
+    const customerKeys = new Set<string>();
+    for (const order of paidOrders) {
+      if (order.user) {
+        customerKeys.add(`u:${String(order.user)}`);
+      } else if (order.shippingAddress?.email) {
+        customerKeys.add(`e:${order.shippingAddress.email.toLowerCase()}`);
+      }
+    }
 
     return NextResponse.json({
       ordersToday,
       revenue: revenueAgg[0]?.total || 0,
       lowStock,
       recentOrders,
-      customers,
+      users,
+      customers: customerKeys.size,
     });
   } catch (e) {
     return authErrorResponse(e);

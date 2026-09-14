@@ -9,6 +9,7 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<{
     ordersToday: number;
     revenue: number;
+    users: number;
     customers: number;
     lowStock: { title: string; stock: number; slug: string }[];
     recentOrders: { orderNumber: string; total: number; status: string }[];
@@ -80,7 +81,7 @@ export default function AdminDashboardPage() {
         </Link>
       </div>
 
-      <div className="mt-10 grid gap-3 sm:grid-cols-3">
+      <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
           <p className="text-sm text-[var(--fg-muted)]">Orders today</p>
           <p className="mt-2 display text-3xl text-[var(--accent)]">{data.ordersToday}</p>
@@ -92,8 +93,14 @@ export default function AdminDashboardPage() {
           </p>
         </div>
         <div className="border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
+          <p className="text-sm text-[var(--fg-muted)]">Users</p>
+          <p className="mt-2 display text-3xl text-[var(--accent)]">{data.users ?? 0}</p>
+          <p className="mt-1 text-xs text-[var(--fg-muted)]">Logged-in accounts</p>
+        </div>
+        <div className="border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
           <p className="text-sm text-[var(--fg-muted)]">Customers</p>
           <p className="mt-2 display text-3xl text-[var(--accent)]">{data.customers}</p>
+          <p className="mt-1 text-xs text-[var(--fg-muted)]">Paid at least once</p>
         </div>
       </div>
     </div>
