@@ -4,7 +4,6 @@ import {
   createSessionToken,
   hashPassword,
   setSessionCookie,
-  verifyPassword,
 } from "@/lib/auth";
 import { User } from "@/models/User";
 import { z } from "zod";
@@ -29,6 +28,7 @@ export async function POST(req: Request) {
       email: body.email.toLowerCase(),
       phone: body.phone,
       passwordHash: await hashPassword(body.password),
+      authProvider: "local",
       role: "customer",
     });
     const token = await createSessionToken({

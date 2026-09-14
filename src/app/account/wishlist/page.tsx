@@ -18,8 +18,9 @@ type ApiProduct = {
 
 export default function WishlistPage() {
   const [items, setItems] = useState<ProductCardData[]>([]);
+  const [removing, setRemoving] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
     fetch("/api/account/wishlist")
       .then((r) => r.json())
       .then((d) =>
@@ -38,14 +39,37 @@ export default function WishlistPage() {
           }))
         )
       );
-  }, []);
+  }
+
+  useEffect(load, []);
+
+  async function remove(productId: string) {
+    setRemoving(productId);
+    await fetch("/api/account/wishlist", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId }),
+    });
+    setItems((prev) => prev.filter((p) => p._id !== productId));
+    setRemoving(null);
+  }
 
   return (
     <div className="container-gb py-12">
       <h1 className="display text-3xl sm:text-4xl">Wishlist</h1>
       <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {items.map((p) => (
-          <ProductCard key={p._id} product={p} />
+          <div key={p._id} className="relative">
+            <ProductCard product={p} />
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm mt-2 w-full"
+              disabled={removing === p._id}
+              onClick={() => remove(p._id)}
+            >
+              {removing === p._id ? "Removing…" : "Remove"}
+            </button>
+          </div>
         ))}
       </div>
       {items.length === 0 && (

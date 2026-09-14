@@ -25,6 +25,16 @@ Checkout already errors clearly if Cashfree keys are empty; Shiprocket is skippe
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — used only by `npm run seed`
 - `NEXT_PUBLIC_APP_URL=http://localhost:3000` for local
 
+### 2b. Google sign-in (optional)
+
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → Create OAuth client (Web)
+2. Authorized redirect URI: `{NEXT_PUBLIC_APP_URL}/api/auth/google/callback`  
+   (local: `http://localhost:3000/api/auth/google/callback`, plus your Vercel URL)
+3. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local` (and Vercel)
+4. Restart `npm run dev` — “Continue with Google” appears on Login / Register
+
+Without these, email/password login still works; the Google button stays hidden.
+
 ### 3. Cloudinary (admin image upload)
 
 1. [cloudinary.com](https://cloudinary.com) → Dashboard
@@ -62,7 +72,9 @@ Default admin (change after first login):
 1. Push the repo to GitHub (do **not** commit `.env.local`)
 2. Import in Vercel (or similar) → add env vars you filled for now:
    - `MONGODB_URI`, `JWT_SECRET`, `CLOUDINARY_*`, `RESEND_*`, `EMAIL_FROM`, `ADMIN_*` if needed
+   - Optional: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` for Google login
 3. Set `NEXT_PUBLIC_APP_URL` to your live domain (e.g. `https://gaanabajana.vercel.app`)
+   - If using Google, add the same live callback URI in Google Cloud
 4. **MongoDB Atlas → Network Access → Add IP → Allow Access from Anywhere (`0.0.0.0/0`)**  
    Vercel uses many IPs; without this, catalog/API pages return errors.
 5. Redeploy after saving env vars (Deployments → … → Redeploy)

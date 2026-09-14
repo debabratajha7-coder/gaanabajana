@@ -61,6 +61,7 @@ async function main() {
       name: "Gaanbajana Admin",
       email: adminEmail,
       passwordHash,
+      authProvider: "local",
       role: "admin",
     },
     { upsert: true, new: true }

@@ -14,7 +14,10 @@ export async function POST(req: Request) {
     const body = schema.parse(await req.json());
     await connectDB();
     const user = await User.findOne({ email: body.email.toLowerCase() });
-    if (!user || !(await verifyPassword(body.password, user.passwordHash))) {
+    if (!user || !user.passwordHash) {
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    }
+    if (!(await verifyPassword(body.password, user.passwordHash))) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
     const token = await createSessionToken({

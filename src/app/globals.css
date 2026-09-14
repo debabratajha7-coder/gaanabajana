@@ -15,7 +15,8 @@
   --danger: #e35d5d;
   --success: #5dba7a;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --radius: 1.1rem;
+  --radius: 0.7rem;
+  --radius-control: 0.45rem;
   --space-section: clamp(3.5rem, 8vw, 6.5rem);
 }
 
@@ -54,6 +55,11 @@ body {
   body {
     padding-bottom: 0;
   }
+}
+
+body[data-menu-open] .mobile-bottom-nav {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 a {
@@ -106,79 +112,145 @@ img {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 999px;
-  padding: 0.85rem 1.4rem;
-  min-height: 46px;
+  border-radius: var(--radius-control);
+  padding: 0.75rem 1.25rem;
+  min-height: 44px;
   font-family: var(--font-body), sans-serif;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
   transition:
-    transform 0.18s ease,
     background 0.18s ease,
     color 0.18s ease,
-    box-shadow 0.18s ease,
     border-color 0.18s ease,
     opacity 0.18s ease;
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
 }
 
-.btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn:active {
-  transform: scale(0.97);
-}
-
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  transform: none;
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
 }
 
 .btn-primary {
-  background: linear-gradient(140deg, #e8b56f 0%, var(--accent) 48%, var(--accent-deep) 100%);
+  background: var(--accent);
   color: #12100c;
-  box-shadow:
-    0 10px 30px rgba(217, 160, 92, 0.22),
-    0 0 0 1px rgba(45, 212, 191, 0.08);
 }
 
 .btn-primary:hover {
-  box-shadow:
-    0 14px 36px rgba(217, 160, 92, 0.3),
-    0 0 24px rgba(45, 212, 191, 0.12);
+  background: color-mix(in oklab, var(--accent) 88%, white);
 }
 
 .btn-ghost {
-  border: 1px solid var(--line-strong);
-  background: color-mix(in oklab, var(--bg-elevated) 65%, transparent);
+  border-color: var(--line-strong);
+  background: color-mix(in oklab, var(--bg-elevated) 80%, transparent);
   color: var(--fg);
-  backdrop-filter: blur(10px);
 }
 
 .btn-ghost:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 8%, var(--bg-elevated));
+}
+
+.icon-btn {
+  display: inline-flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  color: var(--fg);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.icon-btn:hover {
+  background: var(--bg-soft);
+  border-color: var(--line);
 }
 
 .input {
   width: 100%;
   border: 1px solid var(--line);
-  background: var(--bg-elevated);
+  background: color-mix(in oklab, var(--bg-elevated) 88%, transparent);
   color: var(--fg);
-  border-radius: 0.95rem;
-  padding: 0.85rem 1rem;
-  min-height: 46px;
+  border-radius: var(--radius-control);
+  padding: 0.75rem 0.95rem;
+  min-height: 44px;
   font-size: 16px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus {
-  border-color: color-mix(in oklab, var(--glow) 45%, var(--accent));
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
+  border-color: color-mix(in oklab, var(--accent) 65%, var(--line));
+  box-shadow: 0 0 0 3px rgba(217, 160, 92, 0.16);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.search-group {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: color-mix(in oklab, var(--bg-elevated) 88%, transparent);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-group:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 65%, var(--line));
+  box-shadow: 0 0 0 3px rgba(217, 160, 92, 0.16);
+}
+
+.search-group-input {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  min-height: 44px;
+  flex: 1;
+}
+
+.search-group-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  flex-shrink: 0;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.search-group-btn:hover {
+  background: var(--accent);
+  color: #12100c;
 }
 
 .surface {
@@ -373,10 +445,5 @@ img {
   .animate-badge-pop,
   .skeleton::after {
     animation: none !important;
-  }
-
-  .btn:hover,
-  .btn:active {
-    transform: none;
   }
 }

@@ -11,6 +11,7 @@ type Address = {
   city: string;
   state: string;
   pincode: string;
+  isDefault?: boolean;
 };
 
 export default function AddressesPage() {
@@ -65,47 +66,98 @@ export default function AddressesPage() {
     load();
   }
 
+  async function setDefault(addressId: string) {
+    await fetch("/api/account/addresses", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ addressId, isDefault: true }),
+    });
+    load();
+  }
+
   return (
     <div className="container-gb grid gap-10 py-12 lg:grid-cols-2">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-4xl">Addresses</h1>
+        <h1 className="display text-4xl">Addresses</h1>
         <div className="mt-6 space-y-3">
           {addresses.map((a) => (
             <div
               key={a._id}
-              className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-4"
+              className="border border-[var(--line)] bg-[var(--bg-elevated)] p-4"
             >
-              <p className="font-medium">
-                {a.label} · {a.fullName}
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-medium">
+                  {a.label} · {a.fullName}
+                </p>
+                {a.isDefault && (
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)]">
+                    Default
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-sm text-[var(--fg-muted)]">
                 {a.line1}, {a.city}, {a.state} {a.pincode}
               </p>
-              <button
-                type="button"
-                className="mt-2 text-sm text-[var(--danger)]"
-                onClick={() => remove(a._id)}
-              >
-                Delete
-              </button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {!a.isDefault && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setDefault(a._id)}
+                  >
+                    Set as default
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm text-[var(--danger)]"
+                  onClick={() => remove(a._id)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
+          {addresses.length === 0 && (
+            <p className="text-[var(--fg-muted)]">No addresses saved yet.</p>
+          )}
         </div>
       </div>
       <form onSubmit={onSubmit} className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">Add address</h2>
-        {Object.entries(form).map(([key, value]) =>
-          typeof value === "boolean" ? null : (
+        <h2 className="display text-2xl">Add address</h2>
+        {(
+          [
+            ["label", "Label"],
+            ["fullName", "Full name"],
+            ["phone", "Phone"],
+            ["line1", "Address line"],
+            ["city", "City"],
+            ["state", "State"],
+            ["pincode", "Pincode"],
+            ["country", "Country"],
+          ] as const
+        ).map(([key, label]) => (
+          <div key={key}>
+            <label className="field-label" htmlFor={key}>
+              {label}
+            </label>
             <input
-              key={key}
+              id={key}
               className="input"
-              placeholder={key}
-              value={String(value)}
+              value={String(form[key])}
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
               required={key !== "label"}
             />
-          )
-        )}
+          </div>
+        ))}
+        <label className="flex items-center gap-2 text-sm text-[var(--fg-muted)]">
+          <input
+            type="checkbox"
+            checked={form.isDefault}
+            onChange={(e) => setForm({ ...form, isDefault: e.target.checked })}
+          />
+          Set as default address
+        </label>
         <button className="btn btn-primary" type="submit">
           Save address
         </button>

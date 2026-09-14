@@ -61,3 +61,27 @@ export async function DELETE(req: Request) {
     return authErrorResponse(e);
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const session = await requireUser();
+    const { addressId, isDefault } = z
+      .object({ addressId: z.string(), isDefault: z.boolean() })
+      .parse(await req.json());
+    await connectDB();
+    const user = await User.findById(session.id);
+    if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    user.addresses.forEach((a: { _id?: unknown; isDefault?: boolean }) => {
+      if (String(a._id) === addressId) {
+        a.isDefault = isDefault;
+      } else if (isDefault) {
+        a.isDefault = false;
+      }
+    });
+    await user.save();
+    return NextResponse.json({ addresses: user.addresses });
+  } catch (e) {
+    return authErrorResponse(e);
+  }
+}

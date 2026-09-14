@@ -18,7 +18,9 @@ export interface IUser {
   _id: Types.ObjectId;
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  googleId?: string;
+  authProvider: "local" | "google";
   role: "customer" | "admin";
   phone?: string;
   wishlist: Types.ObjectId[];
@@ -47,7 +49,13 @@ const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true },
+    passwordHash: { type: String, required: false },
+    googleId: { type: String, sparse: true, unique: true },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
     role: { type: String, enum: ["customer", "admin"], default: "customer" },
     phone: String,
     wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],

@@ -8,7 +8,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ user: null });
   await connectDB();
   const user = await User.findById(session.id)
-    .select("name email role phone wishlist addresses")
+    .select("name email role phone wishlist addresses authProvider passwordHash")
     .lean();
   if (!user) return NextResponse.json({ user: null });
   return NextResponse.json({
@@ -17,7 +17,9 @@ export async function GET() {
       name: user.name,
       email: user.email,
       role: user.role,
-      phone: user.phone,
+      phone: user.phone || "",
+      authProvider: user.authProvider || "local",
+      hasPassword: Boolean(user.passwordHash),
       wishlist: user.wishlist?.map(String) || [],
       addresses: user.addresses || [],
     },
