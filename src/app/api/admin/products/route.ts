@@ -3,26 +3,16 @@ import { z } from "zod";
 import { connectDB } from "@/lib/db";
 import { authErrorResponse, requireAdmin } from "@/lib/auth";
 import { Product } from "@/models/Product";
+import { Review } from "@/models/Review";
 import { slugify } from "@/lib/utils";
+import { refreshProductRating } from "@/lib/reviews";
 
-export async function GET(req: NextRequest) {
-  try {
-    await requireAdmin();
-    await connectDB();
-    const q = req.nextUrl.searchParams.get("q");
-    const filter: Record<string, unknown> = {};
-    if (q) filter.title = { $regex: q, $options: "i" };
-    const items = await Product.find(filter)
-      .populate("brand", "name")
-      .populate("categories", "name")
-      .sort({ updatedAt: -1 })
-      .limit(100)
-      .lean();
-    return NextResponse.json({ items });
-  } catch (e) {
-    return authErrorResponse(e);
-  }
-}
+const reviewDraftSchema = z.object({
+  authorName: z.string().min(1).max(80),
+  rating: z.number().min(1).max(5),
+  title: z.string().max(120).optional(),
+  body: z.string().min(3).max(2000),
+});
 
 const productSchema = z.object({
   title: z.string().min(2),
@@ -59,30 +49,133 @@ const productSchema = z.object({
     .optional(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
+  reviews: z.array(reviewDraftSchema).optional(),
 });
+
+async function attachAdminReviews(
+  productId: string,
+  drafts: z.infer<typeof reviewDraftSchema>[] | undefined
+) {
+  if (!drafts?.length) return;
+  await Review.insertMany(
+    drafts.map((d) => ({
+      product: productId,
+      authorName: d.authorName.trim(),
+      rating: d.rating,
+      title: d.title?.trim() || undefined,
+      body: d.body.trim(),
+      approved: true,
+    }))
+  );
+  await refreshProductRating(productId);
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    await requireAdmin();
+    await connectDB();
+    const q = req.nextUrl.searchParams.get("q");
+    const id = req.nextUrl.searchParams.get("id");
+
+    if (id) {
+      const [product, reviews] = await Promise.all([
+        Product.findById(id)
+          .populate("brand", "name")
+          .populate("categories", "name parent")
+          .lean(),
+        Review.find({ product: id })
+          .sort({ createdAt: -1 })
+          .lean(),
+      ]);
+      if (!product) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+      return NextResponse.json({
+        product: {
+          ...product,
+          _id: String(product._id),
+          brand: product.brand
+            ? {
+                _id: String((product.brand as { _id: unknown })._id),
+                name: (product.brand as { name?: string }).name,
+              }
+            : null,
+          categories: (product.categories || []).map((c) => {
+            const cat = c as { _id: unknown; name?: string; parent?: unknown };
+            return {
+              _id: String(cat._id),
+              name: cat.name,
+              parent: cat.parent ? String(cat.parent) : null,
+            };
+          }),
+        },
+        reviews: reviews.map((r) => ({
+          _id: String(r._id),
+          authorName: r.authorName,
+          rating: r.rating,
+          title: r.title,
+          body: r.body,
+          approved: r.approved,
+        })),
+      });
+    }
+
+    const filter: Record<string, unknown> = {};
+    if (q) filter.title = { $regex: q, $options: "i" };
+    const items = await Product.find(filter)
+      .populate("brand", "name")
+      .populate("categories", "name")
+      .sort({ updatedAt: -1 })
+      .limit(100)
+      .lean();
+    return NextResponse.json({
+      items: items.map((p) => ({
+        ...p,
+        _id: String(p._id),
+        brand: p.brand
+          ? {
+              _id: String((p.brand as { _id: unknown })._id),
+              name: (p.brand as { name?: string }).name,
+            }
+          : null,
+        categories: (p.categories || []).map((c) => {
+          const cat = c as { _id: unknown; name?: string };
+          return { _id: String(cat._id), name: cat.name };
+        }),
+      })),
+    });
+  } catch (e) {
+    return authErrorResponse(e);
+  }
+}
 
 export async function POST(req: Request) {
   try {
     await requireAdmin();
     const body = productSchema.parse(await req.json());
     await connectDB();
-    const slug = body.slug || slugify(body.title);
+    const { reviews, ...rest } = body;
+    const slug = rest.slug || slugify(rest.title);
     const product = await Product.create({
-      ...body,
+      ...rest,
       slug,
-      variants: body.variants?.length
-        ? body.variants
+      ratingAvg: 0,
+      ratingCount: 0,
+      variants: rest.variants?.length
+        ? rest.variants
         : [
             {
               sku: `${slug.slice(0, 12)}-std`,
               name: "Standard",
-              price: body.price,
-              mrp: body.mrp,
-              stock: body.stock ?? 0,
+              price: rest.price,
+              mrp: rest.mrp,
+              stock: rest.stock ?? 0,
             },
           ],
     });
-    return NextResponse.json({ product });
+    await attachAdminReviews(String(product._id), reviews);
+    const fresh = await Product.findById(product._id).lean();
+    return NextResponse.json({ product: fresh });
   } catch (e) {
     return authErrorResponse(e);
   }
@@ -93,11 +186,16 @@ export async function PUT(req: Request) {
     await requireAdmin();
     const body = productSchema.extend({ id: z.string() }).parse(await req.json());
     await connectDB();
-    const { id, ...rest } = body;
+    const { id, reviews, ...rest } = body;
     const product = await Product.findByIdAndUpdate(id, rest, {
       returnDocument: "after",
     });
-    return NextResponse.json({ product });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+    await attachAdminReviews(id, reviews);
+    const fresh = await Product.findById(id).lean();
+    return NextResponse.json({ product: fresh });
   } catch (e) {
     return authErrorResponse(e);
   }
@@ -108,7 +206,10 @@ export async function DELETE(req: Request) {
     await requireAdmin();
     const { id } = z.object({ id: z.string() }).parse(await req.json());
     await connectDB();
-    await Product.findByIdAndDelete(id);
+    await Promise.all([
+      Product.findByIdAndDelete(id),
+      Review.deleteMany({ product: id }),
+    ]);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return authErrorResponse(e);

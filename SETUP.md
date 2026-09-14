@@ -121,7 +121,7 @@ Fill these when the site is live and you have a public domain.
 | Upload product photos | Admin → Media (or paste URLs on products) |
 | Add real catalog | Admin → Products / Categories |
 | Approve reviews | Admin → Reviews |
-| See Users vs Customers | Admin → Home (Users = logged in, Customers = paid) |
+| Add comments on a product | Admin → Add a product → Step 5 · Comments |
 | Retry shipping (after Shiprocket keys) | Admin → Orders → Push Shiprocket |
 
 ## Flow reminder (once Cashfree + Shiprocket are live)

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { authErrorResponse, requireUser } from "@/lib/auth";
 import { Review } from "@/models/Review";
 import { Product } from "@/models/Product";
+import { refreshProductRating } from "@/lib/reviews";
 
 export async function GET() {
   try {
@@ -47,11 +48,11 @@ export async function POST(req: Request) {
 
     const approved = await Review.find({ product: body.productId, approved: true });
     if (approved.length) {
-      const avg =
-        approved.reduce((s, r) => s + r.rating, 0) / approved.length;
+      await refreshProductRating(body.productId);
+    } else {
       await Product.findByIdAndUpdate(body.productId, {
-        ratingAvg: Math.round(avg * 100) / 100,
-        ratingCount: approved.length,
+        ratingAvg: 0,
+        ratingCount: 0,
       });
     }
 

@@ -22,3 +22,8 @@ export function discountPercent(price: number, mrp: number) {
   if (!mrp || mrp <= price) return 0;
   return Math.round(((mrp - price) / mrp) * 100);
 }
+
+/** Strip Mongoose ObjectIds / Dates so props are safe for Client Components */
+export function toPlain<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}

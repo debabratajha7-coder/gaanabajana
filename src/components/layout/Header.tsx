@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Heart,
@@ -14,13 +15,16 @@ import {
   Tag,
   LifeBuoy,
   MapPin,
+  BookOpen,
+  Info,
+  FileText,
 } from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
 import { CartBadge } from "@/components/ui/CartBadge";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 
 type Cat = { _id: string; name: string; slug: string; parent?: string | null };
-type Settings = { phone?: string; storeName?: string };
+type Settings = { phone?: string; storeName?: string; email?: string };
 
 export function Header({
   categories = [],
@@ -35,9 +39,14 @@ export function Header({
   const reduce = useReducedMotion();
   const headerRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(72);
+  const [mounted, setMounted] = useState(false);
   const [q, setQ] = useState("");
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -58,22 +67,6 @@ export function Header({
       document.body.removeAttribute("data-menu-open");
     };
   }, [open]);
-
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-
-    const measure = () => setHeaderHeight(el.getBoundingClientRect().height);
-    measure();
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -97,23 +90,283 @@ export function Header({
     router.push(query ? `/search?q=${encodeURIComponent(query)}` : "/search");
   }
 
-  function SearchField() {
-    return (
-      <div className="search-group">
-        <input
-          name="q"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search instruments"
-          className="input search-group-input px-4"
-          aria-label="Search instruments"
-        />
-        <button type="submit" className="search-group-btn" aria-label="Search">
-          <Search className="h-4 w-4" />
-        </button>
-      </div>
+  const menu =
+    mounted &&
+    createPortal(
+      <AnimatePresence>
+        {open && (
+          <div className="fixed inset-0 z-[200] lg:hidden" role="presentation">
+            <motion.button
+              type="button"
+              aria-label="Close menu"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/50"
+              onClick={close}
+            />
+
+            <motion.aside
+              id="mobile-nav-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Site menu"
+              initial={reduce ? { opacity: 0 } : { x: "-100%" }}
+              animate={reduce ? { opacity: 1 } : { x: 0 }}
+              exit={reduce ? { opacity: 0 } : { x: "-100%" }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-y-0 left-0 flex w-[min(100vw-3.25rem,19.5rem)] max-w-full flex-col border-r border-[var(--line)] bg-[var(--bg)] shadow-[8px_0_32px_rgba(0,0,0,0.35)]"
+            >
+              <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3.5 py-3">
+                <Link
+                  href="/"
+                  className="display truncate text-lg"
+                  onClick={close}
+                >
+                  {settings?.storeName?.toLowerCase() || "gaanbajana"}
+                </Link>
+                <button
+                  type="button"
+                  className="icon-btn shrink-0"
+                  onClick={close}
+                  aria-label="Close menu"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto overscroll-contain px-3.5 py-4 pb-[calc(1.5rem+var(--safe-bottom))]">
+                <form onSubmit={goSearch} className="mb-6">
+                  <div className="search-group">
+                    <input
+                      name="q"
+                      value={q}
+                      onChange={(e) => setQ(e.target.value)}
+                      placeholder="Search"
+                      className="input search-group-input px-3 text-sm"
+                      aria-label="Search instruments"
+                    />
+                    <button
+                      type="submit"
+                      className="search-group-btn"
+                      aria-label="Search"
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+                  </div>
+                </form>
+
+                <section className="mb-6">
+                  <p className="eyebrow mb-2.5">Account</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {user ? (
+                      <>
+                        <Link
+                          href="/account"
+                          className="btn btn-ghost px-2 text-xs"
+                          onClick={close}
+                        >
+                          <User className="h-3.5 w-3.5" /> Account
+                        </Link>
+                        <Link
+                          href="/account/orders"
+                          className="btn btn-ghost px-2 text-xs"
+                          onClick={close}
+                        >
+                          <Package className="h-3.5 w-3.5" /> Orders
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/login"
+                          className="btn btn-primary px-2 text-xs"
+                          onClick={close}
+                        >
+                          Login
+                        </Link>
+                        <Link
+                          href="/register"
+                          className="btn btn-ghost px-2 text-xs"
+                          onClick={close}
+                        >
+                          Register
+                        </Link>
+                      </>
+                    )}
+                    <Link
+                      href="/account/wishlist"
+                      className="btn btn-ghost px-2 text-xs"
+                      onClick={close}
+                    >
+                      <Heart className="h-3.5 w-3.5" /> Wishlist
+                    </Link>
+                    <Link
+                      href="/cart"
+                      className="btn btn-ghost px-2 text-xs"
+                      onClick={close}
+                    >
+                      <ShoppingBag className="h-3.5 w-3.5" /> Cart
+                      {count > 0 && (
+                        <span className="ml-0.5 text-[var(--accent)]">
+                          ({count})
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+                </section>
+
+                <section className="mb-6">
+                  <p className="eyebrow mb-2.5">Shop</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <Link
+                      href="/deals"
+                      className="btn btn-ghost px-2 text-xs"
+                      onClick={close}
+                    >
+                      <Tag className="h-3.5 w-3.5" /> Deals
+                    </Link>
+                    <Link
+                      href="/deals/sale"
+                      className="btn btn-ghost px-2 text-xs"
+                      onClick={close}
+                    >
+                      Sale
+                    </Link>
+                    <Link
+                      href="/deals/open-box"
+                      className="btn btn-ghost px-2 text-xs"
+                      onClick={close}
+                    >
+                      Open box
+                    </Link>
+                    <Link
+                      href="/blog"
+                      className="btn btn-ghost px-2 text-xs"
+                      onClick={close}
+                    >
+                      <BookOpen className="h-3.5 w-3.5" /> Blog
+                    </Link>
+                  </div>
+                </section>
+
+                <section className="mb-6">
+                  <p className="eyebrow mb-2.5">Categories</p>
+                  <div className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
+                    {parents.map((p) => {
+                      const kids = childrenOf(p._id);
+                      const isOpen = expanded === p._id;
+                      return (
+                        <div key={p._id}>
+                          <div className="flex items-center gap-1">
+                            <Link
+                              href={`/collections/${p.slug}`}
+                              className="display min-w-0 flex-1 py-3 text-[1.05rem] leading-tight"
+                              onClick={close}
+                            >
+                              {p.name}
+                            </Link>
+                            {kids.length > 0 && (
+                              <button
+                                type="button"
+                                className="icon-btn h-9 w-9 shrink-0"
+                                aria-expanded={isOpen}
+                                aria-label={`${isOpen ? "Hide" : "Show"} ${p.name} types`}
+                                onClick={() =>
+                                  setExpanded((cur) =>
+                                    cur === p._id ? null : p._id
+                                  )
+                                }
+                              >
+                                <span className="text-base leading-none">
+                                  {isOpen ? "−" : "+"}
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                          {kids.length > 0 && isOpen && (
+                            <div className="grid grid-cols-1 gap-0.5 pb-3 pl-1 text-sm text-[var(--fg-muted)]">
+                              {kids.map((c) => (
+                                <Link
+                                  key={c._id}
+                                  href={`/collections/${c.slug}`}
+                                  onClick={close}
+                                  className="py-1.5"
+                                >
+                                  {c.name}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {parents.length === 0 && (
+                      <p className="py-3 text-sm text-[var(--fg-muted)]">
+                        Categories will appear here once added in admin.
+                      </p>
+                    )}
+                  </div>
+                </section>
+
+                <section className="mb-6">
+                  <p className="eyebrow mb-2.5">Help & info</p>
+                  <div className="grid gap-0">
+                    {[
+                      { href: "/track-order", label: "Track order", icon: MapPin },
+                      { href: "/contact", label: "Contact", icon: LifeBuoy },
+                      { href: "/faqs", label: "FAQs", icon: LifeBuoy },
+                      { href: "/about", label: "About", icon: Info },
+                      { href: "/stores", label: "Stores", icon: MapPin },
+                      {
+                        href: "/policies/shipping",
+                        label: "Shipping",
+                        icon: FileText,
+                      },
+                      {
+                        href: "/policies/returns",
+                        label: "Returns",
+                        icon: FileText,
+                      },
+                      {
+                        href: "/policies/warranty",
+                        label: "Warranty",
+                        icon: FileText,
+                      },
+                      {
+                        href: "/policies/privacy",
+                        label: "Privacy",
+                        icon: FileText,
+                      },
+                      { href: "/policies/terms", label: "Terms", icon: FileText },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex items-center gap-2.5 border-b border-[var(--line)] py-3 text-sm last:border-b-0"
+                        onClick={close}
+                      >
+                        <item.icon className="h-3.5 w-3.5 shrink-0 text-[var(--accent)]" />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+
+                {(settings?.phone || settings?.email) && (
+                  <section className="border-t border-[var(--line)] pt-4 text-xs text-[var(--fg-muted)]">
+                    {settings.phone && <p>{settings.phone}</p>}
+                    {settings.email && <p className="mt-1">{settings.email}</p>}
+                  </section>
+                )}
+              </div>
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>,
+      document.body
     );
-  }
 
   return (
     <header
@@ -130,7 +383,10 @@ export function Header({
             <Link href="/deals" className="transition hover:text-[var(--accent)]">
               Deals
             </Link>
-            <Link href="/contact" className="hidden transition hover:text-[var(--accent)] md:inline">
+            <Link
+              href="/contact"
+              className="hidden transition hover:text-[var(--accent)] md:inline"
+            >
               Help
             </Link>
           </div>
@@ -140,7 +396,7 @@ export function Header({
       <div className="container-gb flex items-center gap-3 py-3.5 sm:gap-4">
         <button
           type="button"
-          className="icon-btn lg:hidden"
+          className="icon-btn relative z-[1] lg:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
@@ -156,7 +412,19 @@ export function Header({
         </Link>
 
         <form onSubmit={goSearch} className="ml-auto hidden max-w-md flex-1 md:flex">
-          <SearchField />
+          <div className="search-group">
+            <input
+              name="q"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search instruments"
+              className="input search-group-input px-4"
+              aria-label="Search instruments"
+            />
+            <button type="submit" className="search-group-btn" aria-label="Search">
+              <Search className="h-4 w-4" />
+            </button>
+          </div>
         </form>
 
         <div className="ml-auto flex items-center gap-0.5 md:ml-0 md:gap-1">
@@ -207,145 +475,7 @@ export function Header({
         </div>
       </nav>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            id="mobile-nav-drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Site menu"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, x: -28 }}
-            animate={reduce ? { opacity: 1 } : { opacity: 1, x: 0 }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, x: -20 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            style={{ top: headerHeight }}
-            className="fixed inset-x-0 bottom-0 z-[60] overflow-y-auto border-t border-[var(--line)] bg-[var(--bg-elevated)] lg:hidden"
-          >
-            <div className="container-gb space-y-8 py-6 pb-12">
-              <form onSubmit={goSearch}>
-                <SearchField />
-              </form>
-
-              <section>
-                <p className="eyebrow mb-3">Account</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {user ? (
-                    <>
-                      <Link href="/account" className="btn btn-ghost" onClick={close}>
-                        <User className="h-4 w-4" /> Account
-                      </Link>
-                      <Link
-                        href="/account/orders"
-                        className="btn btn-ghost"
-                        onClick={close}
-                      >
-                        <Package className="h-4 w-4" /> Orders
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link href="/login" className="btn btn-primary" onClick={close}>
-                        Login
-                      </Link>
-                      <Link href="/register" className="btn btn-ghost" onClick={close}>
-                        Register
-                      </Link>
-                    </>
-                  )}
-                  <Link
-                    href="/account/wishlist"
-                    className="btn btn-ghost"
-                    onClick={close}
-                  >
-                    <Heart className="h-4 w-4" /> Wishlist
-                  </Link>
-                  <Link href="/cart" className="btn btn-ghost relative" onClick={close}>
-                    <ShoppingBag className="h-4 w-4" /> Cart
-                    {count > 0 && (
-                      <span className="ml-1 text-[var(--accent)]">({count})</span>
-                    )}
-                  </Link>
-                </div>
-              </section>
-
-              <section>
-                <p className="eyebrow mb-3">Shop</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="/deals" className="btn btn-ghost" onClick={close}>
-                    <Tag className="h-4 w-4" /> Deals
-                  </Link>
-                  <Link href="/deals/sale" className="btn btn-ghost" onClick={close}>
-                    Sale
-                  </Link>
-                  <Link
-                    href="/deals/open-box"
-                    className="btn btn-ghost col-span-2"
-                    onClick={close}
-                  >
-                    Open box
-                  </Link>
-                </div>
-              </section>
-
-              <section>
-                <p className="eyebrow mb-3">Categories</p>
-                <div className="space-y-5">
-                  {parents.map((p) => (
-                    <div key={p._id} className="border-b border-[var(--line)] pb-4">
-                      <Link
-                        href={`/collections/${p.slug}`}
-                        className="display block py-1 text-xl"
-                        onClick={close}
-                      >
-                        {p.name}
-                      </Link>
-                      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm text-[var(--fg-muted)]">
-                        {childrenOf(p._id).map((c) => (
-                          <Link
-                            key={c._id}
-                            href={`/collections/${c.slug}`}
-                            onClick={close}
-                            className="py-1.5"
-                          >
-                            {c.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section>
-                <p className="eyebrow mb-3">Help</p>
-                <div className="grid gap-1">
-                  <Link
-                    href="/track-order"
-                    className="flex items-center gap-3 border-b border-[var(--line)] py-3 text-sm"
-                    onClick={close}
-                  >
-                    <MapPin className="h-4 w-4 text-[var(--accent)]" /> Track order
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="flex items-center gap-3 border-b border-[var(--line)] py-3 text-sm"
-                    onClick={close}
-                  >
-                    <LifeBuoy className="h-4 w-4 text-[var(--accent)]" /> Contact
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="flex items-center gap-3 py-3 text-sm"
-                    onClick={close}
-                  >
-                    <LifeBuoy className="h-4 w-4 text-[var(--accent)]" /> Help
-                  </Link>
-                </div>
-              </section>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {menu}
     </header>
   );
 }

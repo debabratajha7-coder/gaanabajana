@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts",
-    "seed:reviews": "tsx --env-file=.env.local scripts/seed-reviews.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

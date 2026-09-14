@@ -19,5 +19,31 @@ export async function GET(
     .sort({ createdAt: -1 })
     .limit(20)
     .lean();
-  return NextResponse.json({ product, reviews });
+  return NextResponse.json({
+    product: {
+      ...product,
+      _id: String(product._id),
+      brand: product.brand
+        ? {
+            name: (product.brand as { name?: string }).name,
+            slug: (product.brand as { slug?: string }).slug,
+          }
+        : null,
+      categories: (product.categories || []).map((c) => {
+        const cat = c as { name?: string; slug?: string };
+        return { name: cat.name, slug: cat.slug };
+      }),
+    },
+    reviews: reviews.map((r) => ({
+      rating: r.rating,
+      title: r.title,
+      body: r.body,
+      user: {
+        name:
+          r.authorName ||
+          (r.user as { name?: string } | null)?.name ||
+          "Customer",
+      },
+    })),
+  });
 }
