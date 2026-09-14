@@ -23,7 +23,10 @@ export default async function OpenBoxPage() {
               price: p.price,
               mrp: p.mrp,
               images: p.images,
-              brand: p.brand as { name?: string },
+              brandName:
+              p.brand && typeof p.brand === "object" && "name" in p.brand
+                ? String((p.brand as { name?: string }).name || "")
+                : null,
             }}
           />
         ))}

@@ -113,30 +113,34 @@ export function Header({
         </div>
       </div>
 
-      <nav className="container-gb hidden gap-7 overflow-x-auto pb-3.5 text-[13px] lg:flex">
-        {parents.slice(0, 8).map((p) => (
-          <div key={p._id} className="group relative shrink-0">
-            <Link
-              href={`/collections/${p.slug}`}
-              className="text-[var(--fg-muted)] transition hover:text-[var(--fg)]"
-            >
-              {p.name}
-            </Link>
-            {childrenOf(p._id).length > 0 && (
-              <div className="invisible absolute left-0 top-full z-40 min-w-[220px] rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-2 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
-                {childrenOf(p._id).map((c) => (
-                  <Link
-                    key={c._id}
-                    href={`/collections/${c.slug}`}
-                    className="block rounded-xl px-3 py-2.5 text-[var(--fg-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]"
-                  >
-                    {c.name}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+      <nav className="container-gb hidden border-t border-[var(--line)] lg:block">
+        <div className="flex flex-wrap items-center gap-x-1 gap-y-0 py-0">
+          {parents.slice(0, 8).map((p, i) => (
+            <div key={p._id} className="group relative">
+              <Link
+                href={`/collections/${p.slug}`}
+                className={`inline-flex items-center px-3.5 py-3 text-[13px] text-[var(--fg-muted)] transition hover:text-[var(--fg)] ${
+                  i > 0 ? "border-l border-[var(--line)]" : ""
+                }`}
+              >
+                {p.name}
+              </Link>
+              {childrenOf(p._id).length > 0 && (
+                <div className="invisible absolute left-0 top-full z-40 min-w-[220px] border border-[var(--line)] bg-[var(--bg-elevated)] p-1 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
+                  {childrenOf(p._id).map((c) => (
+                    <Link
+                      key={c._id}
+                      href={`/collections/${c.slug}`}
+                      className="block border-b border-[var(--line)] px-3 py-2.5 text-[13px] text-[var(--fg-muted)] last:border-b-0 hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]"
+                    >
+                      {c.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </nav>
 
       <AnimatePresence>

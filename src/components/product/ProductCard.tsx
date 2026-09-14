@@ -13,36 +13,36 @@ export type ProductCardData = {
   images?: string[];
   ratingAvg?: number;
   ratingCount?: number;
-  brand?: { name?: string } | null;
+  brandName?: string | null;
   onSale?: boolean;
 };
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const save = discountPercent(product.price, product.mrp);
   return (
-    <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+    <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
       <Link
         href={`/products/${product.slug}`}
-        className="group block overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] transition duration-300 hover:border-[color-mix(in_oklab,var(--accent)_45%,transparent)] hover:shadow-[0_18px_40px_rgba(0,0,0,0.28)]"
+        className="group block overflow-hidden border border-[var(--line)] bg-[var(--bg-elevated)] transition duration-300 hover:border-[var(--line-strong)]"
       >
-        <div className="relative aspect-[4/5] overflow-hidden bg-[var(--bg-soft)]">
+        <div className="relative aspect-[4/5] overflow-hidden border-b border-[var(--line)] bg-[var(--bg-soft)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={product.images?.[0] || "/placeholder-product.jpg"}
             alt={product.title}
-            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
             loading="lazy"
           />
           {save > 0 && (
-            <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-semibold text-[#1a120a] sm:left-3 sm:top-3 sm:text-xs">
+            <span className="absolute left-0 top-0 border-b border-r border-[var(--line)] bg-[var(--accent)] px-2.5 py-1 text-[10px] font-semibold text-[#1a120a] sm:text-xs">
               −{save}%
             </span>
           )}
         </div>
         <div className="space-y-1.5 p-3 sm:p-4">
-          {product.brand?.name && (
+          {product.brandName && (
             <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--fg-muted)] sm:text-[11px]">
-              {product.brand.name}
+              {product.brandName}
             </p>
           )}
           <h3 className="line-clamp-2 min-h-[2.5em] font-[family-name:var(--font-display)] text-[0.95rem] leading-snug sm:text-[1.05rem]">

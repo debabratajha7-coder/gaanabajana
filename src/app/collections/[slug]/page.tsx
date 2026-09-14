@@ -101,7 +101,10 @@ export default async function CollectionPage({
               images: p.images,
               ratingAvg: p.ratingAvg,
               ratingCount: p.ratingCount,
-              brand: p.brand as { name?: string },
+              brandName:
+                p.brand && typeof p.brand === "object" && "name" in p.brand
+                  ? String((p.brand as { name?: string }).name || "")
+                  : null,
             }}
           />
         ))}

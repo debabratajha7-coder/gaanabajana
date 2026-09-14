@@ -8,8 +8,11 @@ import { getSiteSettings } from "@/models/SiteSettings";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { brandLogo, categoryImage } from "@/lib/catalog-media";
 
 export const dynamic = "force-dynamic";
+
+type LeanBrand = { name?: string; slug?: string } | null;
 
 export default async function HomePage() {
   let settings;
@@ -23,7 +26,7 @@ export default async function HomePage() {
     settings = await getSiteSettings();
     [featured, parents, brands, posts] = await Promise.all([
       Product.find({ isActive: true, featured: true })
-        .populate("brand", "name")
+        .populate("brand", "name slug")
         .limit(8)
         .lean(),
       Category.find({ isActive: true, parent: null }).sort({ sortOrder: 1 }).lean(),
@@ -74,39 +77,38 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="container-gb section-gb">
-        <Reveal>
-          <SectionHeader eyebrow="Explore" title="Shop by category" />
-        </Reveal>
-        <Reveal delay={0.05}>
-          <div className="scroll-row md:grid md:grid-cols-4 md:gap-4 md:overflow-visible">
-            {parents.slice(0, 8).map((c) => (
-              <Link
-                key={String(c._id)}
-                href={`/collections/${c.slug}`}
-                className="group relative aspect-[4/3] w-[70vw] max-w-[260px] overflow-hidden rounded-2xl border border-[var(--line)] md:w-auto md:max-w-none"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={
-                    c.image ||
-                    "https://images.unsplash.com/photo-1510915361894-db8b50135cf0?auto=format&fit=crop&w=800&q=80"
-                  }
-                  alt={c.name}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-                <span className="absolute bottom-3.5 left-3.5 display text-lg sm:text-xl">
-                  {c.name}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </Reveal>
+      <section className="border-y border-[var(--line)]">
+        <div className="container-gb section-gb">
+          <Reveal>
+            <SectionHeader eyebrow="Explore" title="Shop by category" />
+          </Reveal>
+          <Reveal delay={0.05}>
+            <div className="grid grid-cols-2 border-l border-t border-[var(--line)] md:grid-cols-4">
+              {parents.slice(0, 8).map((c) => (
+                <Link
+                  key={String(c._id)}
+                  href={`/collections/${c.slug}`}
+                  className="group relative aspect-[4/3] overflow-hidden border-b border-r border-[var(--line)]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={categoryImage(c.slug, c.image)}
+                    alt={c.name}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/25 to-transparent" />
+                  <span className="absolute bottom-3 left-3 display text-base sm:bottom-4 sm:left-4 sm:text-xl">
+                    {c.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Reveal>
+        </div>
       </section>
 
-      <section className="border-y border-[var(--line)] bg-[color-mix(in_oklab,var(--bg-elevated)_80%,transparent)]">
+      <section className="border-b border-[var(--line)] bg-[color-mix(in_oklab,var(--bg-elevated)_80%,transparent)]">
         <div className="container-gb section-gb">
           <Reveal>
             <SectionHeader
@@ -116,24 +118,31 @@ export default async function HomePage() {
             />
           </Reveal>
           <Reveal delay={0.06}>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-              {featured.map((p) => (
-                <ProductCard
-                  key={String(p._id)}
-                  product={{
-                    _id: String(p._id),
-                    title: p.title,
-                    slug: p.slug,
-                    price: p.price,
-                    mrp: p.mrp,
-                    images: p.images,
-                    ratingAvg: p.ratingAvg,
-                    ratingCount: p.ratingCount,
-                    brand: p.brand as { name?: string },
-                    onSale: p.onSale,
-                  }}
-                />
-              ))}
+            <div className="grid grid-cols-2 gap-0 border-l border-t border-[var(--line)] md:grid-cols-4">
+              {featured.map((p) => {
+                const brand = p.brand as LeanBrand;
+                return (
+                  <div
+                    key={String(p._id)}
+                    className="border-b border-r border-[var(--line)] [&_a]:border-0 [&_a]:rounded-none"
+                  >
+                    <ProductCard
+                      product={{
+                        _id: String(p._id),
+                        title: p.title,
+                        slug: p.slug,
+                        price: p.price,
+                        mrp: p.mrp,
+                        images: p.images,
+                        ratingAvg: p.ratingAvg,
+                        ratingCount: p.ratingCount,
+                        brandName: brand?.name || null,
+                        onSale: p.onSale,
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </Reveal>
           {featured.length === 0 && (
@@ -144,44 +153,63 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="container-gb section-gb">
-        <Reveal>
-          <SectionHeader eyebrow="Trusted names" title="Brands we stock" />
-        </Reveal>
-        <Reveal delay={0.05}>
-          <div className="scroll-row md:flex md:flex-wrap md:gap-3 md:overflow-visible">
-            {brands.map((b) => (
-              <Link
-                key={String(b._id)}
-                href={`/brands/${b.slug}`}
-                className="rounded-full border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--fg-muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-              >
-                {b.name}
-              </Link>
-            ))}
-          </div>
-        </Reveal>
+      <section className="border-b border-[var(--line)]">
+        <div className="container-gb section-gb">
+          <Reveal>
+            <SectionHeader eyebrow="Trusted names" title="Brands we stock" />
+          </Reveal>
+          <Reveal delay={0.05}>
+            <div className="grid grid-cols-2 border-l border-t border-[var(--line)] sm:grid-cols-3 md:grid-cols-5">
+              {brands.map((b) => {
+                const slug = b.slug;
+                const logo = brandLogo(slug);
+                return (
+                  <Link
+                    key={String(b._id)}
+                    href={`/brands/${slug}`}
+                    className="flex aspect-[5/3] items-center justify-center border-b border-r border-[var(--line)] bg-[var(--bg-elevated)] px-4 transition hover:bg-[var(--bg-soft)]"
+                    title={b.name}
+                  >
+                    {logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={logo}
+                        alt={b.name}
+                        className="max-h-10 w-auto max-w-[70%] object-contain brightness-0 invert opacity-80 transition group-hover:opacity-100"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="display text-lg tracking-wide text-[var(--fg-muted)]">
+                        {b.name}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {posts.length > 0 && (
-        <section className="border-t border-[var(--line)]">
+        <section>
           <div className="container-gb section-gb">
             <Reveal>
               <SectionHeader eyebrow="Learn" title="From the blog" href="/blog" />
             </Reveal>
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid border-l border-t border-[var(--line)] md:grid-cols-2">
               {posts.map((post, i) => (
                 <Reveal key={String(post._id)} delay={i * 0.06}>
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="group block overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] transition hover:border-[color-mix(in_oklab,var(--accent)_35%,transparent)]"
+                    className="group block overflow-hidden border-b border-r border-[var(--line)] bg-[var(--bg-elevated)] transition hover:bg-[var(--bg-soft)]"
                   >
                     {post.coverImage && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={post.coverImage}
                         alt=""
-                        className="aspect-[16/9] w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+                        className="aspect-[16/9] w-full border-b border-[var(--line)] object-cover transition duration-700 group-hover:scale-[1.02]"
                         loading="lazy"
                       />
                     )}

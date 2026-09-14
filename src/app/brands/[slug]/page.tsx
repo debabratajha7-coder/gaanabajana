@@ -33,7 +33,7 @@ export default async function BrandPage({
               price: p.price,
               mrp: p.mrp,
               images: p.images,
-              brand: { name: brand.name },
+              brandName: brand.name,
               ratingAvg: p.ratingAvg,
               ratingCount: p.ratingCount,
             }}
