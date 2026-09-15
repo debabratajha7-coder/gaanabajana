@@ -493,7 +493,7 @@ async function main() {
       categories: catId ? [catId] : [],
       description: `<p>${p.title} from Gaanbajana. Built for practice rooms, home studios, and live stages. Includes manufacturer warranty and our support desk guidance.</p><ul><li>Checked and packed by our team</li><li>Secure prepaid checkout</li><li>Pan-India shipping via partner couriers</li></ul>`,
       shortDescription: `Shop ${p.title} online at Gaanbajana with fast shipping across India.`,
-      images: [img, IMAGES[(i + 1) % IMAGES.length]],
+      images: [img],
       variants: [
         {
           sku: `${slugify(p.title).slice(0, 12)}-std`,

@@ -103,27 +103,29 @@ export function ProductBuyBox({
               className="aspect-square w-full object-cover"
             />
           </div>
-          <div className="scroll-row md:grid md:grid-cols-4 md:gap-2 md:overflow-visible">
-            {gallery.map((img, i) => (
-              <button
-                key={img + i}
-                type="button"
-                onClick={() => setActiveImage(i)}
-                className={`overflow-hidden rounded-xl border transition ${
-                  activeImage === i
-                    ? "border-[var(--accent)]"
-                    : "border-[var(--line)] opacity-80 hover:opacity-100"
-                }`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={img}
-                  alt=""
-                  className="aspect-square w-20 object-cover md:w-auto"
-                />
-              </button>
-            ))}
-          </div>
+          {gallery.length > 1 && (
+            <div className="scroll-row md:grid md:grid-cols-4 md:gap-2 md:overflow-visible">
+              {gallery.map((img, i) => (
+                <button
+                  key={img + i}
+                  type="button"
+                  onClick={() => setActiveImage(i)}
+                  className={`overflow-hidden rounded-xl border transition ${
+                    activeImage === i
+                      ? "border-[var(--accent)]"
+                      : "border-[var(--line)] opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img}
+                    alt=""
+                    className="aspect-square w-20 object-cover md:w-auto"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="pb-28 lg:pb-0">
