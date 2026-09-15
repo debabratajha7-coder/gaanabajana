@@ -28,11 +28,11 @@ const brand = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: {
-    default: "Gaanbajana — Musical Instruments Online",
-    template: "%s · Gaanbajana",
+    default: "Gaanbajna — Musical Instruments Online",
+    template: "%s · Gaanbajna",
   },
   description:
-    "Buy guitars, keyboards, drums, and studio gear online in India at Gaanbajana.",
+    "Buy guitars, keyboards, drums, and studio gear online in India at Gaanbajna.",
 };
 
 export default async function RootLayout({

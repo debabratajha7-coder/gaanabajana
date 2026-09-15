@@ -22,6 +22,7 @@ import {
 import { useCart } from "@/components/providers/CartProvider";
 import { CartBadge } from "@/components/ui/CartBadge";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { brandWordmark } from "@/lib/brand";
 
 type Cat = { _id: string; name: string; slug: string; parent?: string | null };
 type Settings = { phone?: string; storeName?: string; email?: string };
@@ -80,6 +81,7 @@ export function Header({
   const parents = categories.filter((c) => !c.parent);
   const childrenOf = (id: string) =>
     categories.filter((c) => String(c.parent) === String(id));
+  const wordmark = brandWordmark(settings?.storeName);
 
   const close = () => setOpen(false);
 
@@ -124,7 +126,7 @@ export function Header({
                   className="display truncate text-lg"
                   onClick={close}
                 >
-                  gaanbajna
+                  {wordmark}
                 </Link>
                 <button
                   type="button"
@@ -408,8 +410,11 @@ export function Header({
         </button>
 
         <Link href="/" className="min-w-0 shrink">
-          <span className="display block truncate text-[1.35rem] text-[var(--fg)] sm:text-2xl md:text-[1.85rem]">
-            gaanbajna
+          <span
+            className="display block truncate text-[1.35rem] text-[var(--fg)] sm:text-2xl md:text-[1.85rem]"
+            suppressHydrationWarning
+          >
+            {wordmark}
           </span>
         </Link>
 

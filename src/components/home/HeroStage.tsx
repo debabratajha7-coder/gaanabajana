@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
+import { brandWordmark } from "@/lib/brand";
 
 type HeroStageProps = {
   image: string;
@@ -66,8 +67,9 @@ export function HeroStage({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, ease }}
             className="display text-[clamp(2.1rem,9vw,5.5rem)] leading-[0.92] tracking-[-0.045em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.55)]"
+            suppressHydrationWarning
           >
-            {storeName.toLowerCase()}
+            {brandWordmark(storeName)}
           </motion.p>
 
           <motion.h1

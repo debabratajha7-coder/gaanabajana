@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { STORE_NAME } from "@/lib/brand";
 
 type Settings = {
   storeName?: string;
@@ -18,7 +19,9 @@ export function Footer({ settings }: { settings?: Settings }) {
     <footer className="mt-auto border-t border-[var(--line)] bg-[var(--bg-elevated)]">
       <div className="container-gb grid gap-10 py-12 sm:py-16 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <p className="display text-3xl">{settings?.storeName || "Gaanbajna"}</p>
+          <p className="display text-3xl" suppressHydrationWarning>
+            {settings?.storeName || STORE_NAME}
+          </p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--fg-muted)]">
             {settings?.tagline ||
               "Musical instruments & audio gear for every stage."}
@@ -96,7 +99,7 @@ export function Footer({ settings }: { settings?: Settings }) {
         </div>
       </div>
       <div className="border-t border-[var(--line)] py-4 text-center text-[11px] tracking-wide text-[var(--fg-muted)]">
-        © {new Date().getFullYear()} Gaanbajna
+        © {new Date().getFullYear()} {STORE_NAME}
       </div>
     </footer>
   );
