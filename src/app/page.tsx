@@ -54,7 +54,7 @@ export default async function HomePage() {
       heroCtaHref: "/collections/guitars",
       heroImage:
         "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=2000&q=80",
-      storeName: "Gaanbajana",
+      storeName: "Gaanbajna",
       homeCategoriesEyebrow: "Explore",
       homeCategoriesTitle: "Shop by category",
       homeBestsellersEyebrow: "Curated",
@@ -74,7 +74,7 @@ export default async function HomePage() {
     <>
       <HeroStage
         image={settings.heroImage}
-        storeName={settings.storeName || "Gaanbajana"}
+        storeName={settings.storeName || "Gaanbajna"}
         headline={settings.heroHeadline}
         subheadline={settings.heroSubheadline}
         ctaLabel={settings.heroCtaLabel}

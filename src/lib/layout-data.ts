@@ -30,6 +30,7 @@ export async function getLayoutData() {
         tagline: settings.tagline,
         phone: settings.phone,
         email: settings.email,
+        address: settings.address,
         heroHeadline: settings.heroHeadline,
         heroSubheadline: settings.heroSubheadline,
         heroCtaLabel: settings.heroCtaLabel,
@@ -49,10 +50,11 @@ export async function getLayoutData() {
     return {
       categories: [],
       settings: {
-        storeName: "Gaanbajana",
+        storeName: "Gaanbajna",
         tagline: "Musical instruments & audio gear for every stage",
-        phone: "+91-98765-43210",
+        phone: "+91 9563754563, +91 7679586321",
         email: "hello@gaanbajana.com",
+        address: "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
         heroHeadline: "Find the instrument that finds your sound",
         heroSubheadline:
           "Guitars, keys, drums, and studio gear — curated for Indian musicians.",

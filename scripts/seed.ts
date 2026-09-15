@@ -70,12 +70,12 @@ async function main() {
 
   await SiteSettings.deleteMany({});
   await SiteSettings.create({
-    storeName: "Gaanbajana",
+    storeName: "Gaanbajna",
     tagline: "Musical instruments & audio gear for every stage",
-    phone: "+91-98765-43210",
+    phone: "+91 9563754563, +91 7679586321",
     email: "hello@gaanbajana.com",
-    whatsapp: "+919876543210",
-    address: "Mumbai, India",
+    whatsapp: "+919563754563",
+    address: "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
     freeShippingThreshold: 1000,
     shippingFee: 99,
     heroHeadline: "Find the instrument that finds your sound",
@@ -561,7 +561,7 @@ async function main() {
     {
       key: "contact",
       title: "Contact Us",
-      body: `<p>Email hello@gaanbajana.com or call +91-98765-43210. We typically reply within one business day.</p>`,
+      body: `<p>Call +91 9563754563 / +91 7679586321 or email hello@gaanbajana.com. Visit us at M9VC F4C Medical More, Kawakhari, West Bengal, 734011. We typically reply within one business day.</p>`,
     },
   ];
 

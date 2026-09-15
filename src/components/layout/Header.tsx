@@ -124,7 +124,7 @@ export function Header({
                   className="display truncate text-lg"
                   onClick={close}
                 >
-                  {settings?.storeName?.toLowerCase() || "gaanbajana"}
+                  gaanbajna
                 </Link>
                 <button
                   type="button"
@@ -375,7 +375,9 @@ export function Header({
     >
       <div className="hidden border-b border-[var(--line)] sm:block">
         <div className="container-gb flex items-center justify-between gap-4 py-2 text-[11px] tracking-wide text-[var(--fg-muted)]">
-          <p className="truncate">{settings?.phone || "+91-98765-43210"}</p>
+          <p className="truncate">
+            {settings?.phone || "+91 9563754563, +91 7679586321"}
+          </p>
           <div className="flex gap-5">
             <Link href="/track-order" className="transition hover:text-[var(--accent)]">
               Track
@@ -407,7 +409,7 @@ export function Header({
 
         <Link href="/" className="min-w-0 shrink">
           <span className="display block truncate text-[1.35rem] text-[var(--fg)] sm:text-2xl md:text-[1.85rem]">
-            gaanbajana
+            gaanbajna
           </span>
         </Link>
 

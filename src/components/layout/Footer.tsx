@@ -5,23 +5,46 @@ type Settings = {
   phone?: string;
   email?: string;
   tagline?: string;
+  address?: string;
 };
 
 export function Footer({ settings }: { settings?: Settings }) {
+  const phones = (settings?.phone || "")
+    .split(/[,|·•]/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   return (
     <footer className="mt-auto border-t border-[var(--line)] bg-[var(--bg-elevated)]">
       <div className="container-gb grid gap-10 py-12 sm:py-16 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <p className="display text-3xl">{settings?.storeName || "Gaanbajana"}</p>
+          <p className="display text-3xl">{settings?.storeName || "Gaanbajna"}</p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--fg-muted)]">
             {settings?.tagline ||
               "Musical instruments & audio gear for every stage."}
           </p>
-          <p className="mt-5 text-sm text-[var(--fg-muted)]">
-            {settings?.phone}
-            <br />
-            {settings?.email}
-          </p>
+          <div className="mt-5 space-y-1 text-sm text-[var(--fg-muted)]">
+            {phones.map((p) => (
+              <p key={p}>
+                <a href={`tel:${p.replace(/\s+/g, "")}`} className="hover:text-[var(--accent)]">
+                  {p}
+                </a>
+              </p>
+            ))}
+            {settings?.address && (
+              <p className="max-w-xs leading-relaxed">{settings.address}</p>
+            )}
+            {settings?.email && (
+              <p>
+                <a
+                  href={`mailto:${settings.email}`}
+                  className="hover:text-[var(--accent)]"
+                >
+                  {settings.email}
+                </a>
+              </p>
+            )}
+          </div>
         </div>
 
         <div>
@@ -73,7 +96,7 @@ export function Footer({ settings }: { settings?: Settings }) {
         </div>
       </div>
       <div className="border-t border-[var(--line)] py-4 text-center text-[11px] tracking-wide text-[var(--fg-muted)]">
-        © {new Date().getFullYear()} Gaanbajana
+        © {new Date().getFullYear()} Gaanbajna
       </div>
     </footer>
   );

@@ -34,12 +34,16 @@ export interface ISiteSettings {
 
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
-    storeName: { type: String, default: "Gaanbajana" },
+    storeName: { type: String, default: "Gaanbajna" },
     tagline: { type: String, default: "Musical instruments & audio gear for every stage" },
-    phone: { type: String, default: "+91-98765-43210" },
+    phone: { type: String, default: "+91 9563754563, +91 7679586321" },
     email: { type: String, default: "hello@gaanbajana.com" },
     whatsapp: String,
-    address: String,
+    address: {
+      type: String,
+      default:
+        "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
+    },
     freeShippingThreshold: { type: Number, default: 1000 },
     shippingFee: { type: Number, default: 99 },
     heroHeadline: {
