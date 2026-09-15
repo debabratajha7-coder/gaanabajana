@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroStage } from "@/components/home/HeroStage";
+import { BrandLogoGrid } from "@/components/home/BrandLogoGrid";
 import { categoryImage } from "@/lib/catalog-media";
 import { filterPublicCategories } from "@/lib/public-catalog";
 
@@ -20,21 +21,30 @@ export default async function HomePage() {
   let settings;
   let featured: Awaited<ReturnType<typeof Product.find>> = [];
   let parents: Awaited<ReturnType<typeof Category.find>> = [];
-  let brands: Awaited<ReturnType<typeof Brand.find>> = [];
+  let brands: { _id: string; name: string; slug: string; logo?: string }[] = [];
   let posts: Awaited<ReturnType<typeof BlogPost.find>> = [];
 
   try {
     await connectDB();
     settings = await getSiteSettings();
-    [featured, parents, brands, posts] = await Promise.all([
+    const [featuredDocs, parentDocs, brandDocs, postDocs] = await Promise.all([
       Product.find({ isActive: true, featured: true })
         .populate("brand", "name slug")
         .limit(8)
         .lean(),
       Category.find({ isActive: true, parent: null }).sort({ sortOrder: 1 }).lean(),
-      Brand.find({ isActive: true }).limit(10).lean(),
+      Brand.find({ isActive: true }).sort({ name: 1 }).limit(24).lean(),
       BlogPost.find({ published: true }).sort({ publishedAt: -1 }).limit(2).lean(),
     ]);
+    featured = featuredDocs;
+    parents = parentDocs;
+    posts = postDocs;
+    brands = brandDocs.map((b) => ({
+      _id: String(b._id),
+      name: b.name,
+      slug: b.slug,
+      logo: b.logo || undefined,
+    }));
   } catch {
     settings = {
       heroHeadline: "Find the instrument that finds your sound",
@@ -159,23 +169,7 @@ export default async function HomePage() {
             />
           </Reveal>
           <Reveal delay={0.05}>
-            <div className="grid grid-cols-2 border-l border-t border-[var(--line)] sm:grid-cols-3 md:grid-cols-5">
-              {brands.map((b) => {
-                const slug = b.slug;
-                return (
-                  <Link
-                    key={String(b._id)}
-                    href={`/brands/${slug}`}
-                    className="group flex aspect-[5/3] items-center justify-center border-b border-r border-[var(--line)] bg-[var(--bg-elevated)] px-4 transition hover:bg-[var(--bg-soft)]"
-                    title={b.name}
-                  >
-                    <span className="brand-mark text-center text-[clamp(1.15rem,2.4vw,1.65rem)] text-[var(--fg-muted)] transition group-hover:text-[var(--fg)]">
-                      {b.name}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+            <BrandLogoGrid brands={brands} />
           </Reveal>
         </div>
       </section>

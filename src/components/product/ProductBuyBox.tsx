@@ -194,12 +194,20 @@ export function ProductBuyBox({
               max={variant.stock}
               value={qty}
               onChange={(e) => setQty(Number(e.target.value) || 1)}
-              className="input w-24"
+              className="input w-24 shrink-0"
             />
-            <button type="button" className="btn btn-primary" onClick={addToCart}>
+            <button
+              type="button"
+              className="btn btn-primary shrink-0 whitespace-nowrap px-6"
+              onClick={addToCart}
+            >
               Add to cart
             </button>
-            <button type="button" className="btn btn-ghost" onClick={toggleWishlist}>
+            <button
+              type="button"
+              className="btn btn-ghost shrink-0 whitespace-nowrap"
+              onClick={toggleWishlist}
+            >
               <Heart className="h-4 w-4" /> Save
             </button>
           </div>
@@ -242,8 +250,12 @@ export function ProductBuyBox({
           >
             <Heart className="h-4 w-4" />
           </button>
-          <button type="button" className="btn btn-primary flex-1" onClick={addToCart}>
-            Add · {formatINR(variant.price)}
+          <button
+            type="button"
+            className="btn btn-primary min-w-0 flex-1 whitespace-nowrap"
+            onClick={addToCart}
+          >
+            Add to cart · {formatINR(variant.price)}
           </button>
         </div>
       </div>

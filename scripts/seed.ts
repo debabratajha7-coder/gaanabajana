@@ -173,14 +173,21 @@ async function main() {
 
   const brandNames = [
     "Fender",
+    "PRS",
     "Yamaha",
     "Ibanez",
     "Roland",
+    "Vault",
+    "Tama",
+    "Cort",
+    "Mackie",
+    "Kala",
+    "Gibson",
+    "Alesis",
     "Casio",
     "Pearl",
     "Shure",
     "Focusrite",
-    "Vault",
     "Henrix",
   ];
   const brandMap = new Map<string, string>();

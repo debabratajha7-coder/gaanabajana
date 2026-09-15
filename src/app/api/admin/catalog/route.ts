@@ -76,7 +76,15 @@ export async function PUT(req: Request) {
       return NextResponse.json({ category });
     }
     if (body.type === "brand") {
-      const brand = await Brand.findByIdAndUpdate(body.id, body.data, {
+      const data = z
+        .object({
+          name: z.string().min(1).optional(),
+          logo: z.string().optional(),
+          description: z.string().optional(),
+          isActive: z.boolean().optional(),
+        })
+        .parse(body.data ?? {});
+      const brand = await Brand.findByIdAndUpdate(body.id, data, {
         returnDocument: "after",
       });
       return NextResponse.json({ brand });
