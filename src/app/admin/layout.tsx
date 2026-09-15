@@ -44,12 +44,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
+        if (cancelled) return;
         if (d.user?.role !== "admin") router.replace("/login");
         else setOk(true);
+      })
+      .catch(() => {
+        if (!cancelled) router.replace("/login");
       });
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   useEffect(() => {
