@@ -16,7 +16,7 @@ export function Footer({ settings }: { settings?: Settings }) {
     .filter(Boolean);
 
   return (
-    <footer className="mt-auto border-t border-[var(--line)] bg-[var(--bg-elevated)]">
+    <footer className="site-footer mt-auto border-t border-[var(--line)]">
       <div className="container-gb grid gap-10 py-12 sm:py-16 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <p className="display text-3xl" suppressHydrationWarning>

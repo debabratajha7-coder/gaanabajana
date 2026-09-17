@@ -118,7 +118,7 @@ export function Header({
               animate={reduce ? { opacity: 1 } : { x: 0 }}
               exit={reduce ? { opacity: 0 } : { x: "-100%" }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-y-0 left-0 flex w-[min(100vw-3.25rem,19.5rem)] max-w-full flex-col border-r border-[var(--line)] bg-[var(--bg)] shadow-[8px_0_32px_rgba(0,0,0,0.35)]"
+              className="absolute inset-y-0 left-0 flex w-[min(100vw-3.25rem,19.5rem)] max-w-full flex-col border-r border-[var(--line)] bg-white shadow-[8px_0_32px_rgba(0,0,0,0.12)]"
             >
               <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3.5 py-3">
                 <Link
@@ -377,25 +377,25 @@ export function Header({
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 border-b border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_86%,transparent)] backdrop-blur-xl"
+      className="sticky top-0 z-50 border-b border-[var(--line)] bg-white"
     >
-      <div className="hidden border-b border-[var(--line)] sm:block">
-        <div className="container-gb flex items-center justify-between gap-4 py-2 text-[11px] tracking-wide text-[var(--fg-muted)]">
+      <div className="hidden bg-[#1a1a1a] sm:block">
+        <div className="container-gb flex items-center justify-between gap-4 py-1.5 text-[11px] tracking-wide text-white/80">
           <p className="truncate">
-            {settings?.phone || "+91 9563754563, +91 7679586321"}
+            Call us: {settings?.phone || "+91 9563754563"}
           </p>
           <div className="flex gap-5">
-            <Link href="/track-order" className="transition hover:text-[var(--accent)]">
-              Track
+            <Link href="/track-order" className="transition hover:text-white">
+              Track your order
             </Link>
-            <Link href="/deals" className="transition hover:text-[var(--accent)]">
+            <Link href="/deals" className="transition hover:text-white">
               Deals
             </Link>
             <Link
               href="/contact"
-              className="hidden transition hover:text-[var(--accent)] md:inline"
+              className="hidden transition hover:text-white md:inline"
             >
-              Help
+              Connect
             </Link>
           </div>
         </div>
@@ -418,20 +418,20 @@ export function Header({
           className="min-w-0 max-w-[min(52vw,14rem)] shrink sm:max-w-none md:shrink-0"
         >
           <span
-            className="display block whitespace-nowrap text-[clamp(1rem,4.6vw,1.35rem)] leading-none tracking-[-0.03em] text-[var(--fg)] sm:text-2xl sm:tracking-normal md:text-[1.85rem]"
+            className="display block whitespace-nowrap text-[clamp(1rem,4.6vw,1.35rem)] leading-none tracking-[-0.03em] text-[#111] sm:text-2xl sm:tracking-normal md:text-[1.85rem]"
             suppressHydrationWarning
           >
             {wordmark}
           </span>
         </Link>
 
-        <form onSubmit={goSearch} className="ml-auto hidden max-w-md flex-1 md:flex">
+        <form onSubmit={goSearch} className="ml-auto hidden max-w-xl flex-1 md:flex">
           <div className="search-group">
             <input
               name="q"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search instruments"
+              placeholder="Search for instruments…"
               className="input search-group-input px-4"
               aria-label="Search instruments"
             />
@@ -460,19 +460,17 @@ export function Header({
       </div>
 
       <nav className="container-gb hidden border-t border-[var(--line)] lg:block">
-        <div className="flex flex-wrap items-center gap-x-1 gap-y-0 py-0">
-          {parents.slice(0, 8).map((p, i) => (
+        <div className="flex flex-wrap items-center gap-x-0 gap-y-0 py-0">
+          {parents.slice(0, 8).map((p) => (
             <div key={p._id} className="group relative">
               <Link
                 href={`/collections/${p.slug}`}
-                className={`inline-flex items-center px-3.5 py-3 text-[13px] text-[var(--fg-muted)] transition hover:text-[var(--fg)] ${
-                  i > 0 ? "border-l border-[var(--line)]" : ""
-                }`}
+                className="inline-flex items-center px-3.5 py-3 text-[13px] font-medium text-[#222] transition hover:text-[var(--accent)]"
               >
                 {p.name}
               </Link>
               {childrenOf(p._id).length > 0 && (
-                <div className="invisible absolute left-0 top-full z-40 min-w-[220px] border border-[var(--line)] bg-[var(--bg-elevated)] p-1 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
+                <div className="invisible absolute left-0 top-full z-40 min-w-[220px] border border-[var(--line)] bg-white p-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
                   {childrenOf(p._id).map((c) => (
                     <Link
                       key={c._id}
@@ -486,6 +484,12 @@ export function Header({
               )}
             </div>
           ))}
+          <Link
+            href="/deals"
+            className="inline-flex items-center px-3.5 py-3 text-[13px] font-semibold text-[var(--accent)] transition hover:opacity-80"
+          >
+            Deals
+          </Link>
         </div>
       </nav>
 

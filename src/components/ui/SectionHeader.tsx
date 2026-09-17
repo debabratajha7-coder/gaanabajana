@@ -5,12 +5,36 @@ export function SectionHeader({
   title,
   href,
   linkLabel = "View all",
+  centered = false,
 }: {
   eyebrow?: string;
   title: string;
   href?: string;
   linkLabel?: string;
+  centered?: boolean;
 }) {
+  if (centered) {
+    return (
+      <div className="mb-8 sm:mb-10">
+        <div className="section-title-line">
+          <h2 className="text-xl font-bold tracking-tight text-[var(--fg)] sm:text-2xl">
+            {title}
+          </h2>
+        </div>
+        {href && (
+          <div className="mt-3 flex justify-end">
+            <Link
+              href={href}
+              className="text-sm font-medium underline underline-offset-2 text-[var(--fg-muted)] hover:text-[var(--accent)]"
+            >
+              {linkLabel}
+            </Link>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mb-7 flex items-end justify-between gap-4 sm:mb-9">
       <div className="min-w-0">

@@ -1,23 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  /* Strict black & white storefront */
-  --bg: #050505;
-  --bg-elevated: #111111;
-  --bg-soft: #1a1a1a;
-  --fg: #f5f5f5;
-  --fg-muted: #9a9a9a;
-  --accent: #ffffff;
-  --accent-deep: #d4d4d4;
-  --glow: #ffffff;
-  --line: rgba(255, 255, 255, 0.12);
-  --line-strong: rgba(255, 255, 255, 0.22);
-  --danger: #e35d5d;
-  --success: #5dba7a;
+  /* Bajaao-inspired white storefront */
+  --bg: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-soft: #f5f5f5;
+  --fg: #111111;
+  --fg-muted: #666666;
+  --accent: #c8102e;
+  --accent-deep: #8f0b20;
+  --glow: #c8102e;
+  --line: rgba(0, 0, 0, 0.1);
+  --line-strong: rgba(0, 0, 0, 0.18);
+  --danger: #c43c3c;
+  --success: #2f8f55;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --radius: 0.7rem;
-  --radius-control: 0.45rem;
-  --space-section: clamp(3.5rem, 8vw, 6.5rem);
+  --radius: 0.5rem;
+  --radius-control: 0.4rem;
+  --space-section: clamp(3rem, 6vw, 5rem);
+  --footer-bg: #111111;
+  --footer-fg: #f5f5f5;
+  --footer-muted: #9a9a9a;
 }
 
 @theme inline {
@@ -58,17 +61,17 @@ body[data-menu-open] .mobile-bottom-nav {
   pointer-events: none;
 }
 
-/* Light admin workspace — easier to read & type than the dark storefront */
+/* Light admin workspace — white panels matching storefront */
 .admin-shell {
-  --bg: #f0f0f0;
+  --bg: #f4f4f4;
   --bg-elevated: #ffffff;
-  --bg-soft: #e8e8e8;
+  --bg-soft: #eeeeee;
   --fg: #111111;
   --fg-muted: #666666;
-  --accent: #111111;
-  --accent-deep: #000000;
-  --line: rgba(0, 0, 0, 0.12);
-  --line-strong: rgba(0, 0, 0, 0.22);
+  --accent: #c8102e;
+  --accent-deep: #8f0b20;
+  --line: rgba(0, 0, 0, 0.1);
+  --line-strong: rgba(0, 0, 0, 0.18);
   --danger: #c43c3c;
   --success: #2f8f55;
   background: var(--bg);
@@ -77,12 +80,9 @@ body[data-menu-open] .mobile-bottom-nav {
 
 .admin-shell .btn-primary {
   background: #111111;
-  color: #f5f5f5;
+  color: #ffffff;
   border-color: #111111;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.12) inset,
-    0 3px 0 #000000,
-    0 5px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .admin-shell .btn-primary:hover {
@@ -90,25 +90,19 @@ body[data-menu-open] .mobile-bottom-nav {
 }
 
 .admin-shell .btn-primary:active {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.08) inset,
-    0 0 0 #000000,
-    0 1px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.12);
 }
 
 .admin-shell .btn-ghost {
   background: #fff;
   color: var(--fg);
   border-color: var(--line-strong);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 2px 0 rgba(0, 0, 0, 0.12),
-    0 3px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
 }
 
 .admin-shell .btn-ghost:hover {
-  border-color: #000;
-  color: #000;
+  border-color: #111;
+  color: #111;
   background: #f5f5f5;
 }
 
@@ -178,7 +172,7 @@ a {
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #b0b0b0;
+  color: var(--fg-muted);
 }
 
 .display {
@@ -243,50 +237,37 @@ a {
 }
 
 .btn-primary {
-  background: #ffffff;
-  color: #050505;
-  border-color: #e5e5e5;
-  /* Raised keycap ledge */
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.55) inset,
-    0 3px 0 #8a8a8a,
-    0 5px 14px rgba(0, 0, 0, 0.45);
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover {
-  background: #ebebeb;
+  background: #2a2a2a;
 }
 
 .btn-primary:active {
-  transform: translateY(3px);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 0 0 #8a8a8a,
-    0 1px 4px rgba(0, 0, 0, 0.35);
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .btn-ghost {
   border-color: var(--line-strong);
-  background: color-mix(in oklab, var(--bg-elevated) 80%, transparent);
+  background: #ffffff;
   color: var(--fg);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 3px 0 rgba(0, 0, 0, 0.45),
-    0 5px 12px rgba(0, 0, 0, 0.28);
+  box-shadow: none;
 }
 
 .btn-ghost:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 8%, var(--bg-elevated));
+  border-color: var(--fg);
+  color: var(--fg);
+  background: var(--bg-soft);
 }
 
 .btn-ghost:active {
-  transform: translateY(3px);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 0 0 rgba(0, 0, 0, 0.45),
-    0 1px 4px rgba(0, 0, 0, 0.25);
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 /* @layer so utilities like lg:hidden can override display */
@@ -324,7 +305,7 @@ a {
 .input {
   width: 100%;
   border: 1px solid var(--line);
-  background: color-mix(in oklab, var(--bg-elevated) 88%, transparent);
+  background: #ffffff;
   color: var(--fg);
   border-radius: var(--radius-control);
   padding: 0.75rem 0.95rem;
@@ -335,8 +316,8 @@ a {
 }
 
 .input:focus {
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
 }
 
 .field-label {
@@ -355,15 +336,16 @@ a {
   width: 100%;
   align-items: stretch;
   border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  background: color-mix(in oklab, var(--bg-elevated) 88%, transparent);
+  border-radius: 999px;
+  background: var(--bg-soft);
   overflow: hidden;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .search-group:focus-within {
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+  background: #ffffff;
 }
 
 .search-group-input {
@@ -383,34 +365,25 @@ a {
   flex-shrink: 0;
   border: 0;
   border-left: 1px solid var(--line);
-  background: #ffffff;
-  color: #050505;
+  background: transparent;
+  color: var(--fg);
   cursor: pointer;
   transform: translateY(0);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.55) inset,
-    0 2px 0 #8a8a8a;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    transform 70ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
-    box-shadow 70ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .search-group-btn:hover {
-  background: #ebebeb;
-  color: #050505;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--fg);
 }
 
 .search-group-btn:active {
-  transform: translateY(2px);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 0 0 #8a8a8a;
+  transform: none;
+  box-shadow: none;
 }
 
 .surface {
-  background: color-mix(in oklab, var(--bg-elevated) 92%, transparent);
+  background: #ffffff;
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
@@ -469,7 +442,7 @@ a {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(247, 241, 232, 0.06),
+    rgba(0, 0, 0, 0.04),
     transparent
   );
   animation: shimmer 1.35s ease-in-out infinite;
@@ -511,10 +484,44 @@ a {
   padding: 0.85rem 1rem;
   border-radius: 999px;
   border: 1px solid var(--line-strong);
-  background: color-mix(in oklab, var(--bg-elevated) 92%, black);
+  background: #ffffff;
   backdrop-filter: blur(16px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   font-size: 0.9rem;
+}
+
+/* Dark footer island (Bajaao-style contrast) */
+.site-footer {
+  --bg: var(--footer-bg);
+  --bg-elevated: #1a1a1a;
+  --bg-soft: #222222;
+  --fg: var(--footer-fg);
+  --fg-muted: var(--footer-muted);
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --accent: #ffffff;
+  background: var(--footer-bg);
+  color: var(--footer-fg);
+}
+
+/* Centered section title with hairline (Bajaao) */
+.section-title-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.section-title-line::before,
+.section-title-line::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.section-title-line > * {
+  flex-shrink: 0;
 }
 
 .toast-success {

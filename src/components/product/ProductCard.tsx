@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import { formatINR, discountPercent, cn } from "@/lib/utils";
+import { formatINR, discountPercent } from "@/lib/utils";
 
 export type ProductCardData = {
   _id: string;
@@ -23,7 +23,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
     <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
       <Link
         href={`/products/${product.slug}`}
-        className="group block overflow-hidden border border-[var(--line)] bg-[var(--bg-elevated)] transition duration-300 hover:border-[var(--line-strong)]"
+        className="group block overflow-hidden border border-[var(--line)] bg-white transition duration-300 hover:border-[var(--line-strong)] hover:shadow-sm"
       >
         <div className="relative aspect-[4/5] overflow-hidden border-b border-[var(--line)] bg-[var(--bg-soft)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -34,8 +34,15 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             loading="lazy"
           />
           {save > 0 && (
-            <span className="absolute left-0 top-0 border-b border-r border-[var(--line)] bg-[var(--accent)] px-2.5 py-1 text-[10px] font-semibold text-[#1a120a] sm:text-xs">
-              −{save}%
+            <span className="absolute left-2 top-2 rounded bg-[#1d4ed8] px-2 py-0.5 text-[10px] font-semibold text-white sm:text-xs">
+              Save {save}%
+            </span>
+          )}
+          {!!product.ratingCount && (
+            <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded bg-white/95 px-1.5 py-0.5 text-[10px] text-[var(--fg)] shadow-sm sm:text-xs">
+              <span className="text-amber-500">★</span>
+              {product.ratingAvg?.toFixed(1)}
+              <span className="text-[var(--fg-muted)]">({product.ratingCount})</span>
             </span>
           )}
         </div>
@@ -45,7 +52,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               {product.brandName}
             </p>
           )}
-          <h3 className="line-clamp-2 min-h-[2.5em] font-[family-name:var(--font-display)] text-[0.95rem] leading-snug sm:text-[1.05rem]">
+          <h3 className="line-clamp-2 min-h-[2.5em] text-[0.9rem] font-semibold leading-snug text-[var(--fg)] sm:text-[0.95rem]">
             {product.title}
           </h3>
           <div className="flex flex-wrap items-baseline gap-1.5 pt-0.5">
@@ -58,11 +65,6 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               </span>
             )}
           </div>
-          {!!product.ratingCount && (
-            <p className={cn("text-[10px] text-[var(--fg-muted)] sm:text-xs")}>
-              ★ {product.ratingAvg?.toFixed(1)} · {product.ratingCount}
-            </p>
-          )}
         </div>
       </Link>
     </motion.div>

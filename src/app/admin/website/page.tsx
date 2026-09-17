@@ -8,6 +8,8 @@ import { filterPublicCategories } from "@/lib/public-catalog";
 type Settings = Record<string, string | number>;
 type Page = { key: string; title: string; body: string };
 type Cat = { _id: string; name: string; slug: string; parent?: string | null; image?: string };
+type WhyItem = { title: string; body: string };
+type StatItem = { value: string; label: string };
 
 const PAGE_LABELS: Record<string, string> = {
   about: "About us",
@@ -56,6 +58,19 @@ export default function AdminSitePage() {
   const [activeKey, setActiveKey] = useState("about");
   const [pageForm, setPageForm] = useState({ title: "", body: "" });
   const [msg, setMsg] = useState("");
+  const [whyItems, setWhyItems] = useState<WhyItem[]>([
+    { title: "", body: "" },
+    { title: "", body: "" },
+    { title: "", body: "" },
+    { title: "", body: "" },
+    { title: "", body: "" },
+  ]);
+  const [stats, setStats] = useState<StatItem[]>([
+    { value: "", label: "" },
+    { value: "", label: "" },
+    { value: "", label: "" },
+    { value: "", label: "" },
+  ]);
   const [section, setSection] = useState<
     "store" | "banner" | "home" | "shipping" | "pages" | "categories"
   >("store");
@@ -74,6 +89,14 @@ export default function AdminSitePage() {
         youtube: social.youtube || "",
         twitter: social.twitter || "",
       });
+      const why = (raw.homeWhyItems || []) as WhyItem[];
+      setWhyItems(
+        Array.from({ length: 5 }, (_, i) => why[i] || { title: "", body: "" })
+      );
+      const st = (raw.homeStats || []) as StatItem[];
+      setStats(
+        Array.from({ length: 4 }, (_, i) => st[i] || { value: "", label: "" })
+      );
       setPages(cms.pages || []);
       setCategories(catalog.categories || []);
       const page =
@@ -126,6 +149,9 @@ export default function AdminSitePage() {
           homeBrandsTitle: settings.homeBrandsTitle,
           homeBlogEyebrow: settings.homeBlogEyebrow,
           homeBlogTitle: settings.homeBlogTitle,
+          homeWhyTitle: settings.homeWhyTitle,
+          homeWhyItems: whyItems.filter((i) => i.title.trim()),
+          homeStats: stats.filter((s) => s.value.trim() && s.label.trim()),
           freeShippingThreshold: Number(settings.freeShippingThreshold || 1000),
           shippingFee: Number(settings.shippingFee || 99),
           pickupLocationName: settings.pickupLocationName,
@@ -183,7 +209,7 @@ export default function AdminSitePage() {
   const tabs = [
     { id: "store" as const, label: "1. Store info" },
     { id: "banner" as const, label: "2. Home banner" },
-    { id: "home" as const, label: "3. Home section titles" },
+    { id: "home" as const, label: "3. Home sections" },
     { id: "categories" as const, label: "4. Shop by category" },
     { id: "shipping" as const, label: "5. Shipping & social" },
     { id: "pages" as const, label: "6. Site pages" },
@@ -307,63 +333,102 @@ export default function AdminSitePage() {
       )}
 
       {section === "home" && (
-        <form onSubmit={saveSettings} className="mt-8 space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
-          <h2 className="display text-2xl">Home section titles</h2>
+        <form onSubmit={saveSettings} className="mt-8 space-y-6 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
+          <h2 className="display text-2xl">Home sections</h2>
           <p className="text-sm text-[var(--fg-muted)]">
-            These are the headings above each block on the home page.
+            Titles and content for the white homepage blocks.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
-              id="homeCategoriesEyebrow"
-              label="Categories — small label"
-              value={String(settings.homeCategoriesEyebrow ?? "Explore")}
-              onChange={(v) => set("homeCategoriesEyebrow", v)}
-            />
-            <Field
               id="homeCategoriesTitle"
               label="Categories — title"
-              value={String(settings.homeCategoriesTitle ?? "Shop by category")}
+              value={String(settings.homeCategoriesTitle ?? "Explore By Category")}
               onChange={(v) => set("homeCategoriesTitle", v)}
-            />
-            <Field
-              id="homeBestsellersEyebrow"
-              label="Bestsellers — small label"
-              value={String(settings.homeBestsellersEyebrow ?? "Curated")}
-              onChange={(v) => set("homeBestsellersEyebrow", v)}
             />
             <Field
               id="homeBestsellersTitle"
               label="Bestsellers — title"
-              value={String(settings.homeBestsellersTitle ?? "Bestsellers")}
+              value={String(settings.homeBestsellersTitle ?? "Best Sellers")}
               onChange={(v) => set("homeBestsellersTitle", v)}
-            />
-            <Field
-              id="homeBrandsEyebrow"
-              label="Brands — small label"
-              value={String(settings.homeBrandsEyebrow ?? "Trusted names")}
-              onChange={(v) => set("homeBrandsEyebrow", v)}
             />
             <Field
               id="homeBrandsTitle"
               label="Brands — title"
-              value={String(settings.homeBrandsTitle ?? "Brands we stock")}
+              value={String(settings.homeBrandsTitle ?? "Top Brands")}
               onChange={(v) => set("homeBrandsTitle", v)}
-            />
-            <Field
-              id="homeBlogEyebrow"
-              label="Blog — small label"
-              value={String(settings.homeBlogEyebrow ?? "Learn")}
-              onChange={(v) => set("homeBlogEyebrow", v)}
             />
             <Field
               id="homeBlogTitle"
               label="Blog — title"
-              value={String(settings.homeBlogTitle ?? "From the blog")}
+              value={String(settings.homeBlogTitle ?? "Latest Stories")}
               onChange={(v) => set("homeBlogTitle", v)}
             />
+            <Field
+              id="homeWhyTitle"
+              label="Why us — title"
+              value={String(settings.homeWhyTitle ?? "Why Gaana Bajana")}
+              onChange={(v) => set("homeWhyTitle", v)}
+            />
           </div>
+
+          <div className="space-y-3 border-t border-[var(--line)] pt-5">
+            <h3 className="font-semibold">Why Gaana Bajana (5 cards)</h3>
+            {whyItems.map((item, i) => (
+              <div key={i} className="grid gap-2 sm:grid-cols-2">
+                <input
+                  className="input"
+                  placeholder={`Benefit ${i + 1} title`}
+                  value={item.title}
+                  onChange={(e) => {
+                    const next = [...whyItems];
+                    next[i] = { ...next[i], title: e.target.value };
+                    setWhyItems(next);
+                  }}
+                />
+                <input
+                  className="input"
+                  placeholder="Short supporting line"
+                  value={item.body}
+                  onChange={(e) => {
+                    const next = [...whyItems];
+                    next[i] = { ...next[i], body: e.target.value };
+                    setWhyItems(next);
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-3 border-t border-[var(--line)] pt-5">
+            <h3 className="font-semibold">Stats strip (4 items)</h3>
+            {stats.map((s, i) => (
+              <div key={i} className="grid gap-2 sm:grid-cols-2">
+                <input
+                  className="input"
+                  placeholder="Value (e.g. 10k+)"
+                  value={s.value}
+                  onChange={(e) => {
+                    const next = [...stats];
+                    next[i] = { ...next[i], value: e.target.value };
+                    setStats(next);
+                  }}
+                />
+                <input
+                  className="input"
+                  placeholder="Label (e.g. Products)"
+                  value={s.label}
+                  onChange={(e) => {
+                    const next = [...stats];
+                    next[i] = { ...next[i], label: e.target.value };
+                    setStats(next);
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
           <button className="btn btn-primary" type="submit">
-            Save section titles
+            Save home sections
           </button>
         </form>
       )}

@@ -7,7 +7,7 @@ export type BrandTile = {
   logo?: string | null;
 };
 
-/** White-tile logo panel for the home “Brands we stock” section */
+/** White tiles with strong black borders (Bajaao-style) */
 export function BrandLogoGrid({ brands }: { brands: BrandTile[] }) {
   if (!brands.length) {
     return (
@@ -18,12 +18,12 @@ export function BrandLogoGrid({ brands }: { brands: BrandTile[] }) {
   }
 
   return (
-    <div className="grid grid-cols-2 border-2 border-black bg-black sm:grid-cols-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-0 border-2 border-black sm:grid-cols-3 md:grid-cols-4">
       {brands.map((b) => (
         <Link
           key={b._id}
           href={`/brands/${b.slug}`}
-          className="flex aspect-[5/3] items-center justify-center border border-black bg-white px-4 transition hover:bg-neutral-100 sm:px-6"
+          className="flex aspect-[5/3] items-center justify-center border border-black bg-white px-4 transition hover:bg-neutral-50 sm:px-6"
           title={b.name}
           aria-label={b.name}
         >

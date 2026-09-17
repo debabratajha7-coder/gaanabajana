@@ -154,8 +154,8 @@ export function ProductBuyBox({
               </span>
             )}
             {save > 0 && (
-              <span className="rounded-full bg-[var(--accent)] px-2 py-0.5 text-xs font-semibold text-[#1a120a]">
-                −{save}%
+              <span className="rounded bg-[#1d4ed8] px-2 py-0.5 text-xs font-semibold text-white">
+                Save {save}%
               </span>
             )}
           </div>

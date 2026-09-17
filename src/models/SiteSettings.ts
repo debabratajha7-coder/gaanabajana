@@ -1,5 +1,8 @@
 import { Schema, models, model, Types } from "mongoose";
 
+export type WhyItem = { title: string; body: string };
+export type StatItem = { value: string; label: string };
+
 export interface ISiteSettings {
   _id: Types.ObjectId;
   storeName: string;
@@ -23,6 +26,9 @@ export interface ISiteSettings {
   homeBrandsTitle: string;
   homeBlogEyebrow: string;
   homeBlogTitle: string;
+  homeWhyTitle: string;
+  homeWhyItems: WhyItem[];
+  homeStats: StatItem[];
   social: {
     facebook?: string;
     instagram?: string;
@@ -32,10 +38,28 @@ export interface ISiteSettings {
   pickupLocationName: string;
 }
 
+const DEFAULT_WHY: WhyItem[] = [
+  { title: "Fast, free shipping", body: "On most products across India" },
+  { title: "Expert support", body: "Got a question? We’re here to help" },
+  { title: "Manufacturer warranty", body: "So you can focus on the music" },
+  { title: "Secure prepaid checkout", body: "Safe payments every time" },
+  { title: "Curated gear", body: "Instruments checked before they ship" },
+];
+
+const DEFAULT_STATS: StatItem[] = [
+  { value: "10k+", label: "Products" },
+  { value: "1M+", label: "Orders inspired" },
+  { value: "500K+", label: "Musicians served" },
+  { value: "Pan-India", label: "Delivery" },
+];
+
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
     storeName: { type: String, default: "Gaana Bajana" },
-    tagline: { type: String, default: "Musical instruments & audio gear for every stage" },
+    tagline: {
+      type: String,
+      default: "Musical instruments & audio gear for every stage",
+    },
     phone: { type: String, default: "+91 9563754563, +91 7679586321" },
     email: { type: String, default: "hello@gaanbajana.com" },
     whatsapp: String,
@@ -52,7 +76,8 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     },
     heroSubheadline: {
       type: String,
-      default: "Guitars, keys, drums, and studio gear — curated for Indian musicians.",
+      default:
+        "Guitars, keys, drums, and studio gear — curated for Indian musicians.",
     },
     heroCtaLabel: { type: String, default: "Shop bestsellers" },
     heroCtaHref: { type: String, default: "/collections/bestsellers" },
@@ -62,13 +87,32 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
         "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=2000&q=80",
     },
     homeCategoriesEyebrow: { type: String, default: "Explore" },
-    homeCategoriesTitle: { type: String, default: "Shop by category" },
+    homeCategoriesTitle: { type: String, default: "Explore By Category" },
     homeBestsellersEyebrow: { type: String, default: "Curated" },
-    homeBestsellersTitle: { type: String, default: "Bestsellers" },
+    homeBestsellersTitle: { type: String, default: "Best Sellers" },
     homeBrandsEyebrow: { type: String, default: "Trusted names" },
-    homeBrandsTitle: { type: String, default: "Brands we stock" },
+    homeBrandsTitle: { type: String, default: "Top Brands" },
     homeBlogEyebrow: { type: String, default: "Learn" },
-    homeBlogTitle: { type: String, default: "From the blog" },
+    homeBlogTitle: { type: String, default: "Latest Stories" },
+    homeWhyTitle: { type: String, default: "Why Gaana Bajana" },
+    homeWhyItems: {
+      type: [
+        {
+          title: { type: String },
+          body: { type: String },
+        },
+      ],
+      default: DEFAULT_WHY,
+    },
+    homeStats: {
+      type: [
+        {
+          value: { type: String },
+          label: { type: String },
+        },
+      ],
+      default: DEFAULT_STATS,
+    },
     social: {
       facebook: String,
       instagram: String,
@@ -85,6 +129,18 @@ export const SiteSettings =
 
 export async function getSiteSettings() {
   const existing = await SiteSettings.findOne();
-  if (existing) return existing;
+  if (existing) {
+    let dirty = false;
+    if (!existing.homeWhyItems?.length) {
+      existing.homeWhyItems = DEFAULT_WHY;
+      dirty = true;
+    }
+    if (!existing.homeStats?.length) {
+      existing.homeStats = DEFAULT_STATS;
+      dirty = true;
+    }
+    if (dirty) await existing.save();
+    return existing;
+  }
   return SiteSettings.create({});
 }

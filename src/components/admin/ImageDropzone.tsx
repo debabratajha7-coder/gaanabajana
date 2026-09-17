@@ -179,7 +179,9 @@ export function ImageDropzone({
                 src={url}
                 alt=""
                 className={
-                  multiple ? "aspect-square object-cover" : "aspect-video w-full object-cover"
+                  multiple
+                    ? "aspect-square w-full object-contain"
+                    : "aspect-video w-full object-contain"
                 }
               />
               <button

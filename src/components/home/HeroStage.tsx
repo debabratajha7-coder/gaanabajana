@@ -83,7 +83,7 @@ export function HeroStage({
               </Link>
               <Link
                 href="/deals"
-                className="btn btn-ghost w-full justify-center rounded-full border-white/25 text-white hover:border-white hover:text-white"
+                className="btn w-full justify-center rounded-full border border-white/30 bg-transparent text-white hover:border-white hover:bg-white/10"
               >
                 View deals
               </Link>
@@ -148,7 +148,7 @@ export function HeroStage({
               </Link>
               <Link
                 href="/deals"
-                className="btn btn-ghost border-white/30 text-white hover:border-white hover:text-white"
+                className="btn border border-white/30 bg-transparent text-white hover:border-white hover:bg-white/10"
               >
                 View deals
               </Link>

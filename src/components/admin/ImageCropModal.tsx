@@ -29,6 +29,8 @@ export function ImageCropModal({
 }: ImageCropModalProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const minZoom = 0.4;
+  const maxZoom = 3;
   const [aspect, setAspect] = useState<number | undefined>(defaultAspect);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,7 +59,8 @@ export function ImageCropModal({
         <div className="border-b border-[var(--line)] px-5 py-4">
           <h2 className="display text-2xl">Frame your photo</h2>
           <p className="mt-1 text-sm text-[var(--fg-muted)]">
-            Drag to move. Use the slider to zoom. Then tap Use this photo.
+            Drag to move. Zoom out to fit the whole photo, or zoom in to crop.
+            Then tap Use this photo.
           </p>
         </div>
 
@@ -66,6 +69,8 @@ export function ImageCropModal({
             image={imageSrc}
             crop={crop}
             zoom={zoom}
+            minZoom={minZoom}
+            maxZoom={maxZoom}
             aspect={aspect}
             onCropChange={setCrop}
             onZoomChange={setZoom}
@@ -95,8 +100,8 @@ export function ImageCropModal({
             <ZoomOut className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
             <input
               type="range"
-              min={1}
-              max={3}
+              min={minZoom}
+              max={maxZoom}
               step={0.01}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
