@@ -103,9 +103,6 @@ export default async function HomePage() {
       })
     );
 
-    productsByTab.all = featuredDocs
-      .slice(0, 8)
-      .map((p) => toCard({ ...p, brand: p.brand as LeanBrand }));
   } catch {
     settings = {
       heroHeadline: "Find the instrument that finds your sound",
@@ -134,14 +131,11 @@ export default async function HomePage() {
     parents.map((c) => ({ ...c, slug: c.slug, name: c.name }))
   );
 
-  const tabs = [
-    { id: "all", label: "Featured", href: "/search" },
-    ...shopParents.slice(0, 5).map((c) => ({
-      id: String(c._id),
-      label: `${c.name} Best Sellers`,
-      href: `/collections/${c.slug}`,
-    })),
-  ];
+  const tabs = shopParents.slice(0, 5).map((c) => ({
+    id: String(c._id),
+    label: c.name,
+    href: `/collections/${c.slug}`,
+  }));
 
   const whyItems = (settings.homeWhyItems || []).map(
     (i: { title: string; body: string }) => ({

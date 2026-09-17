@@ -25,29 +25,35 @@ export function BestsellerTabs({
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end gap-x-5 gap-y-2 border-b border-[var(--line)]">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setActive(t.id)}
-            className={`-mb-px border-b-2 pb-2.5 text-sm font-medium transition ${
-              active === t.id
-                ? "border-[var(--accent)] text-[var(--accent)]"
-                : "border-transparent text-[var(--fg-muted)] hover:text-[var(--fg)]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-        {activeTab && (
-          <Link
-            href={activeTab.href}
-            className="ml-auto pb-2.5 text-sm font-medium underline underline-offset-2 text-[var(--fg-muted)] hover:text-[var(--accent)]"
-          >
-            View all
-          </Link>
-        )}
+      <div className="mb-6 border-b border-[var(--line)]">
+        <div className="flex items-end gap-1">
+          <div className="min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max items-end gap-x-4 px-0.5 sm:gap-x-5">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActive(t.id)}
+                  className={`-mb-px shrink-0 whitespace-nowrap border-b-2 pb-2.5 text-[13px] font-medium transition sm:text-sm ${
+                    active === t.id
+                      ? "border-[var(--accent)] text-[var(--accent)]"
+                      : "border-transparent text-[var(--fg-muted)] hover:text-[var(--fg)]"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {activeTab && (
+            <Link
+              href={activeTab.href}
+              className="shrink-0 whitespace-nowrap pb-2.5 pl-3 text-[13px] font-medium underline underline-offset-2 text-[var(--fg-muted)] hover:text-[var(--accent)] sm:text-sm"
+            >
+              View all
+            </Link>
+          )}
+        </div>
       </div>
 
       {items.length ? (

@@ -41,7 +41,7 @@ export function HeroStage({
 
   return (
     <section ref={ref} className="relative md:min-h-[88vh]">
-      {/* Phone: clean image panel, then copy in a black band below (not on the photo). */}
+      {/* Phone: image panel, then white copy band below. */}
       <div className="md:hidden">
         <div className="px-3 pt-3">
           <div className="overflow-hidden rounded-2xl bg-[var(--bg-elevated)]">
@@ -50,7 +50,7 @@ export function HeroStage({
           </div>
         </div>
 
-        <div className="bg-black px-5 pb-8 pt-6 text-center">
+        <div className="bg-white px-5 pb-8 pt-6 text-center">
           <motion.div
             initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -58,7 +58,7 @@ export function HeroStage({
             className="mx-auto flex max-w-[22rem] flex-col items-center"
           >
             <p
-              className="display text-[clamp(2.15rem,10vw,3.1rem)] leading-[0.9] tracking-[-0.04em] text-white"
+              className="display text-[clamp(2.15rem,10vw,3.1rem)] leading-[0.9] tracking-[-0.04em] text-[#111]"
               suppressHydrationWarning
             >
               {brandWordmark(storeName)}
@@ -66,14 +66,14 @@ export function HeroStage({
 
             <span
               aria-hidden
-              className="mt-3 h-px w-16 bg-white/70"
+              className="mt-3 h-px w-16 bg-[var(--line-strong)]"
             />
 
-            <h1 className="mt-3 text-[0.95rem] font-medium leading-snug text-white/95">
+            <h1 className="mt-3 text-[0.95rem] font-medium leading-snug text-[var(--fg)]">
               {headline}
             </h1>
 
-            <p className="mt-2 text-sm leading-relaxed text-white/65">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
               {subheadline}
             </p>
 
@@ -83,7 +83,7 @@ export function HeroStage({
               </Link>
               <Link
                 href="/deals"
-                className="btn w-full justify-center rounded-full border border-white/30 bg-transparent text-white hover:border-white hover:bg-white/10"
+                className="btn btn-ghost w-full justify-center rounded-full"
               >
                 View deals
               </Link>
@@ -108,7 +108,7 @@ export function HeroStage({
           style={{ y: copyY, opacity: copyOpacity }}
           className="relative flex min-h-[88vh] flex-col justify-end px-[max(0.75rem,calc((100vw-1120px)/2))] pb-16 pt-24"
         >
-          <div className="w-full max-w-[min(100%,36rem)]">
+          <div className="w-full max-w-[min(100%,26rem)]">
             <motion.p
               initial={reduce ? false : { opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
