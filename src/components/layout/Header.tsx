@@ -123,7 +123,7 @@ export function Header({
               <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3.5 py-3">
                 <Link
                   href="/"
-                  className="display truncate text-lg"
+                  className="display max-w-[70%] whitespace-nowrap text-[clamp(1.05rem,5vw,1.25rem)]"
                   onClick={close}
                 >
                   {wordmark}
@@ -413,9 +413,12 @@ export function Header({
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <Link href="/" className="min-w-0 shrink">
+        <Link
+          href="/"
+          className="min-w-0 max-w-[min(52vw,14rem)] shrink sm:max-w-none md:shrink-0"
+        >
           <span
-            className="display block truncate text-[1.35rem] text-[var(--fg)] sm:text-2xl md:text-[1.85rem]"
+            className="display block whitespace-nowrap text-[clamp(1rem,4.6vw,1.35rem)] leading-none tracking-[-0.03em] text-[var(--fg)] sm:text-2xl sm:tracking-normal md:text-[1.85rem]"
             suppressHydrationWarning
           >
             {wordmark}

@@ -1,6 +1,6 @@
 /** Canonical store brand — use for UI wordmarks */
 export const STORE_NAME = "Gaana Bajana";
-export const STORE_WORDMARK = "gaana bajana";
+export const STORE_WORDMARK = "Gaana Bajana";
 
 /** Normalize any old spelling from DB / cache */
 export function brandWordmark(name?: string | null) {
@@ -16,5 +16,6 @@ export function brandWordmark(name?: string | null) {
   ) {
     return STORE_WORDMARK;
   }
-  return raw;
+  return (name || STORE_NAME).trim() || STORE_WORDMARK;
 }
+
