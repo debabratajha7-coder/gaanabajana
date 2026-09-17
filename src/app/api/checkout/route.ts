@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
 import { getSiteSettings } from "@/models/SiteSettings";
-import { createCashfreeOrder, isCashfreeConfigured } from "@/lib/cashfree";
+import { createPhonePePayment, isPhonePeConfigured } from "@/lib/phonepe";
 import { generateOrderNumber } from "@/lib/orders";
 
 const itemSchema = z.object({
@@ -32,11 +32,11 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
-    if (!isCashfreeConfigured()) {
+    if (!isPhonePeConfigured()) {
       return NextResponse.json(
         {
           error:
-            "Cashfree is not configured. Add CASHFREE_APP_ID and CASHFREE_SECRET_KEY to .env.local",
+            "PhonePe is not configured. Add PHONEPE_CLIENT_ID and PHONEPE_CLIENT_SECRET to .env.local",
         },
         { status: 503 }
       );
@@ -98,31 +98,25 @@ export async function POST(req: Request) {
       note: body.note,
       paymentStatus: "pending",
       status: "pending_payment",
-      cashfreeOrderId: orderNumber,
+      phonepeMerchantOrderId: orderNumber,
       timeline: [{ status: "created", at: new Date() }],
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const cf = await createCashfreeOrder({
-      orderId: orderNumber,
-      amount: total,
-      customer: {
-        id: session?.id || `guest_${orderNumber}`,
-        email: body.shippingAddress.email,
-        phone: body.shippingAddress.phone.replace(/\D/g, "").slice(-10),
-        name: body.shippingAddress.fullName,
-      },
-      returnUrl: `${appUrl}/checkout/success?order_id={order_id}`,
+    const pay = await createPhonePePayment({
+      merchantOrderId: orderNumber,
+      amountInr: total,
+      redirectUrl: `${appUrl}/checkout/success?order_id=${orderNumber}`,
+      message: `Gaanbajna order ${orderNumber}`,
     });
 
-    order.cashfreePaymentSessionId = cf.payment_session_id;
+    order.phonepeOrderId = pay.orderId;
     await order.save();
 
     return NextResponse.json({
       orderNumber,
-      paymentSessionId: cf.payment_session_id,
+      redirectUrl: pay.redirectUrl,
       total,
-      env: process.env.CASHFREE_ENV === "production" ? "production" : "sandbox",
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

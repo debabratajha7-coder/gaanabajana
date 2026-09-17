@@ -40,74 +40,122 @@ export function HeroStage({
   const ease = [0.22, 1, 0.36, 1] as const;
 
   return (
-    <section
-      ref={ref}
-      /* Narrow / editor preview: fixed stage height — not nearly full svh (that left a black void above the copy). Desktop keeps the tall cinematic hero. */
-      className="relative h-[min(36rem,calc(100svh-8.5rem))] overflow-hidden md:h-auto md:min-h-[88vh]"
-    >
-      <motion.div className="absolute inset-0" style={{ y: imageY }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={image}
-          alt=""
-          className="animate-hero-zoom absolute inset-0 h-full max-h-none w-full max-w-none object-cover object-[center_48%] md:object-center"
-        />
-      </motion.div>
+    <section ref={ref} className="relative md:min-h-[88vh]">
+      {/* Phone: clean image panel, then copy in a black band below (not on the photo). */}
+      <div className="md:hidden">
+        <div className="px-3 pt-3">
+          <div className="overflow-hidden rounded-2xl bg-[var(--bg-elevated)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={image} alt="" className="block h-auto w-full" />
+          </div>
+        </div>
 
-      <div className="pointer-events-none absolute inset-0 bg-black/20 md:bg-black/25" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10 md:from-black/70 md:via-black/25 md:to-transparent" />
-
-      <motion.div
-        style={{ y: copyY, opacity: copyOpacity }}
-        className="relative flex h-full flex-col justify-end px-[max(0.75rem,calc((100vw-1120px)/2))] pb-6 pt-16 md:min-h-[88vh] md:pb-16 md:pt-24"
-      >
-        <div className="w-full max-w-[min(100%,36rem)]">
-          <motion.p
-            initial={reduce ? false : { opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease }}
-            className="display text-[clamp(2.1rem,9vw,5.5rem)] leading-[0.92] tracking-[-0.045em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.55)]"
-            suppressHydrationWarning
-          >
-            {brandWordmark(storeName)}
-          </motion.p>
-
-          <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.1, ease }}
-            className="mt-3 max-w-xl text-[0.95rem] text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.45)] sm:mt-5 sm:text-xl md:text-2xl"
-          >
-            {headline}
-          </motion.h1>
-
-          <motion.p
+        <div className="bg-black px-5 pb-8 pt-6 text-center">
+          <motion.div
             initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.18, ease }}
-            className="mt-2 max-w-md text-sm leading-relaxed text-white/80 [text-shadow:0_1px_10px_rgba(0,0,0,0.4)] sm:mt-3 sm:text-base"
+            transition={{ duration: 0.65, ease }}
+            className="mx-auto flex max-w-[22rem] flex-col items-center"
           >
-            {subheadline}
-          </motion.p>
-
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.26, ease }}
-            className="mt-5 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3"
-          >
-            <Link href={ctaHref} className="btn btn-primary">
-              {ctaLabel}
-            </Link>
-            <Link
-              href="/deals"
-              className="btn btn-ghost border-white/30 text-white hover:border-white hover:text-white"
+            <p
+              className="display text-[clamp(2.15rem,10vw,3.1rem)] leading-[0.9] tracking-[-0.04em] text-white"
+              suppressHydrationWarning
             >
-              View deals
-            </Link>
+              {brandWordmark(storeName)}
+            </p>
+
+            <span
+              aria-hidden
+              className="mt-3 h-px w-16 bg-white/70"
+            />
+
+            <h1 className="mt-3 text-[0.95rem] font-medium leading-snug text-white/95">
+              {headline}
+            </h1>
+
+            <p className="mt-2 text-sm leading-relaxed text-white/65">
+              {subheadline}
+            </p>
+
+            <div className="mt-5 flex w-full flex-col gap-2.5">
+              <Link href={ctaHref} className="btn btn-primary w-full justify-center rounded-full">
+                {ctaLabel}
+              </Link>
+              <Link
+                href="/deals"
+                className="btn btn-ghost w-full justify-center rounded-full border-white/25 text-white hover:border-white hover:text-white"
+              >
+                View deals
+              </Link>
+            </div>
           </motion.div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* Desktop: full-bleed cinematic cover with overlay copy */}
+      <div className="relative hidden overflow-hidden md:block md:min-h-[88vh]">
+        <motion.div className="absolute inset-0" style={{ y: imageY }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt=""
+            className="animate-hero-zoom absolute inset-0 h-full w-full object-cover object-center"
+          />
+        </motion.div>
+        <div className="pointer-events-none absolute inset-0 bg-black/25" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+        <motion.div
+          style={{ y: copyY, opacity: copyOpacity }}
+          className="relative flex min-h-[88vh] flex-col justify-end px-[max(0.75rem,calc((100vw-1120px)/2))] pb-16 pt-24"
+        >
+          <div className="w-full max-w-[min(100%,36rem)]">
+            <motion.p
+              initial={reduce ? false : { opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, ease }}
+              className="display text-[clamp(2.1rem,9vw,5.5rem)] leading-[0.92] tracking-[-0.045em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.55)]"
+              suppressHydrationWarning
+            >
+              {brandWordmark(storeName)}
+            </motion.p>
+
+            <motion.h1
+              initial={reduce ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.1, ease }}
+              className="mt-5 max-w-xl text-xl text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.45)] md:text-2xl"
+            >
+              {headline}
+            </motion.h1>
+
+            <motion.p
+              initial={reduce ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.18, ease }}
+              className="mt-3 max-w-md text-base leading-relaxed text-white/80 [text-shadow:0_1px_10px_rgba(0,0,0,0.4)]"
+            >
+              {subheadline}
+            </motion.p>
+
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.26, ease }}
+              className="mt-8 flex flex-wrap gap-3"
+            >
+              <Link href={ctaHref} className="btn btn-primary">
+                {ctaLabel}
+              </Link>
+              <Link
+                href="/deals"
+                className="btn btn-ghost border-white/30 text-white hover:border-white hover:text-white"
+              >
+                View deals
+              </Link>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }

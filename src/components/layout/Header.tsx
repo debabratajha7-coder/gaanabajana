@@ -323,12 +323,12 @@ export function Header({
                       { href: "/stores", label: "Stores", icon: MapPin },
                       {
                         href: "/policies/shipping",
-                        label: "Shipping",
+                        label: "Shipping Policy",
                         icon: FileText,
                       },
                       {
                         href: "/policies/returns",
-                        label: "Returns",
+                        label: "Refund & Cancellation",
                         icon: FileText,
                       },
                       {
@@ -338,10 +338,14 @@ export function Header({
                       },
                       {
                         href: "/policies/privacy",
-                        label: "Privacy",
+                        label: "Privacy Policy",
                         icon: FileText,
                       },
-                      { href: "/policies/terms", label: "Terms", icon: FileText },
+                      {
+                        href: "/policies/terms",
+                        label: "Terms & Conditions",
+                        icon: FileText,
+                      },
                     ].map((item) => (
                       <Link
                         key={item.href}

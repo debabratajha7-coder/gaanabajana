@@ -2,6 +2,12 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  AdminPermission,
+  hasAdminPermission,
+} from "@/lib/permissions";
+import { connectDB } from "@/lib/db";
+import { User } from "@/models/User";
 
 const COOKIE_NAME = "gb_session";
 
@@ -10,6 +16,8 @@ export type SessionUser = {
   email: string;
   name: string;
   role: "customer" | "admin";
+  isSuperAdmin?: boolean;
+  adminPermissions?: string[];
 };
 
 function getSecret() {
@@ -27,10 +35,14 @@ export async function verifyPassword(password: string, hash: string) {
 }
 
 export async function createSessionToken(user: SessionUser) {
+  // Plain array only — Mongoose DocumentArray cannot be cloned into SignJWT
+  const adminPermissions = Array.from(user.adminPermissions || []).map(String);
   return new SignJWT({
     email: user.email,
     name: user.name,
     role: user.role,
+    isSuperAdmin: Boolean(user.isSuperAdmin),
+    adminPermissions,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
@@ -48,7 +60,33 @@ export async function verifySessionToken(token: string): Promise<SessionUser | n
       email: payload.email,
       name: String(payload.name ?? ""),
       role: payload.role === "admin" ? "admin" : "customer",
+      isSuperAdmin: Boolean(payload.isSuperAdmin),
+      adminPermissions: Array.isArray(payload.adminPermissions)
+        ? (payload.adminPermissions as string[])
+        : [],
     };
+  } catch {
+    return null;
+  }
+}
+
+export async function createChallengeToken(
+  payload: Record<string, unknown>,
+  expiresIn = "20m"
+) {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+    .sign(getSecret());
+}
+
+export async function verifyChallengeToken<T extends Record<string, unknown>>(
+  token: string
+): Promise<T | null> {
+  try {
+    const { payload } = await jwtVerify(token, getSecret());
+    return payload as unknown as T;
   } catch {
     return null;
   }
@@ -86,6 +124,34 @@ export async function requireUser() {
 export async function requireAdmin() {
   const session = await requireUser();
   if (session.role !== "admin") throw new AuthError("Forbidden", 403);
+  await connectDB();
+  const user = await User.findById(session.id)
+    .select("isActive isSuperAdmin adminPermissions role")
+    .lean();
+  if (!user || user.isActive === false) {
+    throw new AuthError("Account disabled", 403);
+  }
+  return {
+    ...session,
+    isSuperAdmin: Boolean(user.isSuperAdmin),
+    adminPermissions: (user.adminPermissions || []) as string[],
+  };
+}
+
+export async function requireAdminPermission(permission: AdminPermission) {
+  const session = await requireAdmin();
+  if (
+    !hasAdminPermission(
+      {
+        role: session.role,
+        isSuperAdmin: session.isSuperAdmin,
+        adminPermissions: session.adminPermissions,
+      },
+      permission
+    )
+  ) {
+    throw new AuthError("You do not have access to this section", 403);
+  }
   return session;
 }
 
@@ -109,6 +175,24 @@ export async function getSessionFromRequest(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   if (!token) return null;
   return verifySessionToken(token);
+}
+
+export function sessionFromUser(user: {
+  _id: { toString(): string };
+  email: string;
+  name: string;
+  role: "customer" | "admin";
+  isSuperAdmin?: boolean;
+  adminPermissions?: string[];
+}): SessionUser {
+  return {
+    id: String(user._id),
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    isSuperAdmin: Boolean(user.isSuperAdmin),
+    adminPermissions: Array.from(user.adminPermissions || []).map(String),
+  };
 }
 
 export { COOKIE_NAME };

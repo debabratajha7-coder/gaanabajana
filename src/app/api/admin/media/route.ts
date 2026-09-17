@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { deleteMedia, isCloudinaryConfigured, uploadBuffer } from "@/lib/cloudinary";
 import { Media } from "@/models/Media";
 import { z } from "zod";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireAdminPermission("media");
     await connectDB();
     const items = await Media.find().sort({ createdAt: -1 }).limit(100).lean();
     return NextResponse.json({
@@ -21,7 +21,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("media");
     if (!isCloudinaryConfigured()) {
       return NextResponse.json(
         { error: "Cloudinary not configured. Add CLOUDINARY_* keys." },
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("media");
     const { publicId } = z.object({ publicId: z.string() }).parse(await req.json());
     if (isCloudinaryConfigured()) {
       await deleteMedia(publicId);

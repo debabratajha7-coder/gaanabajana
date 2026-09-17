@@ -2,11 +2,14 @@
 
 Copy `.env.example` to `.env.local` and fill keys in this order.
 
-**Do now** → MongoDB, JWT, Cloudinary, Resend → seed → run locally  
+**Do now** → MongoDB, JWT, Cloudinary, Resend, Twilio → seed → run locally  
 **Then** → GitHub → host  
-**Later** → Cashfree + Shiprocket (need your live website URL for webhooks / return URLs)
+**Later** → PhonePe + Shiprocket (need your live website URL for webhooks / return URLs)
 
-Checkout already errors clearly if Cashfree keys are empty; Shiprocket is skipped until credentials are set.
+Checkout already errors clearly if PhonePe keys are empty; Shiprocket is skipped until credentials are set.
+
+Signup: phone OTP (Twilio) → profile + password → email OTP (Resend).  
+Admin login: email + password → SMS OTP. Main admin assigns staff panel permissions under Admin → Users & staff.
 
 ---
 
@@ -47,12 +50,20 @@ Without these, you can still paste image URLs on products.
 1. [resend.com](https://resend.com) → API key
 2. Verify a sending domain (or use onboarding domain for tests)
 3. Set `RESEND_API_KEY` and `EMAIL_FROM`
+4. Used for signup email OTP + order emails
+
+### 4b. Twilio SMS (phone OTP + admin 2FA)
+
+1. [console.twilio.com](https://console.twilio.com) → Account SID, Auth Token, and a From number
+2. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
+3. Set `ADMIN_PHONE=+91XXXXXXXXXX` before `npm run seed` so the main admin can receive login OTPs
+4. Without Twilio in local/dev, OTPs are printed in the server console (and shown on-screen in development)
 
 ### 5. Seed and run locally
 
 ```bash
 cp .env.example .env.local
-# fill MONGODB_URI, JWT_SECRET, CLOUDINARY_*, RESEND_* (Cashfree/Shiprocket can stay empty)
+# fill MONGODB_URI, JWT_SECRET, CLOUDINARY_*, RESEND_*, TWILIO_* (PhonePe/Shiprocket can stay empty)
 npm run seed
 npm run dev
 ```
@@ -61,6 +72,7 @@ Default admin (change after first login):
 
 - Email: `admin@gaanbajana.com`
 - Password: `ChangeMe123!`
+- Phone: whatever you set in `ADMIN_PHONE`
 
 - Store: [http://localhost:3000](http://localhost:3000)
 - Admin: [http://localhost:3000/admin](http://localhost:3000/admin)
@@ -71,7 +83,7 @@ Default admin (change after first login):
 
 1. Push the repo to GitHub (do **not** commit `.env.local`)
 2. Import in Vercel (or similar) → add env vars you filled for now:
-   - `MONGODB_URI`, `JWT_SECRET`, `CLOUDINARY_*`, `RESEND_*`, `EMAIL_FROM`, `ADMIN_*` if needed
+   - `MONGODB_URI`, `JWT_SECRET`, `CLOUDINARY_*`, `RESEND_*`, `TWILIO_*`, `EMAIL_FROM`, `ADMIN_*` if needed
    - Optional: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` for Google login
 3. Set `NEXT_PUBLIC_APP_URL` to your live domain (e.g. `https://gaanabajana.vercel.app`)
    - If using Google, add the same live callback URI in Google Cloud
@@ -85,21 +97,34 @@ Default admin (change after first login):
 If pages say “This page couldn’t load”, catalog routes are crashing because Mongo is missing or blocked — fix steps 2–4 first.
 ---
 
-## Later (after live URL): Cashfree + Shiprocket
+## Before PhonePe approval
+
+Your live site must look complete (not under construction):
+
+1. Run `npm run prepare:policies` (upserts Terms, Privacy, Refund/Cancellation, Shipping, Contact + restocks products if the catalog is thin)
+2. Confirm footer links work on production: Contact, Shipping, Refund & Cancellation, Privacy, Terms
+3. Confirm Contact shows phone, email, and address
+4. Confirm products show clear prices and Add to cart / Checkout works
+5. Then apply in PhonePe Business with your live domain
+
+---
+
+## Later (after live URL): PhonePe + Shiprocket
 
 Fill these when the site is live and you have a public domain.
 
-### Cashfree payments
+### PhonePe payments
 
-1. Sign up at [merchant.cashfree.com](https://merchant.cashfree.com)
-2. Developers → API Keys → **App ID** + **Secret Key** (start in **Sandbox**)
+1. Sign up at [business.phonepe.com](https://business.phonepe.com) / [developer.phonepe.com](https://developer.phonepe.com)
+2. Payment Gateway → create app → copy **Client ID**, **Client Secret**, **Client Version** (start in **Sandbox**)
 3. Set:
-   - `CASHFREE_APP_ID`
-   - `CASHFREE_SECRET_KEY`
-   - `CASHFREE_ENV=sandbox` (then `production` for live)
-4. Webhooks → `https://YOUR_DOMAIN/api/webhooks/cashfree`
-5. Optional: `CASHFREE_WEBHOOK_SECRET`
-6. Enable UPI (includes PhonePe as a customer UPI app), cards, netbanking
+   - `PHONEPE_CLIENT_ID`
+   - `PHONEPE_CLIENT_SECRET`
+   - `PHONEPE_CLIENT_VERSION=1`
+   - `PHONEPE_ENV=sandbox` (then `production` for live)
+4. Configure S2S callback URL → `https://YOUR_DOMAIN/api/webhooks/phonepe`
+5. Optional (recommended): set callback username/password in dashboard → `PHONEPE_WEBHOOK_USERNAME` / `PHONEPE_WEBHOOK_PASSWORD`
+6. Enable UPI, cards, netbanking on the PhonePe checkout page
 
 ### Shiprocket shipping
 
@@ -107,7 +132,7 @@ Fill these when the site is live and you have a public domain.
 2. Settings → **Pickup Address** → note the **exact pickup location name**
 3. Settings → API → **Create API User**
 4. Set `SHIPROCKET_EMAIL`, `SHIPROCKET_PASSWORD`, `SHIPROCKET_PICKUP_LOCATION`
-5. After a **paid** Cashfree order, the app creates a Shiprocket adhoc order
+5. After a **paid** PhonePe order, the app creates a Shiprocket adhoc order
 6. Admin → Orders → **Push Shiprocket** to retry if needed
 
 ---
@@ -124,6 +149,6 @@ Fill these when the site is live and you have a public domain.
 | Add comments on a product | Admin → Add a product → Step 5 · Comments |
 | Retry shipping (after Shiprocket keys) | Admin → Orders → Push Shiprocket |
 
-## Flow reminder (once Cashfree + Shiprocket are live)
+## Flow reminder (once PhonePe + Shiprocket are live)
 
-Cart → Checkout → Cashfree pay → webhook / success page verifies → order marked **paid** → Shiprocket order created → customer tracks via Account or Track Order.
+Cart → Checkout → PhonePe pay page → webhook / success page verifies → order marked **paid** → Shiprocket order created → customer tracks via Account or Track Order.

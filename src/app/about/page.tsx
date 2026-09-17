@@ -17,14 +17,14 @@ export default async function AboutPage() {
   return (
     <div className="container-gb py-12">
       <h1 className="font-[family-name:var(--font-display)] text-4xl md:text-5xl">
-        {page?.title || "About Gaanbajana"}
+        {page?.title || "About Gaanbajna"}
       </h1>
       <div
         className="prose-gb mt-8 max-w-3xl"
         dangerouslySetInnerHTML={{
           __html:
             page?.body ||
-            "<p>Gaanbajana is an online music store for Indian musicians.</p>",
+            "<p>Gaanbajna is an online music store for Indian musicians.</p>",
         }}
       />
     </div>

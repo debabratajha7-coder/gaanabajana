@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { BlogPost } from "@/models/BlogPost";
 import { slugify } from "@/lib/utils";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireAdminPermission("blog");
     await connectDB();
     const posts = await BlogPost.find().sort({ createdAt: -1 }).lean();
     return NextResponse.json({ posts });
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("blog");
     const body = z
       .object({
         title: z.string(),
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("blog");
     const body = z
       .object({
         id: z.string(),
@@ -71,7 +71,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("blog");
     const { id } = z.object({ id: z.string() }).parse(await req.json());
     await connectDB();
     await BlogPost.findByIdAndDelete(id);

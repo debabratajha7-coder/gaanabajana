@@ -4,18 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { useCart } from "@/components/providers/CartProvider";
 import { formatINR } from "@/lib/utils";
 import Link from "next/link";
-import Script from "next/script";
-
-declare global {
-  interface Window {
-    Cashfree?: new (opts: { mode: string }) => {
-      checkout: (opts: {
-        paymentSessionId: string;
-        redirectTarget?: string;
-      }) => void;
-    };
-  }
-}
 
 export default function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
@@ -104,18 +92,10 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Checkout failed");
+      if (!data.redirectUrl) throw new Error("PhonePe redirect URL missing");
 
-      if (!window.Cashfree) {
-        throw new Error("Cashfree SDK not loaded. Refresh and try again.");
-      }
-      const cashfree = new window.Cashfree({
-        mode: data.env === "production" ? "production" : "sandbox",
-      });
       clear();
-      cashfree.checkout({
-        paymentSessionId: data.paymentSessionId,
-        redirectTarget: "_self",
-      });
+      window.location.href = data.redirectUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
       setLoading(false);
@@ -134,80 +114,74 @@ export default function CheckoutPage() {
   }
 
   return (
-    <>
-      <Script
-        src="https://sdk.cashfree.com/js/v3/cashfree.js"
-        strategy="afterInteractive"
-      />
-      <div className="container-gb grid gap-10 py-10 lg:grid-cols-[1fr_340px]">
-        <form onSubmit={onSubmit} className="space-y-4">
-          <h1 className="font-[family-name:var(--font-display)] text-4xl">Checkout</h1>
-          <p className="text-sm text-[var(--fg-muted)]">
-            Pay securely with UPI (PhonePe & more), cards, netbanking via Cashfree.
-          </p>
-          {(
-            [
-              ["fullName", "Full name"],
-              ["phone", "Phone"],
-              ["email", "Email"],
-              ["line1", "Address line 1"],
-              ["line2", "Address line 2 (optional)"],
-              ["city", "City"],
-              ["state", "State"],
-              ["pincode", "Pincode"],
-            ] as const
-          ).map(([key, label]) => (
-            <div key={key}>
-              <label className="mb-1 block text-sm text-[var(--fg-muted)]">{label}</label>
-              <input
-                className="input"
-                required={key !== "line2"}
-                value={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-              />
-            </div>
-          ))}
-          <div>
-            <label className="mb-1 block text-sm text-[var(--fg-muted)]">Order note</label>
-            <textarea
-              className="input min-h-24"
-              value={form.note}
-              onChange={(e) => setForm({ ...form, note: e.target.value })}
+    <div className="container-gb grid gap-10 py-10 lg:grid-cols-[1fr_340px]">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <h1 className="font-[family-name:var(--font-display)] text-4xl">Checkout</h1>
+        <p className="text-sm text-[var(--fg-muted)]">
+          Pay securely with UPI, cards, and netbanking via PhonePe.
+        </p>
+        {(
+          [
+            ["fullName", "Full name"],
+            ["phone", "Phone"],
+            ["email", "Email"],
+            ["line1", "Address line 1"],
+            ["line2", "Address line 2 (optional)"],
+            ["city", "City"],
+            ["state", "State"],
+            ["pincode", "Pincode"],
+          ] as const
+        ).map(([key, label]) => (
+          <div key={key}>
+            <label className="mb-1 block text-sm text-[var(--fg-muted)]">{label}</label>
+            <input
+              className="input"
+              required={key !== "line2"}
+              value={form[key]}
+              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
             />
           </div>
-          {error && <p className="text-[var(--danger)]">{error}</p>}
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? "Redirecting…" : `Pay ${formatINR(total)}`}
-          </button>
-        </form>
-        <aside className="h-fit rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-6">
-          <h2 className="font-[family-name:var(--font-display)] text-2xl">Summary</h2>
-          <ul className="mt-4 space-y-2 text-sm">
-            {items.map((i) => (
-              <li key={`${i.productId}-${i.variantName}`} className="flex justify-between gap-3">
-                <span>
-                  {i.title} × {i.qty}
-                </span>
-                <span>{formatINR(i.price * i.qty)}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 space-y-1 border-t border-[var(--line)] pt-4 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>{formatINR(subtotal)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>
-            </div>
-            <div className="flex justify-between text-lg text-[var(--accent)]">
-              <span>Total</span>
-              <span>{formatINR(total)}</span>
-            </div>
+        ))}
+        <div>
+          <label className="mb-1 block text-sm text-[var(--fg-muted)]">Order note</label>
+          <textarea
+            className="input min-h-24"
+            value={form.note}
+            onChange={(e) => setForm({ ...form, note: e.target.value })}
+          />
+        </div>
+        {error && <p className="text-[var(--danger)]">{error}</p>}
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? "Redirecting…" : `Pay ${formatINR(total)}`}
+        </button>
+      </form>
+      <aside className="h-fit rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-6">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl">Summary</h2>
+        <ul className="mt-4 space-y-2 text-sm">
+          {items.map((i) => (
+            <li key={`${i.productId}-${i.variantName}`} className="flex justify-between gap-3">
+              <span>
+                {i.title} × {i.qty}
+              </span>
+              <span>{formatINR(i.price * i.qty)}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 space-y-1 border-t border-[var(--line)] pt-4 text-sm">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>{formatINR(subtotal)}</span>
           </div>
-        </aside>
-      </div>
-    </>
+          <div className="flex justify-between">
+            <span>Shipping</span>
+            <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>
+          </div>
+          <div className="flex justify-between text-lg text-[var(--accent)]">
+            <span>Total</span>
+            <span>{formatINR(total)}</span>
+          </div>
+        </div>
+      </aside>
+    </div>
   );
 }

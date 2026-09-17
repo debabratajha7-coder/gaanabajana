@@ -22,6 +22,7 @@ type Product = {
   slug: string;
   price: number;
   stock: number;
+  featured?: boolean;
   brand?: { name?: string; _id?: string } | null;
   categories?: { name?: string; _id?: string; parent?: string | null }[];
 };
@@ -67,6 +68,7 @@ export default function AdminProductsPage() {
   const [mrp, setMrp] = useState("");
   const [stock, setStock] = useState("5");
   const [description, setDescription] = useState("");
+  const [featured, setFeatured] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [reviewDrafts, setReviewDrafts] = useState<ReviewDraft[]>([]);
   const [existingReviews, setExistingReviews] = useState<ExistingReview[]>([]);
@@ -118,6 +120,7 @@ export default function AdminProductsPage() {
     setMrp("");
     setStock("5");
     setDescription("");
+    setFeatured(false);
     setImages([]);
     setReviewDrafts([]);
     setExistingReviews([]);
@@ -161,6 +164,7 @@ export default function AdminProductsPage() {
         ? p.description.replace(/<[^>]+>/g, " ").trim()
         : ""
     );
+    setFeatured(Boolean(p.featured));
     setImages(p.images || []);
     setExistingReviews(data.reviews || []);
     setReviewDrafts([]);
@@ -236,6 +240,7 @@ export default function AdminProductsPage() {
         price: priceNum,
         mrp: mrpNum,
         stock: Number(stock) || 0,
+        featured,
         reviews: cleanedReviews.length ? cleanedReviews : undefined,
       };
 
@@ -471,6 +476,22 @@ export default function AdminProductsPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+            <label className="flex cursor-pointer items-start gap-3 border border-[var(--line)] px-3 py-3 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={featured}
+                onChange={(e) => setFeatured(e.target.checked)}
+              />
+              <span>
+                <span className="block font-medium text-[var(--fg)]">
+                  Show on homepage
+                </span>
+                <span className="mt-0.5 block text-[var(--fg-muted)]">
+                  Appears in Bestsellers on the main page when checked.
+                </span>
+              </span>
+            </label>
           </section>
 
           <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
@@ -668,6 +689,7 @@ export default function AdminProductsPage() {
                   {p.brand?.name ? `${p.brand.name} · ` : ""}
                   {p.categories?.[0]?.name || "Uncategorized"} ·{" "}
                   {formatINR(p.price)} · stock {p.stock}
+                  {p.featured ? " · Homepage" : ""}
                 </p>
                 <p className="mt-1 text-xs text-[var(--accent)]">Click to edit</p>
               </button>

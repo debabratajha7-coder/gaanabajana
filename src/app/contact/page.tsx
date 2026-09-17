@@ -10,19 +10,73 @@ export default async function ContactPage() {
     PageContent.findOne({ key: "contact" }).lean().catch(() => null),
     getSiteSettings().catch(() => null),
   ]);
+
+  const phones = (settings?.phone || "")
+    .split(/[,|·•]/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   return (
     <div className="container-gb py-12">
       <h1 className="font-[family-name:var(--font-display)] text-4xl">
         {page?.title || "Contact Us"}
       </h1>
-      <div
-        className="prose-gb mt-6 max-w-2xl"
-        dangerouslySetInnerHTML={{ __html: page?.body || "" }}
-      />
-      <div className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-6">
-        <p>Phone: {settings?.phone}</p>
-        <p className="mt-2">Email: {settings?.email}</p>
-        {settings?.whatsapp && <p className="mt-2">WhatsApp: {settings.whatsapp}</p>}
+      {page?.body ? (
+        <div
+          className="prose-gb mt-6 max-w-2xl"
+          dangerouslySetInnerHTML={{ __html: page.body }}
+        />
+      ) : (
+        <p className="mt-6 max-w-2xl text-[var(--fg-muted)]">
+          Reach Gaanbajna for product questions, orders, and returns.
+        </p>
+      )}
+
+      <div className="mt-8 max-w-xl space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-6">
+        <div>
+          <p className="eyebrow">Phone</p>
+          <div className="mt-2 space-y-1 text-sm">
+            {phones.length ? (
+              phones.map((p) => (
+                <p key={p}>
+                  <a href={`tel:${p.replace(/\s+/g, "")}`} className="hover:text-[var(--accent)]">
+                    {p}
+                  </a>
+                </p>
+              ))
+            ) : (
+              <p className="text-[var(--fg-muted)]">Not set</p>
+            )}
+          </div>
+        </div>
+        <div>
+          <p className="eyebrow">Email</p>
+          <p className="mt-2 text-sm">
+            {settings?.email ? (
+              <a href={`mailto:${settings.email}`} className="hover:text-[var(--accent)]">
+                {settings.email}
+              </a>
+            ) : (
+              "Not set"
+            )}
+          </p>
+        </div>
+        {settings?.whatsapp && (
+          <div>
+            <p className="eyebrow">WhatsApp</p>
+            <p className="mt-2 text-sm">{settings.whatsapp}</p>
+          </div>
+        )}
+        <div>
+          <p className="eyebrow">Address</p>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+            {settings?.address ||
+              "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India"}
+          </p>
+        </div>
+        <p className="text-xs text-[var(--fg-muted)]">
+          Monday–Saturday, 10:00 AM – 7:00 PM IST
+        </p>
       </div>
     </div>
   );

@@ -77,20 +77,26 @@ export function Footer({ settings }: { settings?: Settings }) {
         <div>
           <p className="eyebrow mb-4">Help</p>
           <div className="grid gap-2.5 text-sm">
+            <Link href="/contact" className="hover:text-[var(--accent)]">
+              Contact Us
+            </Link>
+            <Link href="/policies/shipping" className="hover:text-[var(--accent)]">
+              Shipping Policy
+            </Link>
+            <Link href="/policies/returns" className="hover:text-[var(--accent)]">
+              Refund & Cancellation
+            </Link>
+            <Link href="/policies/privacy" className="hover:text-[var(--accent)]">
+              Privacy Policy
+            </Link>
+            <Link href="/policies/terms" className="hover:text-[var(--accent)]">
+              Terms & Conditions
+            </Link>
             <Link href="/faqs" className="hover:text-[var(--accent)]">
               FAQs
             </Link>
-            <Link href="/policies/shipping" className="hover:text-[var(--accent)]">
-              Shipping
-            </Link>
-            <Link href="/policies/returns" className="hover:text-[var(--accent)]">
-              Returns
-            </Link>
             <Link href="/track-order" className="hover:text-[var(--accent)]">
               Track order
-            </Link>
-            <Link href="/contact" className="hover:text-[var(--accent)]">
-              Contact
             </Link>
             <Link href="/about" className="hover:text-[var(--accent)]">
               About

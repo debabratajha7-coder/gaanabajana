@@ -45,9 +45,9 @@ export interface IOrder {
     | "shipped"
     | "delivered"
     | "cancelled";
-  cashfreeOrderId?: string;
-  cashfreePaymentId?: string;
-  cashfreePaymentSessionId?: string;
+  phonepeMerchantOrderId?: string;
+  phonepeOrderId?: string;
+  phonepeTransactionId?: string;
   shiprocketOrderId?: string;
   shiprocketShipmentId?: string;
   awb?: string;
@@ -116,9 +116,9 @@ const OrderSchema = new Schema<IOrder>(
       ],
       default: "pending_payment",
     },
-    cashfreeOrderId: String,
-    cashfreePaymentId: String,
-    cashfreePaymentSessionId: String,
+    phonepeMerchantOrderId: String,
+    phonepeOrderId: String,
+    phonepeTransactionId: String,
     shiprocketOrderId: String,
     shiprocketShipmentId: String,
     awb: String,

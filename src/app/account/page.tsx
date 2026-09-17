@@ -11,6 +11,7 @@ import {
   Shield,
   LayoutDashboard,
 } from "lucide-react";
+import { DeleteAccountControl } from "@/components/account/DeleteAccountControl";
 
 const links = [
   {
@@ -110,9 +111,17 @@ export default function AccountPage() {
         )}
       </div>
 
-      <button type="button" className="btn btn-ghost mt-10" onClick={logout}>
-        Log out
-      </button>
+      <div className="mt-10 flex items-center gap-4">
+        <button type="button" className="btn btn-ghost" onClick={logout}>
+          Log out
+        </button>
+      </div>
+
+      {user.role !== "admin" && (
+        <div className="mt-28 flex justify-end border-t border-[var(--line)]/60 pt-10">
+          <DeleteAccountControl />
+        </div>
+      )}
     </div>
   );
 }

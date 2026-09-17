@@ -63,33 +63,51 @@ async function main() {
       passwordHash,
       authProvider: "local",
       role: "admin",
+      isSuperAdmin: true,
+      adminPermissions: [],
+      emailVerified: true,
+      phoneVerified: Boolean(process.env.ADMIN_PHONE),
+      phone: process.env.ADMIN_PHONE
+        ? process.env.ADMIN_PHONE.replace(/\s/g, "")
+        : undefined,
+      isActive: true,
     },
     { upsert: true, new: true }
   );
   console.log(`Admin: ${adminEmail} / ${adminPassword}`);
+  if (!process.env.ADMIN_PHONE) {
+    console.log(
+      "Tip: set ADMIN_PHONE=+91XXXXXXXXXX so admin login SMS OTP works with Twilio."
+    );
+  }
 
-  await SiteSettings.deleteMany({});
-  await SiteSettings.create({
-    storeName: "Gaanbajna",
-    tagline: "Musical instruments & audio gear for every stage",
-    phone: "+91 9563754563, +91 7679586321",
-    email: "hello@gaanbajana.com",
-    whatsapp: "+919563754563",
-    address: "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
-    freeShippingThreshold: 1000,
-    shippingFee: 99,
-    heroHeadline: "Find the instrument that finds your sound",
-    heroSubheadline:
-      "Guitars, keys, drums, and studio gear — curated for Indian musicians.",
-    heroCtaLabel: "Shop bestsellers",
-    heroCtaHref: "/collections/guitars",
-    pickupLocationName: process.env.SHIPROCKET_PICKUP_LOCATION || "Primary",
-    social: {
-      instagram: "https://instagram.com/gaanbajana",
-      youtube: "https://youtube.com/@gaanbajana",
-      facebook: "https://facebook.com/gaanbajana",
-    },
-  });
+  const existingSettings = await SiteSettings.findOne();
+  if (!existingSettings) {
+    await SiteSettings.create({
+      storeName: "Gaanbajna",
+      tagline: "Musical instruments & audio gear for every stage",
+      phone: "+91 9563754563, +91 7679586321",
+      email: "hello@gaanbajana.com",
+      whatsapp: "+919563754563",
+      address: "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
+      freeShippingThreshold: 1000,
+      shippingFee: 99,
+      heroHeadline: "Find the instrument that finds your sound",
+      heroSubheadline:
+        "Guitars, keys, drums, and studio gear — curated for Indian musicians.",
+      heroCtaLabel: "Shop bestsellers",
+      heroCtaHref: "/collections/guitars",
+      pickupLocationName: process.env.SHIPROCKET_PICKUP_LOCATION || "Primary",
+      social: {
+        instagram: "https://instagram.com/gaanbajana",
+        youtube: "https://youtube.com/@gaanbajana",
+        facebook: "https://facebook.com/gaanbajana",
+      },
+    });
+    console.log("Created default SiteSettings");
+  } else {
+    console.log("Kept existing SiteSettings (hero/images/CMS unchanged)");
+  }
 
   const tree: { name: string; children?: string[] }[] = [
     {
@@ -479,47 +497,52 @@ async function main() {
     },
   ];
 
-  await Product.deleteMany({});
-  let i = 0;
-  for (const p of products) {
-    const brandId = brandMap.get(p.brand);
-    const catId = categoryMap.get(p.category);
-    const img = IMAGES[i % IMAGES.length];
-    i++;
-    await Product.create({
-      title: p.title,
-      slug: slugify(p.title),
-      brand: brandId,
-      categories: catId ? [catId] : [],
-      description: `<p>${p.title} from Gaanbajana. Built for practice rooms, home studios, and live stages. Includes manufacturer warranty and our support desk guidance.</p><ul><li>Checked and packed by our team</li><li>Secure prepaid checkout</li><li>Pan-India shipping via partner couriers</li></ul>`,
-      shortDescription: `Shop ${p.title} online at Gaanbajana with fast shipping across India.`,
-      images: [img],
-      variants: [
-        {
-          sku: `${slugify(p.title).slice(0, 12)}-std`,
-          name: "Standard",
-          color: "Natural",
-          price: p.price,
-          mrp: p.mrp,
-          stock: 25,
-          image: img,
-        },
-      ],
-      price: p.price,
-      mrp: p.mrp,
-      stock: 25,
-      weightKg: p.category.includes("Drum") ? 18 : p.category.includes("Piano") ? 12 : 3.5,
-      lengthCm: 100,
-      breadthCm: 40,
-      heightCm: 15,
-      tags: p.tags || [],
-      featured: Boolean(p.featured),
-      onSale: Boolean(p.onSale),
-      openBox: Boolean(p.openBox),
-      isActive: true,
-      ratingAvg: 0,
-      ratingCount: 0,
-    });
+  const productCount = await Product.countDocuments();
+  if (productCount > 0) {
+    console.log(`Kept existing products (${productCount}) — catalog images unchanged`);
+  } else {
+    let i = 0;
+    for (const p of products) {
+      const brandId = brandMap.get(p.brand);
+      const catId = categoryMap.get(p.category);
+      const img = IMAGES[i % IMAGES.length];
+      i++;
+      await Product.create({
+        title: p.title,
+        slug: slugify(p.title),
+        brand: brandId,
+        categories: catId ? [catId] : [],
+        description: `<p>${p.title} from Gaanbajana. Built for practice rooms, home studios, and live stages. Includes manufacturer warranty and our support desk guidance.</p><ul><li>Checked and packed by our team</li><li>Secure prepaid checkout</li><li>Pan-India shipping via partner couriers</li></ul>`,
+        shortDescription: `Shop ${p.title} online at Gaanbajana with fast shipping across India.`,
+        images: [img],
+        variants: [
+          {
+            sku: `${slugify(p.title).slice(0, 12)}-std`,
+            name: "Standard",
+            color: "Natural",
+            price: p.price,
+            mrp: p.mrp,
+            stock: 25,
+            image: img,
+          },
+        ],
+        price: p.price,
+        mrp: p.mrp,
+        stock: 25,
+        weightKg: p.category.includes("Drum") ? 18 : p.category.includes("Piano") ? 12 : 3.5,
+        lengthCm: 100,
+        breadthCm: 40,
+        heightCm: 15,
+        tags: p.tags || [],
+        featured: Boolean(p.featured),
+        onSale: Boolean(p.onSale),
+        openBox: Boolean(p.openBox),
+        isActive: true,
+        ratingAvg: 0,
+        ratingCount: 0,
+      });
+    }
+    console.log(`Seeded ${products.length} products`);
   }
 
   const pages = [
@@ -546,7 +569,7 @@ async function main() {
     {
       key: "privacy",
       title: "Privacy Policy",
-      body: `<p>We collect account, order, and delivery details to fulfil purchases and improve the store. Payment data is processed by Cashfree; we do not store card numbers.</p>`,
+      body: `<p>We collect account, order, and delivery details to fulfil purchases and improve the store. Payment data is processed by PhonePe; we do not store card numbers.</p>`,
     },
     {
       key: "terms",
@@ -556,7 +579,7 @@ async function main() {
     {
       key: "faqs",
       title: "Frequently Asked Questions",
-      body: `<h3>Do you ship pan-India?</h3><p>Yes, via Shiprocket courier partners to serviceable pincodes.</p><h3>Which payments are accepted?</h3><p>UPI (including PhonePe), cards, netbanking, and wallets through Cashfree.</p><h3>Can I track my order?</h3><p>Yes — use Track Order or your account order history once the AWB is assigned.</p>`,
+      body: `<h3>Do you ship pan-India?</h3><p>Yes, via Shiprocket courier partners to serviceable pincodes.</p><h3>Which payments are accepted?</h3><p>UPI, cards, netbanking, and wallets through PhonePe Payment Gateway.</p><h3>Can I track my order?</h3><p>Yes — use Track Order or your account order history once the AWB is assigned.</p>`,
     },
     {
       key: "contact",
@@ -572,27 +595,32 @@ async function main() {
     });
   }
 
-  await BlogPost.deleteMany({});
-  await BlogPost.create([
-    {
-      title: "How to choose your first acoustic guitar",
-      slug: "first-acoustic-guitar",
-      excerpt: "Size, top wood, and budget tips for beginners shopping in India.",
-      body: `<p>Start with a comfortable body size, a reliable truss rod, and a starter kit that includes a bag and picks. Try a few necks if you can — then buy online with a clear return window.</p>`,
-      coverImage: IMAGES[0],
-      published: true,
-      publishedAt: new Date(),
-    },
-    {
-      title: "Home studio starter checklist",
-      slug: "home-studio-checklist",
-      excerpt: "Interface, headphones, mic, and treatment — what actually matters first.",
-      body: `<p>Prioritise a solid audio interface and closed-back headphones before expensive monitors. Add a condenser mic when your room is quieter.</p>`,
-      coverImage: IMAGES[3],
-      published: true,
-      publishedAt: new Date(),
-    },
-  ]);
+  const blogCount = await BlogPost.countDocuments();
+  if (blogCount === 0) {
+    await BlogPost.create([
+      {
+        title: "How to choose your first acoustic guitar",
+        slug: "first-acoustic-guitar",
+        excerpt: "Size, top wood, and budget tips for beginners shopping in India.",
+        body: `<p>Start with a comfortable body size, a reliable truss rod, and a starter kit that includes a bag and picks. Try a few necks if you can — then buy online with a clear return window.</p>`,
+        coverImage: IMAGES[0],
+        published: true,
+        publishedAt: new Date(),
+      },
+      {
+        title: "Home studio starter checklist",
+        slug: "home-studio-checklist",
+        excerpt: "Interface, headphones, mic, and treatment — what actually matters first.",
+        body: `<p>Prioritise a solid audio interface and closed-back headphones before expensive monitors. Add a condenser mic when your room is quieter.</p>`,
+        coverImage: IMAGES[3],
+        published: true,
+        publishedAt: new Date(),
+      },
+    ]);
+    console.log("Seeded blog posts");
+  } else {
+    console.log(`Kept existing blog posts (${blogCount})`);
+  }
 
   console.log("Seed complete.");
   process.exit(0);

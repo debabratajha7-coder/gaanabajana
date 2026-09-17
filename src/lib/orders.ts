@@ -13,7 +13,7 @@ export async function markOrderPaid(orderNumber: string, paymentId?: string) {
 
   order.paymentStatus = "paid";
   order.status = "confirmed";
-  if (paymentId) order.cashfreePaymentId = paymentId;
+  if (paymentId) order.phonepeTransactionId = paymentId;
   order.timeline.push({ status: "paid", at: new Date(), note: "Payment confirmed" });
   await order.save();
 

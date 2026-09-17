@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { Review } from "@/models/Review";
 import { User } from "@/models/User";
 import { refreshProductRating } from "@/lib/reviews";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireAdminPermission("reviews");
     await connectDB();
     const [reviews, users] = await Promise.all([
       Review.find()
@@ -47,7 +47,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("reviews");
     const body = z
       .object({
         productId: z.string(),
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("reviews");
     const body = z
       .object({
         reviewId: z.string(),
@@ -107,7 +107,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("reviews");
     const body = z
       .object({
         reviewId: z.string().optional(),

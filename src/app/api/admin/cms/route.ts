@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { getSiteSettings, SiteSettings } from "@/models/SiteSettings";
 import { PageContent } from "@/models/PageContent";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireAdminPermission("website");
     await connectDB();
     const settings = await getSiteSettings();
     const pages = await PageContent.find().lean();
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("website");
     const body = await req.json();
     await connectDB();
 

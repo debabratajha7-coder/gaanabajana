@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { Category } from "@/models/Category";
 import { Brand } from "@/models/Brand";
 import { slugify } from "@/lib/utils";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireAdminPermission("catalog");
     await connectDB();
     const [categories, brands] = await Promise.all([
       Category.find().sort({ sortOrder: 1 }).lean(),
@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("catalog");
     const body = await req.json();
     await connectDB();
 
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("catalog");
     const body = await req.json();
     await connectDB();
     if (body.type === "category") {
@@ -97,7 +97,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("catalog");
     const body = z
       .object({ type: z.enum(["category", "brand"]), id: z.string() })
       .parse(await req.json());

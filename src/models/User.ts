@@ -14,6 +14,17 @@ export type Address = {
   isDefault?: boolean;
 };
 
+export type AdminPermissionKey =
+  | "dashboard"
+  | "products"
+  | "orders"
+  | "catalog"
+  | "website"
+  | "blog"
+  | "reviews"
+  | "media"
+  | "users";
+
 export interface IUser {
   _id: Types.ObjectId;
   name: string;
@@ -22,7 +33,12 @@ export interface IUser {
   googleId?: string;
   authProvider: "local" | "google";
   role: "customer" | "admin";
+  isSuperAdmin?: boolean;
+  adminPermissions?: AdminPermissionKey[];
   phone?: string;
+  phoneVerified?: boolean;
+  emailVerified?: boolean;
+  isActive?: boolean;
   wishlist: Types.ObjectId[];
   addresses: Address[];
   createdAt: Date;
@@ -48,7 +64,13 @@ const AddressSchema = new Schema(
 const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     passwordHash: { type: String, required: false },
     googleId: { type: String, sparse: true, unique: true },
     authProvider: {
@@ -57,7 +79,12 @@ const UserSchema = new Schema<IUser>(
       default: "local",
     },
     role: { type: String, enum: ["customer", "admin"], default: "customer" },
-    phone: String,
+    isSuperAdmin: { type: Boolean, default: false },
+    adminPermissions: { type: [String], default: [] },
+    phone: { type: String, sparse: true, unique: true },
+    phoneVerified: { type: Boolean, default: false },
+    emailVerified: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
     wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     addresses: [AddressSchema],
   },

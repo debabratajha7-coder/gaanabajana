@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { Order } from "@/models/Order";
 import { pushOrderToShiprocket } from "@/lib/orders";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireAdminPermission("orders");
     await connectDB();
     const orders = await Order.find().sort({ createdAt: -1 }).limit(100).lean();
     return NextResponse.json({ orders });
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("orders");
     const body = z
       .object({
         orderNumber: z.string(),

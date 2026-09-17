@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { createSessionToken } from "@/lib/auth";
+import { createSessionToken, sessionFromUser, COOKIE_NAME } from "@/lib/auth";
 import {
   STATE_COOKIE,
   clearOAuthStateCookie,
@@ -8,7 +8,6 @@ import {
   googleRedirectUri,
 } from "@/lib/google-oauth";
 import { User } from "@/models/User";
-import { COOKIE_NAME } from "@/lib/auth";
 
 function appUrl(path: string) {
   const base = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
@@ -91,6 +90,8 @@ export async function GET(req: NextRequest) {
         googleId: profile.sub,
         authProvider: "google",
         role: "customer",
+        emailVerified: true,
+        isActive: true,
       });
     } else {
       if (!user.googleId) user.googleId = profile.sub;
@@ -98,15 +99,11 @@ export async function GET(req: NextRequest) {
       if (user.authProvider !== "google" && !user.passwordHash) {
         user.authProvider = "google";
       }
+      user.emailVerified = true;
       await user.save();
     }
 
-    const token = await createSessionToken({
-      id: String(user._id),
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    });
+    const token = await createSessionToken(sessionFromUser(user));
 
     const dest = user.role === "admin" ? "/admin" : "/account";
     const res = NextResponse.redirect(appUrl(dest));

@@ -141,9 +141,17 @@ export default function ProfilePage() {
         </p>
         {user.hasPassword && (
           <div>
-            <label className="field-label" htmlFor="currentPassword">
-              Current password
-            </label>
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <label className="field-label mb-0" htmlFor="currentPassword">
+                Current password
+              </label>
+              <Link
+                href={`/forgot-password?identifier=${encodeURIComponent(user.email)}`}
+                className="text-xs text-[var(--fg-muted)] hover:text-[var(--accent)]"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="currentPassword"
               className="input"

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { authErrorResponse, requireAdmin } from "@/lib/auth";
+import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { Product } from "@/models/Product";
 import { Review } from "@/models/Review";
 import { slugify } from "@/lib/utils";
@@ -72,7 +72,7 @@ async function attachAdminReviews(
 
 export async function GET(req: NextRequest) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("products");
     await connectDB();
     const q = req.nextUrl.searchParams.get("q");
     const id = req.nextUrl.searchParams.get("id");
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("products");
     const body = productSchema.parse(await req.json());
     await connectDB();
     const { reviews, ...rest } = body;
@@ -187,7 +187,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("products");
     const body = productSchema.extend({ id: z.string() }).parse(await req.json());
     await connectDB();
     const { id, reviews, ...rest } = body;
@@ -207,7 +207,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdmin();
+    await requireAdminPermission("products");
     const { id } = z.object({ id: z.string() }).parse(await req.json());
     await connectDB();
     await Promise.all([
