@@ -34,7 +34,7 @@ export interface ISiteSettings {
 
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
-    storeName: { type: String, default: "Gaanbajna" },
+    storeName: { type: String, default: "Gaana Bajana" },
     tagline: { type: String, default: "Musical instruments & audio gear for every stage" },
     phone: { type: String, default: "+91 9563754563, +91 7679586321" },
     email: { type: String, default: "hello@gaanbajana.com" },

@@ -27,7 +27,7 @@ export async function GET() {
         // Logged-in accounts (excludes admin + demo review seed accounts)
         User.countDocuments({
           role: "customer",
-          email: { $not: /@gaanbajana\.demo$/i },
+          email: { $not: /@gaanabajana\.demo$/i },
         }),
         // Paid orders — used to derive customers who actually paid
         Order.find({ paymentStatus: "paid" })

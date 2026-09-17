@@ -149,7 +149,7 @@ export async function createPhonePePayment(input: {
       amount,
       paymentFlow: {
         type: "PG_CHECKOUT",
-        message: input.message || "Payment for Gaanbajna order",
+        message: input.message || "Payment for Gaanabajana order",
         merchantUrls: {
           redirectUrl: input.redirectUrl,
         },

@@ -26,7 +26,7 @@ type CartContextValue = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "gaanbajana_cart";
+const STORAGE_KEY = "gaanabajana_cart";
 
 function keyOf(item: { productId: string; variantName?: string }) {
   return `${item.productId}::${item.variantName || ""}`;

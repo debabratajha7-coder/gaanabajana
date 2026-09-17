@@ -18,7 +18,7 @@ export function isCloudinaryConfigured() {
   );
 }
 
-export async function uploadBuffer(buffer: Buffer, folder = "gaanbajana") {
+export async function uploadBuffer(buffer: Buffer, folder = "gaanabajana") {
   const c = configureCloudinary();
   return new Promise<{
     public_id: string;

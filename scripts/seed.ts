@@ -58,7 +58,7 @@ async function main() {
   await User.findOneAndUpdate(
     { email: adminEmail },
     {
-      name: "Gaanbajana Admin",
+      name: "Gaanabajana Admin",
       email: adminEmail,
       passwordHash,
       authProvider: "local",
@@ -84,7 +84,7 @@ async function main() {
   const existingSettings = await SiteSettings.findOne();
   if (!existingSettings) {
     await SiteSettings.create({
-      storeName: "Gaanbajna",
+      storeName: "Gaana Bajana",
       tagline: "Musical instruments & audio gear for every stage",
       phone: "+91 9563754563, +91 7679586321",
       email: "hello@gaanbajana.com",
@@ -99,9 +99,9 @@ async function main() {
       heroCtaHref: "/collections/guitars",
       pickupLocationName: process.env.SHIPROCKET_PICKUP_LOCATION || "Primary",
       social: {
-        instagram: "https://instagram.com/gaanbajana",
-        youtube: "https://youtube.com/@gaanbajana",
-        facebook: "https://facebook.com/gaanbajana",
+        instagram: "https://instagram.com/gaanabajana",
+        youtube: "https://youtube.com/@gaanabajana",
+        facebook: "https://facebook.com/gaanabajana",
       },
     });
     console.log("Created default SiteSettings");
@@ -512,8 +512,8 @@ async function main() {
         slug: slugify(p.title),
         brand: brandId,
         categories: catId ? [catId] : [],
-        description: `<p>${p.title} from Gaanbajana. Built for practice rooms, home studios, and live stages. Includes manufacturer warranty and our support desk guidance.</p><ul><li>Checked and packed by our team</li><li>Secure prepaid checkout</li><li>Pan-India shipping via partner couriers</li></ul>`,
-        shortDescription: `Shop ${p.title} online at Gaanbajana with fast shipping across India.`,
+        description: `<p>${p.title} from Gaanabajana. Built for practice rooms, home studios, and live stages. Includes manufacturer warranty and our support desk guidance.</p><ul><li>Checked and packed by our team</li><li>Secure prepaid checkout</li><li>Pan-India shipping via partner couriers</li></ul>`,
+        shortDescription: `Shop ${p.title} online at Gaanabajana with fast shipping across India.`,
         images: [img],
         variants: [
           {
@@ -548,8 +548,8 @@ async function main() {
   const pages = [
     {
       key: "about",
-      title: "About Gaanbajana",
-      body: `<p>Gaanbajana is an online music store built for Indian musicians — from first-chord beginners to session players stocking a home studio.</p><p>We curate guitars, keyboards, drums, studio gear, and Indian instruments with transparent pricing, prepaid checkout, and courier partners you can track.</p>`,
+      title: "About Gaanabajana",
+      body: `<p>Gaanabajana is an online music store built for Indian musicians — from first-chord beginners to session players stocking a home studio.</p><p>We curate guitars, keyboards, drums, studio gear, and Indian instruments with transparent pricing, prepaid checkout, and courier partners you can track.</p>`,
     },
     {
       key: "shipping",
@@ -564,7 +564,7 @@ async function main() {
     {
       key: "warranty",
       title: "Warranty",
-      body: `<p>Products carry manufacturer warranty as listed on the product page. Gaanbajana assists with claim documentation and service centre guidance.</p>`,
+      body: `<p>Products carry manufacturer warranty as listed on the product page. Gaanabajana assists with claim documentation and service centre guidance.</p>`,
     },
     {
       key: "privacy",
@@ -574,7 +574,7 @@ async function main() {
     {
       key: "terms",
       title: "Terms of Service",
-      body: `<p>By shopping at Gaanbajana you agree to accurate shipping details, prepaid payment terms, and our return windows. Prices and stock can change without notice.</p>`,
+      body: `<p>By shopping at Gaanabajana you agree to accurate shipping details, prepaid payment terms, and our return windows. Prices and stock can change without notice.</p>`,
     },
     {
       key: "faqs",

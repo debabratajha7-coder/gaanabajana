@@ -19,7 +19,7 @@ export async function GET() {
         .lean(),
       User.find({
         role: "customer",
-        email: { $not: /@gaanbajana\.demo$/i },
+        email: { $not: /@gaanabajana\.demo$/i },
       })
         .select("name email phone createdAt")
         .sort({ createdAt: -1 })

@@ -107,7 +107,7 @@ export async function POST(req: Request) {
       merchantOrderId: orderNumber,
       amountInr: total,
       redirectUrl: `${appUrl}/checkout/success?order_id=${orderNumber}`,
-      message: `Gaanbajna order ${orderNumber}`,
+      message: `Gaanabajana order ${orderNumber}`,
     });
 
     order.phonepeOrderId = pay.orderId;

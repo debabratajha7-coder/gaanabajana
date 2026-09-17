@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { OtpInput } from "@/components/auth/OtpInput";
 
 const REASONS = [
-  { value: "not_using", label: "I no longer use Gaanbajna" },
+  { value: "not_using", label: "I no longer use Gaanabajana" },
   { value: "too_many_emails", label: "I get too many emails" },
   { value: "privacy", label: "I want to protect my privacy" },
   { value: "better_alternative", label: "I found another store" },
@@ -235,7 +235,7 @@ export function DeleteAccountControl() {
               <div className="mt-5 space-y-4">
                 <p className="text-sm text-[var(--fg-muted)]">
                   Deleting your account permanently removes your personal data from
-                  Gaanbajna.
+                  Gaanabajana.
                 </p>
                 <ul className="space-y-2 text-sm text-[var(--fg)]">
                   <li className="border-l-2 border-[var(--line)] pl-3">

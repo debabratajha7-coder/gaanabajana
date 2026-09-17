@@ -1,4 +1,4 @@
-# Gaanbajana — what you need to do
+# Gaanabajana — what you need to do
 
 Copy `.env.example` to `.env.local` and fill keys in this order.
 

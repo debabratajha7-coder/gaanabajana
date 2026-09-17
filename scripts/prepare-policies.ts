@@ -20,8 +20,8 @@ const CONTACT = {
 const pages = [
   {
     key: "about",
-    title: "About Gaanbajna",
-    body: `<p><strong>Gaanbajna</strong> is an online store for musical instruments and audio gear in India. We sell guitars, keyboards, drums, studio equipment, and related accessories for beginners, students, and performing musicians.</p>
+    title: "About Gaanabajana",
+    body: `<p><strong>Gaanabajana</strong> is an online store for musical instruments and audio gear in India. We sell guitars, keyboards, drums, studio equipment, and related accessories for beginners, students, and performing musicians.</p>
 <p>Orders are placed online with prepaid checkout. After payment confirmation we pack and ship through courier partners. You can track deliveries from your account or the Track Order page.</p>
 <p><strong>Registered / business address:</strong> ${CONTACT.address}</p>
 <p><strong>Contact:</strong> ${CONTACT.phones} · ${CONTACT.email}</p>`,
@@ -29,7 +29,7 @@ const pages = [
   {
     key: "shipping",
     title: "Shipping Policy",
-    body: `<p>This Shipping Policy applies to orders placed on <strong>Gaanbajna</strong> (${CONTACT.email}).</p>
+    body: `<p>This Shipping Policy applies to orders placed on <strong>Gaanabajana</strong> (${CONTACT.email}).</p>
 <h3>Processing</h3>
 <p>Orders are processed after successful prepaid payment. We aim to hand parcels to our courier partners within 1–3 business days, subject to stock and location.</p>
 <h3>Delivery</h3>
@@ -43,7 +43,7 @@ const pages = [
   {
     key: "returns",
     title: "Refund & Cancellation Policy",
-    body: `<p>This Refund &amp; Cancellation Policy applies to purchases from <strong>Gaanbajna</strong>.</p>
+    body: `<p>This Refund &amp; Cancellation Policy applies to purchases from <strong>Gaanabajana</strong>.</p>
 <h3>Cancellations</h3>
 <p>You may request cancellation before the order is shipped. Once handed to the courier, cancellation may not be possible; you can refuse delivery or request a return after receipt as below.</p>
 <h3>Returns</h3>
@@ -57,14 +57,14 @@ const pages = [
   {
     key: "warranty",
     title: "Warranty",
-    body: `<p>Most products sold by Gaanbajna carry the <strong>manufacturer’s warranty</strong> as stated on the product page or included documentation.</p>
+    body: `<p>Most products sold by Gaanabajana carry the <strong>manufacturer’s warranty</strong> as stated on the product page or included documentation.</p>
 <p>Warranty covers manufacturing defects under the brand’s terms. It does not cover physical damage, misuse, unauthorized repairs, or normal wear.</p>
 <p>We help with claim documentation and service-centre guidance. Contact ${CONTACT.email} or ${CONTACT.phones} with your order number and product serial (if any).</p>`,
   },
   {
     key: "privacy",
     title: "Privacy Policy",
-    body: `<p>This Privacy Policy describes how <strong>Gaanbajna</strong> collects and uses information when you use our website and place orders.</p>
+    body: `<p>This Privacy Policy describes how <strong>Gaanabajana</strong> collects and uses information when you use our website and place orders.</p>
 <h3>Information we collect</h3>
 <ul>
 <li>Account details (name, email, phone) when you register or check out</li>
@@ -84,7 +84,7 @@ const pages = [
   {
     key: "terms",
     title: "Terms & Conditions",
-    body: `<p>Welcome to <strong>Gaanbajna</strong>. By accessing our website or placing an order you agree to these Terms &amp; Conditions.</p>
+    body: `<p>Welcome to <strong>Gaanabajana</strong>. By accessing our website or placing an order you agree to these Terms &amp; Conditions.</p>
 <h3>Store &amp; products</h3>
 <p>We sell musical instruments, audio equipment, and related accessories online in India. Product descriptions and images are provided for accuracy in good faith; minor variations may occur. Prices and stock can change without prior notice until payment is completed.</p>
 <h3>Accounts</h3>
@@ -94,7 +94,7 @@ const pages = [
 <h3>Shipping &amp; returns</h3>
 <p>Delivery and returns are governed by our Shipping Policy and Refund &amp; Cancellation Policy.</p>
 <h3>Limitation</h3>
-<p>To the extent permitted by law, Gaanbajna is not liable for indirect or consequential losses arising from use of the site or delayed courier events outside our reasonable control.</p>
+<p>To the extent permitted by law, Gaanabajana is not liable for indirect or consequential losses arising from use of the site or delayed courier events outside our reasonable control.</p>
 <h3>Contact</h3>
 <p>${CONTACT.email} · ${CONTACT.phones}<br/>${CONTACT.address}</p>`,
   },
@@ -327,8 +327,8 @@ async function ensureCatalog() {
         slug,
         brand: brandId,
         categories: catId ? [catId] : [],
-        description: `<p>${p.title} from Gaanbajna. Built for practice rooms, home studios, and live stages. Includes manufacturer warranty support guidance.</p><ul><li>Checked and packed by our team</li><li>Secure prepaid checkout</li><li>Pan-India shipping via courier partners</li></ul>`,
-        shortDescription: `Shop ${p.title} online at Gaanbajna with clear pricing and prepaid checkout.`,
+        description: `<p>${p.title} from Gaanabajana. Built for practice rooms, home studios, and live stages. Includes manufacturer warranty support guidance.</p><ul><li>Checked and packed by our team</li><li>Secure prepaid checkout</li><li>Pan-India shipping via courier partners</li></ul>`,
+        shortDescription: `Shop ${p.title} online at Gaanabajana with clear pricing and prepaid checkout.`,
         images: [img],
         variants: [
           {

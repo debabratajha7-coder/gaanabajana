@@ -1,4 +1,4 @@
-# Gaanbajana
+# Gaanabajana
 
 Musical instruments ecommerce for India — Next.js + MongoDB + Cloudinary admin CMS. PhonePe and Shiprocket keys come after hosting (you need a live site URL).
 

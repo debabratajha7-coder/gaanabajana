@@ -28,7 +28,7 @@ export default async function ContactPage() {
         />
       ) : (
         <p className="mt-6 max-w-2xl text-[var(--fg-muted)]">
-          Reach Gaanbajna for product questions, orders, and returns.
+          Reach Gaanabajana for product questions, orders, and returns.
         </p>
       )}
 

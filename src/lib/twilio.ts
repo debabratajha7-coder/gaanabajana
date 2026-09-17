@@ -29,7 +29,7 @@ export async function sendSmsOtp(to: string, code: string) {
         body: new URLSearchParams({
           To: to,
           From: from,
-          Body: `Your Gaanbajna code is ${code}. Valid for 15 minutes.`,
+          Body: `Your Gaanabajana code is ${code}. Valid for 15 minutes.`,
         }),
       }
     );

@@ -50,7 +50,7 @@ export async function getLayoutData() {
     return {
       categories: [],
       settings: {
-        storeName: "Gaanbajna",
+        storeName: "Gaana Bajana",
         tagline: "Musical instruments & audio gear for every stage",
         phone: "+91 9563754563, +91 7679586321",
         email: "hello@gaanbajana.com",

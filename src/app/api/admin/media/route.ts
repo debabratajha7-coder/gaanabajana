@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       alt,
       bytes: uploaded.bytes,
       format: uploaded.format,
-      folder: "gaanbajana",
+      folder: "gaanabajana",
     });
     return NextResponse.json({ media });
   } catch (e) {

@@ -142,7 +142,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
   return (
     <div className="container-gb mx-auto max-w-md py-12 md:py-16">
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--fg-muted)]">
-        Join Gaanbajna
+        Join Gaanabajana
       </p>
       <h1 className="display mt-2 text-4xl md:text-5xl">Create account</h1>
       <p className="mt-2 text-[var(--fg-muted)]">
