@@ -13,7 +13,7 @@ export default async function ContactPage() {
 
   const phones = (settings?.phone || "")
     .split(/[,|·•]/)
-    .map((p) => p.trim())
+    .map((p: string) => p.trim())
     .filter(Boolean);
 
   return (
@@ -37,7 +37,7 @@ export default async function ContactPage() {
           <p className="eyebrow">Phone</p>
           <div className="mt-2 space-y-1 text-sm">
             {phones.length ? (
-              phones.map((p) => (
+              phones.map((p: string) => (
                 <p key={p}>
                   <a href={`tel:${p.replace(/\s+/g, "")}`} className="hover:text-[var(--accent)]">
                     {p}
