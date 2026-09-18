@@ -14,6 +14,7 @@ import {
   Star,
   Images,
   Users,
+  Shield,
   ChevronDown,
   LogOut,
 } from "lucide-react";
@@ -54,12 +55,13 @@ const more: {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
-  permission: AdminPermission;
+  permission: AdminPermission | null;
 }[] = [
   { href: "/admin/blog", label: "Blog posts", icon: Newspaper, permission: "blog" },
   { href: "/admin/reviews", label: "Reviews", icon: Star, permission: "reviews" },
   { href: "/admin/media", label: "All photos", icon: Images, permission: "media" },
   { href: "/admin/users", label: "Users & staff", icon: Users, permission: "users" },
+  { href: "/admin/security", label: "Login & security", icon: Shield, permission: null },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -125,18 +127,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const allowedMore = useMemo(
     () =>
-      more.filter((item) =>
-        user
-          ? hasAdminPermission(
-              {
-                role: user.role,
-                isSuperAdmin: user.isSuperAdmin,
-                adminPermissions: user.adminPermissions,
-              },
-              item.permission
-            )
-          : false
-      ),
+      more.filter((item) => {
+        if (!user) return false;
+        if (!item.permission) return true;
+        return hasAdminPermission(
+          {
+            role: user.role,
+            isSuperAdmin: user.isSuperAdmin,
+            adminPermissions: user.adminPermissions,
+          },
+          item.permission
+        );
+      }),
     [user]
   );
 

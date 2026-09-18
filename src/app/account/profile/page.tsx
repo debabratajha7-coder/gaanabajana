@@ -3,11 +3,14 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { OtpInput } from "@/components/auth/OtpInput";
+import { maskPhone } from "@/lib/otp-client";
 
 type ProfileUser = {
   name: string;
   email: string;
   phone?: string;
+  role?: string;
   authProvider?: string;
   hasPassword?: boolean;
 };
@@ -16,7 +19,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<ProfileUser | null>(null);
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
   const [profileMsg, setProfileMsg] = useState("");
   const [profileError, setProfileError] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -25,6 +27,16 @@ export default function ProfilePage() {
   const [passwordMsg, setPasswordMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [newPhone, setNewPhone] = useState("");
+  const [phonePassword, setPhonePassword] = useState("");
+  const [phoneStep, setPhoneStep] = useState<"form" | "otp">("form");
+  const [phoneChallenge, setPhoneChallenge] = useState("");
+  const [phoneMasked, setPhoneMasked] = useState("");
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneMsg, setPhoneMsg] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [phoneBusy, setPhoneBusy] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -36,7 +48,6 @@ export default function ProfilePage() {
         }
         setUser(d.user);
         setName(d.user.name || "");
-        setPhone(d.user.phone || "");
       });
   }, [router]);
 
@@ -48,7 +59,7 @@ export default function ProfilePage() {
     const res = await fetch("/api/account/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name }),
     });
     const data = await res.json();
     setSaving(false);
@@ -58,6 +69,57 @@ export default function ProfilePage() {
     }
     setUser((u) => (u ? { ...u, ...data.user } : data.user));
     setProfileMsg("Profile updated");
+  }
+
+  async function requestPhoneChange(e: FormEvent) {
+    e.preventDefault();
+    setPhoneBusy(true);
+    setPhoneError("");
+    setPhoneMsg("");
+    const res = await fetch("/api/account/phone/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: newPhone,
+        ...(user?.role === "admin" ? { currentPassword: phonePassword } : {}),
+      }),
+    });
+    const data = await res.json();
+    setPhoneBusy(false);
+    if (!res.ok) {
+      setPhoneError(data.error || "Could not send code");
+      return;
+    }
+    setPhoneChallenge(data.challengeToken);
+    setPhoneMasked(data.maskedPhone || "");
+    setPhoneOtp("");
+    setPhoneStep("otp");
+    setPhoneMsg(`Code sent to ${data.maskedPhone}`);
+  }
+
+  async function confirmPhoneChange(e: FormEvent) {
+    e.preventDefault();
+    setPhoneBusy(true);
+    setPhoneError("");
+    setPhoneMsg("");
+    const res = await fetch("/api/account/phone/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challengeToken: phoneChallenge, code: phoneOtp }),
+    });
+    const data = await res.json();
+    setPhoneBusy(false);
+    if (!res.ok) {
+      setPhoneError(data.error || "Could not verify code");
+      return;
+    }
+    setUser((u) => (u ? { ...u, phone: data.phone } : u));
+    setNewPhone("");
+    setPhonePassword("");
+    setPhoneChallenge("");
+    setPhoneOtp("");
+    setPhoneStep("form");
+    setPhoneMsg("Phone updated");
   }
 
   async function savePassword(e: FormEvent) {
@@ -90,6 +152,8 @@ export default function ProfilePage() {
 
   if (!user) return <div className="container-gb py-16">Loading…</div>;
 
+  const isAdmin = user.role === "admin";
+
   return (
     <div className="container-gb max-w-xl py-12">
       <Link href="/account" className="text-sm text-[var(--fg-muted)] hover:text-[var(--accent)]">
@@ -97,6 +161,15 @@ export default function ProfilePage() {
       </Link>
       <h1 className="display mt-4 text-4xl">Profile & security</h1>
       <p className="mt-2 text-[var(--fg-muted)]">{user.email}</p>
+      {isAdmin && (
+        <p className="mt-2 text-sm text-[var(--fg-muted)]">
+          Admin OTP phone can also be managed in{" "}
+          <Link href="/admin/security" className="underline hover:text-[var(--accent)]">
+            Admin → Login &amp; security
+          </Link>
+          .
+        </p>
+      )}
 
       <form onSubmit={saveProfile} className="mt-8 space-y-4">
         <div>
@@ -111,24 +184,98 @@ export default function ProfilePage() {
             required
           />
         </div>
-        <div>
-          <label className="field-label" htmlFor="phone">
-            Phone
-          </label>
-          <input
-            id="phone"
-            className="input"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Optional"
-          />
-        </div>
         {profileError && <p className="text-[var(--danger)]">{profileError}</p>}
         {profileMsg && <p className="text-[var(--success)]">{profileMsg}</p>}
         <button className="btn btn-primary" type="submit" disabled={saving}>
-          Save profile
+          Save name
         </button>
       </form>
+
+      <div className="mt-12 space-y-4 border-t border-[var(--line)] pt-10">
+        <h2 className="display text-2xl">Phone number</h2>
+        <p className="text-sm text-[var(--fg-muted)]">
+          Current:{" "}
+          <span className="font-medium text-[var(--fg)]">
+            {user.phone ? maskPhone(user.phone) : "Not set"}
+          </span>
+          {user.phone ? ` (${user.phone})` : ""}
+          {isAdmin
+            ? ". Admin login OTPs are sent here."
+            : "."}
+        </p>
+
+        {phoneStep === "form" ? (
+          <form onSubmit={requestPhoneChange} className="space-y-4">
+            {isAdmin && (
+              <div>
+                <label className="field-label" htmlFor="phonePassword">
+                  Current password
+                </label>
+                <input
+                  id="phonePassword"
+                  className="input"
+                  type="password"
+                  value={phonePassword}
+                  onChange={(e) => setPhonePassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+            )}
+            <div>
+              <label className="field-label" htmlFor="newPhone">
+                New phone
+              </label>
+              <input
+                id="newPhone"
+                className="input"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                placeholder="10-digit mobile"
+                required
+                inputMode="tel"
+              />
+            </div>
+            {phoneError && <p className="text-[var(--danger)]">{phoneError}</p>}
+            {phoneMsg && <p className="text-[var(--success)]">{phoneMsg}</p>}
+            <button className="btn btn-primary" type="submit" disabled={phoneBusy}>
+              {phoneBusy ? "Sending…" : "Send OTP to new number"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={confirmPhoneChange} className="space-y-4">
+            <p className="text-sm text-[var(--fg-muted)]">
+              Enter the code sent to {phoneMasked || "your new phone"}.
+            </p>
+            <OtpInput value={phoneOtp} onChange={setPhoneOtp} />
+            {phoneError && <p className="text-[var(--danger)]">{phoneError}</p>}
+            {phoneMsg && <p className="text-[var(--success)]">{phoneMsg}</p>}
+            <div className="flex flex-wrap gap-3">
+              <button
+                className="btn btn-primary"
+                type="submit"
+                disabled={phoneBusy || phoneOtp.length < 6}
+              >
+                {phoneBusy ? "Saving…" : "Confirm phone"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={phoneBusy}
+                onClick={() => {
+                  setPhoneStep("form");
+                  setPhoneChallenge("");
+                  setPhoneOtp("");
+                  setPhoneError("");
+                  setPhoneMsg("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
 
       <form onSubmit={savePassword} className="mt-12 space-y-4 border-t border-[var(--line)] pt-10">
         <h2 className="display text-2xl">

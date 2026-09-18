@@ -6,7 +6,6 @@ import { User } from "@/models/User";
 
 const schema = z.object({
   name: z.string().min(2).max(80),
-  phone: z.string().max(20).optional(),
 });
 
 export async function PATCH(req: Request) {
@@ -16,10 +15,7 @@ export async function PATCH(req: Request) {
     await connectDB();
     const user = await User.findByIdAndUpdate(
       session.id,
-      {
-        name: body.name.trim(),
-        phone: body.phone?.trim() || undefined,
-      },
+      { name: body.name.trim() },
       { new: true }
     ).select("name email phone role authProvider");
 

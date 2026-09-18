@@ -52,7 +52,7 @@ async function main() {
   await connectDB();
   console.log("Connected. Seeding…");
 
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@gaanbajana.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@gaanabajana.com";
   const adminPassword = process.env.ADMIN_PASSWORD || "ChangeMe123!";
   const passwordHash = await hashPassword(adminPassword);
   await User.findOneAndUpdate(
@@ -77,7 +77,7 @@ async function main() {
   console.log(`Admin: ${adminEmail} / ${adminPassword}`);
   if (!process.env.ADMIN_PHONE) {
     console.log(
-      "Tip: set ADMIN_PHONE=+91XXXXXXXXXX so admin login SMS OTP works with Twilio."
+      "Tip: set ADMIN_PHONE=+91XXXXXXXXXX once for the initial OTP number. Change it later in Admin → Login & security."
     );
   }
 

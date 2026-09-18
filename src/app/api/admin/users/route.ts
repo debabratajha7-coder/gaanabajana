@@ -155,6 +155,15 @@ export async function PATCH(req: Request) {
 
     if (body.name) user.name = body.name.trim();
     if (body.phone) {
+      if (String(user._id) === session.id && user.role === "admin") {
+        return NextResponse.json(
+          {
+            error:
+              "Change your own OTP phone from Admin → Login & security (password + SMS verify).",
+          },
+          { status: 400 }
+        );
+      }
       const phone = normalizeIndianPhone(body.phone);
       const clash = await User.findOne({ phone, _id: { $ne: user._id } });
       if (clash) {

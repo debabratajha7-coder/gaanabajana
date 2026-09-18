@@ -67,17 +67,19 @@ export async function POST(req: Request) {
     }
 
     if (user.role === "admin") {
-      const envPhone = (process.env.ADMIN_PHONE || "").replace(/\s/g, "");
-      const envAdminEmail = (process.env.ADMIN_EMAIL || "").toLowerCase().trim();
-      if (
-        envPhone &&
-        (user.isSuperAdmin ||
-          (envAdminEmail && user.email?.toLowerCase() === envAdminEmail)) &&
-        user.phone !== envPhone
-      ) {
-        user.phone = envPhone;
-        user.phoneVerified = true;
-        await user.save();
+      // Seed OTP phone from ADMIN_PHONE only when the account has none.
+      // Never overwrite a number the admin already set (any device / future changes).
+      if (!user.phone) {
+        const envPhone = (process.env.ADMIN_PHONE || "").replace(/\s/g, "");
+        if (envPhone) {
+          try {
+            user.phone = normalizeIndianPhone(envPhone);
+            user.phoneVerified = true;
+            await user.save();
+          } catch {
+            /* ignore invalid ADMIN_PHONE */
+          }
+        }
       }
 
       const hasEmail = Boolean(user.email);
