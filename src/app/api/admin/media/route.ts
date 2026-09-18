@@ -1,9 +1,22 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
-import { deleteMedia, isCloudinaryConfigured, uploadBuffer } from "@/lib/cloudinary";
+import {
+  deleteMedia,
+  isCloudinaryConfigured,
+  uploadBuffer,
+} from "@/lib/cloudinary";
 import { Media } from "@/models/Media";
 import { z } from "zod";
+
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
 
 export async function GET() {
   try {
@@ -30,9 +43,21 @@ export async function POST(req: Request) {
     }
     const form = await req.formData();
     const file = form.get("file");
-    const alt = String(form.get("alt") || "");
+    const alt = String(form.get("alt") || "").slice(0, 200);
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "file required" }, { status: 400 });
+    }
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { error: "Only JPEG, PNG, WebP, GIF, or AVIF images are allowed." },
+        { status: 400 }
+      );
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { error: "Image must be 8MB or smaller." },
+        { status: 400 }
+      );
     }
     const buffer = Buffer.from(await file.arrayBuffer());
     const uploaded = await uploadBuffer(buffer);
@@ -54,7 +79,18 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     await requireAdminPermission("media");
-    const { publicId } = z.object({ publicId: z.string() }).parse(await req.json());
+    const { publicId } = z
+      .object({ publicId: z.string().min(3).max(200) })
+      .parse(await req.json());
+    if (
+      !publicId.startsWith("gaanabajana/") &&
+      !publicId.startsWith("gaanbajana/")
+    ) {
+      return NextResponse.json(
+        { error: "Invalid media id" },
+        { status: 400 }
+      );
+    }
     if (isCloudinaryConfigured()) {
       await deleteMedia(publicId);
     }

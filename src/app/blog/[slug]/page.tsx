@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { BlogPost } from "@/models/BlogPost";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function BlogPostPage({
       )}
       <div
         className="prose-gb mt-8 max-w-3xl"
-        dangerouslySetInnerHTML={{ __html: post.body }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.body || "") }}
       />
     </article>
   );

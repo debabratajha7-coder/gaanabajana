@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import { PageContent } from "@/models/PageContent";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,10 @@ export default async function AboutPage() {
       <div
         className="prose-gb mt-8 max-w-3xl"
         dangerouslySetInnerHTML={{
-          __html:
+          __html: sanitizeHtml(
             page?.body ||
-            "<p>Gaanabajana is an online music store for Indian musicians.</p>",
+              "<p>Gaanabajana is an online music store for Indian musicians.</p>"
+          ),
         }}
       />
     </div>

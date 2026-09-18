@@ -182,7 +182,14 @@ export function verifyPhonePeCallbackAuthorization(authorization: string | null)
     .digest("hex");
   // Header may be raw hash or "SHA256{hash}" depending on dashboard config
   const normalized = authorization.replace(/^SHA256/i, "").trim();
-  return normalized === expected || authorization === expected;
+  try {
+    const a = Buffer.from(normalized, "utf8");
+    const b = Buffer.from(expected, "utf8");
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
 
 export function isPhonePePaidState(state?: string) {

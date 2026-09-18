@@ -16,6 +16,7 @@ import { BestsellerTabs } from "@/components/home/BestsellerTabs";
 import { WhyUsGrid } from "@/components/home/WhyUsGrid";
 import { StatsStrip } from "@/components/home/StatsStrip";
 import { filterPublicCategories } from "@/lib/public-catalog";
+import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -92,13 +93,11 @@ export default async function HomePage() {
 
     await Promise.all(
       shopParentsEarly.map(async (cat) => {
-        const kids = await Category.find({
-          parent: cat._id,
-          isActive: true,
-        })
-          .select("_id")
-          .lean();
-        const ids = [cat._id, ...kids.map((k) => k._id)];
+        const ids = await resolveCatalogCategoryIds({
+          _id: String(cat._id),
+          name: cat.name,
+          slug: cat.slug,
+        });
         const docs = await Product.find({
           isActive: true,
           categories: { $in: ids },

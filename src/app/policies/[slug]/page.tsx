@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { PageContent } from "@/models/PageContent";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +26,12 @@ export default async function PolicyPage({
   if (!page) notFound();
   return (
     <div className="container-gb py-12">
-      <h1 className="font-[family-name:var(--font-display)] text-4xl">{page.title}</h1>
+      <h1 className="font-[family-name:var(--font-display)] text-4xl">
+        {page.title}
+      </h1>
       <div
         className="prose-gb mt-8 max-w-3xl"
-        dangerouslySetInnerHTML={{ __html: page.body }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.body || "") }}
       />
     </div>
   );

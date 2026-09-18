@@ -5,6 +5,7 @@ import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
+import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -53,8 +54,11 @@ export default async function CollectionPage({
     );
   }
 
-  const children = await Category.find({ parent: category._id, isActive: true }).lean();
-  const ids = [category._id, ...children.map((c) => c._id)];
+  const children = await Category.find({
+    parent: category._id,
+    isActive: true,
+  }).lean();
+  const ids = await resolveCatalogCategoryIds(category);
 
   const products = await Product.find({
     isActive: true,

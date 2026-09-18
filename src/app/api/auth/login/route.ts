@@ -15,6 +15,7 @@ import {
 } from "@/lib/otp";
 import { sendEmailOtp } from "@/lib/email";
 import { User } from "@/models/User";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -36,7 +37,14 @@ async function findUserByIdentifier(identifier: string) {
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimit(`login:${clientIp(req)}`, 8, 15 * 60_000);
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
     const body = schema.parse(await req.json());
+    const idKey = body.identifier.trim().toLowerCase().slice(0, 80);
+    const idLimited = rateLimit(`login-id:${idKey}`, 10, 15 * 60_000);
+    if (!idLimited.ok) return rateLimitResponse(idLimited.retryAfterSec);
+
     await connectDB();
     const user = await findUserByIdentifier(body.identifier);
     if (!user?.passwordHash) {
@@ -46,7 +54,10 @@ export async function POST(req: Request) {
       );
     }
     if (user.isActive === false) {
-      return NextResponse.json({ error: "This account is disabled" }, { status: 403 });
+      return NextResponse.json(
+        { error: "This account is disabled" },
+        { status: 403 }
+      );
     }
     if (!(await verifyPassword(body.password, user.passwordHash))) {
       return NextResponse.json(
@@ -55,9 +66,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Admin: password OK → choose email or phone OTP (code not sent yet)
     if (user.role === "admin") {
-      // Keep main admin phone in sync with ADMIN_PHONE from env (seed-only otherwise)
       const envPhone = (process.env.ADMIN_PHONE || "").replace(/\s/g, "");
       const envAdminEmail = (process.env.ADMIN_EMAIL || "").toLowerCase().trim();
       if (
@@ -74,16 +83,13 @@ export async function POST(req: Request) {
       const hasEmail = Boolean(user.email);
       const hasPhone = Boolean(user.phone);
       if (!hasEmail && !hasPhone) {
-        await setSessionCookie(await createSessionToken(sessionFromUser(user)));
-        return NextResponse.json({
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isSuperAdmin: Boolean(user.isSuperAdmin),
+        return NextResponse.json(
+          {
+            error:
+              "Admin accounts require a verified email or phone for two-factor login. Contact the store owner.",
           },
-        });
+          { status: 403 }
+        );
       }
 
       const pendingToken = await createChallengeToken(
@@ -144,7 +150,10 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message },
+        { status: 400 }
+      );
     }
     console.error("login", error);
     return NextResponse.json(

@@ -1,3 +1,5 @@
+import { shouldExposeDevOtp } from "@/lib/otp";
+
 export async function sendOrderEmail(input: {
   to: string;
   orderNumber: string;
@@ -7,7 +9,7 @@ export async function sendOrderEmail(input: {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || "Gaanabajana <onboarding@resend.dev>";
   if (!key) {
-    console.log("[email skipped]", input);
+    console.log("[email skipped]", { to: input.to, orderNumber: input.orderNumber });
     return { skipped: true };
   }
 
@@ -40,7 +42,11 @@ export async function sendEmailOtp(to: string, code: string) {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || "Gaanabajana <onboarding@resend.dev>";
   if (!key) {
-    console.log(`[email otp skipped] ${code} → ${to}`);
+    if (shouldExposeDevOtp()) {
+      console.log(`[email otp skipped] ${code} → ${to}`);
+    } else {
+      console.log("[email otp skipped] RESEND_API_KEY missing");
+    }
     return { skipped: true as const, code };
   }
 
@@ -68,8 +74,9 @@ export async function sendEmailOtp(to: string, code: string) {
   if (!res.ok) {
     const text = await res.text();
     console.error("Resend OTP error", text);
-    // Domain not verified / bad from-address — don't strand signup; fall back to local OTP
-    console.log(`[email otp fallback] ${code} → ${to}`);
+    if (shouldExposeDevOtp()) {
+      console.log(`[email otp fallback] ${code} → ${to}`);
+    }
     return { skipped: true as const, code, error: text };
   }
 

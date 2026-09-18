@@ -8,7 +8,7 @@ import {
   verifyChallengeToken,
 } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { issueOtpChallenge, maskEmail } from "@/lib/otp";
+import { issueOtpChallenge, maskEmail, shouldExposeDevOtp } from "@/lib/otp";
 import { sendEmailOtp } from "@/lib/email";
 import { User } from "@/models/User";
 
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
       completed: false,
       emailChallengeToken,
       maskedEmail: maskEmail(email),
-      devCode: code,
+      ...(shouldExposeDevOtp() ? { devCode: code } : {}),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

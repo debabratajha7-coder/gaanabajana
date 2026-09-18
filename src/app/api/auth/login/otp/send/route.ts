@@ -6,6 +6,7 @@ import { issueOtpChallenge, maskEmail, maskPhone } from "@/lib/otp";
 import { sendEmailOtp } from "@/lib/email";
 import { sendSmsOtp } from "@/lib/twilio";
 import { User } from "@/models/User";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const schema = z.object({
   pendingToken: z.string().min(10),
@@ -14,6 +15,9 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimit(`otp-send:${clientIp(req)}`, 5, 15 * 60_000);
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
     const body = schema.parse(await req.json());
     const pending = await verifyChallengeToken<{
       purpose?: string;

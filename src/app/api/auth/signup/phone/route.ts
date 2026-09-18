@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { issueOtpChallenge, normalizeIndianPhone, maskPhone } from "@/lib/otp";
+import {
+  issueOtpChallenge,
+  normalizeIndianPhone,
+  maskPhone,
+  shouldExposeDevOtp,
+} from "@/lib/otp";
 import { sendSmsOtp } from "@/lib/twilio";
 import { User } from "@/models/User";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const schema = z.object({
   phone: z.string().min(10),
@@ -11,6 +17,9 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimit(`signup-phone:${clientIp(req)}`, 5, 15 * 60_000);
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
     const body = schema.parse(await req.json());
     const phone = normalizeIndianPhone(body.phone);
     await connectDB();
@@ -39,11 +48,14 @@ export async function POST(req: Request) {
       masked: maskPhone(phone),
       otpToken,
       smsSent,
-      ...(smsSent ? {} : { devCode: code }),
+      ...(smsSent || !shouldExposeDevOtp() ? {} : { devCode: code }),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message },
+        { status: 400 }
+      );
     }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Could not send OTP" },

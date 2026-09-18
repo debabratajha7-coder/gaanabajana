@@ -12,6 +12,17 @@ export function hashOtp(code: string) {
     .digest("hex");
 }
 
+function timingSafeEqualHex(a: string, b: string) {
+  try {
+    const ba = Buffer.from(a, "hex");
+    const bb = Buffer.from(b, "hex");
+    if (ba.length !== bb.length) return false;
+    return crypto.timingSafeEqual(ba, bb);
+  } catch {
+    return false;
+  }
+}
+
 export function normalizeIndianPhone(input: string) {
   const digits = input.replace(/\D/g, "");
   if (digits.length === 10) return `+91${digits}`;
@@ -45,7 +56,7 @@ export async function issueOtpChallenge(
 ) {
   const code = generateOtpCode();
   const token = await createChallengeToken(
-    { ...payload, otpHash: hashOtp(code) },
+    { ...payload, otpHash: hashOtp(code), attempts: 0 },
     expiresIn
   );
   return { code, token };
@@ -57,19 +68,46 @@ export async function consumeOtpChallenge<T extends Record<string, unknown>>(
   expectedPurpose: string | string[]
 ) {
   const payload = await verifyChallengeToken<
-    T & { purpose?: string; otpHash?: string }
+    T & {
+      purpose?: string;
+      otpHash?: string;
+      attempts?: number;
+      consumed?: boolean;
+    }
   >(token);
   const purposes = Array.isArray(expectedPurpose)
     ? expectedPurpose
     : [expectedPurpose];
-  if (!payload?.otpHash || !payload.purpose || !purposes.includes(payload.purpose)) {
+  if (
+    !payload?.otpHash ||
+    !payload.purpose ||
+    !purposes.includes(payload.purpose)
+  ) {
     return {
       ok: false as const,
       error: "Code expired. Go back and sign in again.",
     };
   }
-  if (hashOtp(code) !== payload.otpHash) {
+  if (payload.consumed) {
+    return {
+      ok: false as const,
+      error: "Code already used. Request a new one.",
+    };
+  }
+  const attempts = Number(payload.attempts || 0);
+  if (attempts >= 5) {
+    return {
+      ok: false as const,
+      error: "Too many incorrect codes. Request a new one.",
+    };
+  }
+  if (!timingSafeEqualHex(hashOtp(code), payload.otpHash)) {
     return { ok: false as const, error: "Incorrect code. Try again." };
   }
   return { ok: true as const, payload };
+}
+
+/** Only expose OTP codes outside production (local/dev fallbacks). */
+export function shouldExposeDevOtp() {
+  return process.env.NODE_ENV !== "production";
 }

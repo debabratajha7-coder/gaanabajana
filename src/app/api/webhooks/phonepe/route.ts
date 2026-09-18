@@ -7,16 +7,32 @@ import {
 } from "@/lib/phonepe";
 import { markOrderPaid } from "@/lib/orders";
 import { Order } from "@/models/Order";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(`phonepe-webhook:${clientIp(req)}`, 60, 60_000);
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
   const rawBody = await req.text();
   const authorization =
     req.headers.get("authorization") || req.headers.get("Authorization");
 
-  const hasWebhookAuth = Boolean(
-    process.env.PHONEPE_WEBHOOK_USERNAME && process.env.PHONEPE_WEBHOOK_PASSWORD
-  );
-  if (hasWebhookAuth) {
+  const username = process.env.PHONEPE_WEBHOOK_USERNAME;
+  const password = process.env.PHONEPE_WEBHOOK_PASSWORD;
+  const isProd =
+    process.env.NODE_ENV === "production" ||
+    process.env.PHONEPE_ENV === "production";
+
+  // Production always requires webhook credentials
+  if (isProd && (!username || !password)) {
+    console.error("PhonePe webhook credentials missing in production");
+    return NextResponse.json(
+      { error: "Webhook not configured" },
+      { status: 503 }
+    );
+  }
+
+  if (username && password) {
     if (!verifyPhonePeCallbackAuthorization(authorization)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }

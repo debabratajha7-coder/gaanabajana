@@ -7,6 +7,7 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/ui/Toast";
 import { ProductCard } from "@/components/product/ProductCard";
 import type { ProductCardData } from "@/lib/product-card";
+import { sanitizeHtml } from "@/lib/sanitize";
 import {
   ChevronDown,
   ChevronUp,
@@ -466,8 +467,8 @@ export function ProductBuyBox({
           {!!product.specs?.length && (
             <div className="mt-6 border-t border-[var(--line)] pt-5">
               <h2 className="text-sm font-semibold text-[var(--fg)]">Specs</h2>
-              <dl className="mt-3 divide-y divide-[var(--line)] border border-[var(--line)]">
-                {product.specs.slice(0, 8).map((s) => (
+              <dl className="mt-3 max-h-[28rem] divide-y divide-[var(--line)] overflow-y-auto border border-[var(--line)]">
+                {product.specs.map((s) => (
                   <div
                     key={`${s.label}-${s.value}`}
                     className="grid grid-cols-2 gap-3 px-3 py-2 text-sm"
@@ -477,11 +478,6 @@ export function ProductBuyBox({
                   </div>
                 ))}
               </dl>
-              {product.specs.length > 8 && (
-                <p className="mt-2 text-xs text-[var(--fg-muted)]">
-                  +{product.specs.length - 8} more below
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -510,27 +506,12 @@ export function ProductBuyBox({
           </p>
         )}
 
-        {!!product.specs?.length && (
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--fg)]">Specs</h2>
-            <dl className="mt-4 max-w-2xl divide-y divide-[var(--line)] border border-[var(--line)]">
-              {product.specs.map((s) => (
-                <div
-                  key={`${s.label}-${s.value}`}
-                  className="grid grid-cols-2 gap-4 px-4 py-3 text-sm"
-                >
-                  <dt className="text-[var(--fg-muted)]">{s.label}</dt>
-                  <dd className="font-medium text-[var(--fg)]">{s.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        )}
-
         {product.description && (
           <div
             className="prose-gb max-w-3xl"
-            dangerouslySetInnerHTML={{ __html: product.description }}
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(product.description),
+            }}
           />
         )}
 

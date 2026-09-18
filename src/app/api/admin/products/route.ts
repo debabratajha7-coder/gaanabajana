@@ -192,6 +192,10 @@ export async function POST(req: Request) {
     await connectDB();
     const { reviews, ...rest } = body;
     const slug = rest.slug || slugify(rest.title);
+    if (typeof rest.description === "string") {
+      const { sanitizeHtml } = await import("@/lib/sanitize");
+      rest.description = sanitizeHtml(rest.description);
+    }
     const product = await Product.create({
       ...rest,
       slug,
@@ -223,6 +227,10 @@ export async function PUT(req: Request) {
     const body = productSchema.extend({ id: z.string() }).parse(await req.json());
     await connectDB();
     const { id, reviews, ...rest } = body;
+    if (typeof rest.description === "string") {
+      const { sanitizeHtml } = await import("@/lib/sanitize");
+      rest.description = sanitizeHtml(rest.description);
+    }
     const product = await Product.findByIdAndUpdate(id, rest, {
       returnDocument: "after",
     });

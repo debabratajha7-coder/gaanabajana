@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { PageContent } from "@/models/PageContent";
 import { getSiteSettings } from "@/models/SiteSettings";
 import { STORE_NAME, TRADE_NAME } from "@/lib/brand";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export default async function ContactPage() {
       {page?.body ? (
         <div
           className="prose-gb mt-6 max-w-2xl"
-          dangerouslySetInnerHTML={{ __html: page.body }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.body) }}
         />
       ) : (
         <p className="mt-6 max-w-2xl text-[var(--fg-muted)]">

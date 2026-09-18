@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { consumeOtpChallenge } from "@/lib/otp";
 import { User } from "@/models/User";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const schema = z.object({
   challengeToken: z.string().min(10),
@@ -13,6 +14,9 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimit(`forgot-reset:${clientIp(req)}`, 8, 15 * 60_000);
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
     const body = schema.parse(await req.json());
     const result = await consumeOtpChallenge<{ userId?: string }>(
       body.challengeToken,

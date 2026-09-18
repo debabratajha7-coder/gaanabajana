@@ -10,6 +10,7 @@ import {
 import { sendEmailOtp } from "@/lib/email";
 import { sendSmsOtp } from "@/lib/twilio";
 import { User } from "@/models/User";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const schema = z.object({
   identifier: z.string().min(3),
@@ -30,6 +31,9 @@ async function findUser(identifier: string) {
 
 export async function POST(req: Request) {
   try {
+    const limited = rateLimit(`forgot:${clientIp(req)}`, 5, 15 * 60_000);
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
     const body = schema.parse(await req.json());
     await connectDB();
     const user = await findUser(body.identifier);
