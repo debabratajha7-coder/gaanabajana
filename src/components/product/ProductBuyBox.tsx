@@ -189,9 +189,9 @@ export function ProductBuyBox({
         </nav>
       </div>
 
-      <div className="container-gb grid gap-6 py-5 sm:gap-8 sm:py-8 lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(300px,400px)] lg:items-start xl:grid-cols-[80px_minmax(0,1.15fr)_minmax(340px,420px)]">
-        {/* Vertical thumbs (desktop) */}
-        <div className="hidden lg:flex lg:flex-col lg:items-center lg:gap-2">
+      <div className="container-gb grid grid-cols-[64px_minmax(0,1fr)] gap-3 py-5 sm:gap-4 sm:py-8 lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(300px,400px)] lg:items-start lg:gap-6 xl:grid-cols-[80px_minmax(0,1.15fr)_minmax(340px,420px)]">
+        {/* Side thumbs — single strip for all breakpoints */}
+        <div className="flex flex-col items-center gap-2">
           {gallery.length > THUMB_VISIBLE && (
             <button
               type="button"
@@ -221,7 +221,7 @@ export function ProductBuyBox({
                   <img
                     src={img}
                     alt=""
-                    className="h-[68px] w-[68px] object-contain xl:h-[76px] xl:w-[76px]"
+                    className="h-14 w-14 object-contain sm:h-[68px] sm:w-[68px] xl:h-[76px] xl:w-[76px]"
                   />
                 </button>
               );
@@ -245,7 +245,7 @@ export function ProductBuyBox({
         </div>
 
         {/* Main image */}
-        <div className="min-w-0 space-y-3">
+        <div className="min-w-0">
           <div className="overflow-hidden border border-[var(--line)] bg-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -256,33 +256,10 @@ export function ProductBuyBox({
               decoding="async"
             />
           </div>
-          {gallery.length > 1 && (
-            <div className="scroll-row gap-2 lg:hidden">
-              {gallery.map((img, i) => (
-                <button
-                  key={img + i}
-                  type="button"
-                  onClick={() => setActiveImage(i)}
-                  className={`shrink-0 overflow-hidden border transition ${
-                    activeImage === i
-                      ? "border-[var(--fg)]"
-                      : "border-[var(--line)] opacity-80"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={img}
-                    alt=""
-                    className="h-16 w-16 object-contain sm:h-20 sm:w-20"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Buy panel */}
-        <div className="min-w-0 pb-28 lg:pb-8">
+        <div className="col-span-2 min-w-0 pb-28 lg:col-span-1 lg:pb-8">
           {product.brand?.name && (
             <Link
               href={`/brands/${product.brand.slug}`}
