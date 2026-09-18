@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ProductCard, ProductCardData } from "@/components/product/ProductCard";
+import { ProductCard } from "@/components/product/ProductCard";
+import { mapColorOptions, type ProductCardData } from "@/lib/product-card";
 
 type ApiProduct = {
   _id: string;
@@ -10,6 +11,7 @@ type ApiProduct = {
   price: number;
   mrp: number;
   images?: string[];
+  colorOptions?: { name?: string; swatch?: string; images?: string[] }[];
   ratingAvg?: number;
   ratingCount?: number;
   brand?: { name?: string } | null;
@@ -32,6 +34,7 @@ export default function WishlistPage() {
             price: p.price,
             mrp: p.mrp,
             images: p.images,
+            colorOptions: mapColorOptions(p.colorOptions),
             ratingAvg: p.ratingAvg,
             ratingCount: p.ratingCount,
             brandName: p.brand?.name || null,

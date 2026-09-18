@@ -11,7 +11,7 @@ type Cat = {
   _id: string;
   name: string;
   slug: string;
-  parent?: string | null;
+  parent?: string | null | { _id?: string };
 };
 
 type Brand = { _id: string; name: string };
@@ -44,6 +44,70 @@ type ExistingReview = {
   approved: boolean;
 };
 
+type ColorDraft = {
+  key: string;
+  name: string;
+  swatch: string;
+  images: string[];
+};
+
+type SpecDraft = {
+  key: string;
+  label: string;
+  value: string;
+};
+
+/** Common instrument fields — admin can fill values or edit labels */
+const COMMON_SPEC_LABELS = [
+  "Number Of Strings",
+  "Orientation",
+  "Body Type",
+  "Body Material",
+  "Body Shape",
+  "Body Finish",
+  "Neck Material",
+  "Neck Shape",
+  "Neck Joint",
+  "Radius (Inches)",
+  "Fingerboard Material",
+  "Fingerboard Inlay",
+  "Number Of Frets",
+  "Scale Length (Inches)",
+  "Nut Material",
+  "Nut Width (Mm)",
+  "Bridge/ Tailpiece",
+  "Bridge Pickup",
+];
+
+function emptyColor(): ColorDraft {
+  return {
+    key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: "",
+    swatch: "#888888",
+    images: [],
+  };
+}
+
+function emptySpec(label = ""): SpecDraft {
+  return {
+    key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    label,
+    value: "",
+  };
+}
+
+/** Native <input type="color"> only accepts #rrggbb */
+function normalizeHex(value: string, fallback = "#888888") {
+  let s = value.trim();
+  if (!s) return fallback;
+  if (!s.startsWith("#")) s = `#${s}`;
+  if (/^#[0-9A-Fa-f]{3}$/.test(s)) {
+    s = `#${s[1]}${s[1]}${s[2]}${s[2]}${s[3]}${s[3]}`;
+  }
+  if (/^#[0-9A-Fa-f]{6}$/.test(s)) return s.toLowerCase();
+  return fallback;
+}
+
 function emptyReview(): ReviewDraft {
   return {
     key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -70,6 +134,9 @@ export default function AdminProductsPage() {
   const [description, setDescription] = useState("");
   const [featured, setFeatured] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [colorOptions, setColorOptions] = useState<ColorDraft[]>([]);
+  const [specs, setSpecs] = useState<SpecDraft[]>([]);
+  const [essentialIds, setEssentialIds] = useState<string[]>([]);
   const [reviewDrafts, setReviewDrafts] = useState<ReviewDraft[]>([]);
   const [existingReviews, setExistingReviews] = useState<ExistingReview[]>([]);
   const [msg, setMsg] = useState("");
@@ -97,17 +164,29 @@ export default function AdminProductsPage() {
   }, []);
 
   const parents = useMemo(
-    () => filterPublicCategories(categories.filter((c) => !c.parent)),
+    () =>
+      filterPublicCategories(
+        categories.filter((c) => {
+          const p = c.parent;
+          if (p == null || p === "") return true;
+          return false;
+        })
+      ),
     [categories]
   );
 
-  const children = useMemo(
-    () =>
-      categories.filter(
-        (c) => c.parent && String(c.parent) === String(parentId)
-      ),
-    [categories, parentId]
-  );
+  const children = useMemo(() => {
+    if (!parentId) return [];
+    return categories.filter((c) => {
+      const raw = c.parent as unknown;
+      if (raw == null || raw === "") return false;
+      const id =
+        typeof raw === "object" && raw !== null && "_id" in raw
+          ? String((raw as { _id: unknown })._id)
+          : String(raw);
+      return id === String(parentId);
+    });
+  }, [categories, parentId]);
 
   function resetForm() {
     setEditingId(null);
@@ -122,6 +201,9 @@ export default function AdminProductsPage() {
     setDescription("");
     setFeatured(false);
     setImages([]);
+    setColorOptions([]);
+    setSpecs([]);
+    setEssentialIds([]);
     setReviewDrafts([]);
     setExistingReviews([]);
   }
@@ -166,6 +248,28 @@ export default function AdminProductsPage() {
     );
     setFeatured(Boolean(p.featured));
     setImages(p.images || []);
+    setColorOptions(
+      ((p.colorOptions || []) as { name?: string; swatch?: string; images?: string[] }[]).map(
+        (c, i) => ({
+          key: `c-${i}-${c.name || i}`,
+          name: c.name || "",
+          swatch: c.swatch || "#888888",
+          images: c.images || [],
+        })
+      )
+    );
+    setSpecs(
+      ((p.specs || []) as { label?: string; value?: string }[]).map((s, i) => ({
+        key: `s-${i}-${s.label || i}`,
+        label: s.label || "",
+        value: s.value || "",
+      }))
+    );
+    setEssentialIds(
+      ((p.essentials || []) as Array<{ _id?: string } | string>).map((e) =>
+        typeof e === "string" ? e : String(e._id)
+      )
+    );
     setExistingReviews(data.reviews || []);
     setReviewDrafts([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -195,6 +299,12 @@ export default function AdminProductsPage() {
       setError("Pick a main category (like Guitars).");
       return;
     }
+    if (children.length > 0 && !childId) {
+      setError(
+        "Pick a subtype (e.g. Acoustic Guitars or Bass under Guitars)."
+      );
+      return;
+    }
     if (!title.trim()) {
       setError("Give the product a name.");
       return;
@@ -207,6 +317,35 @@ export default function AdminProductsPage() {
     if (!images.length) {
       setError("Add at least one product photo.");
       return;
+    }
+
+    const cleanedColors = colorOptions
+      .map((c) => ({
+        name: c.name.trim(),
+        swatch: c.swatch.trim() || "#888888",
+        images: c.images.filter(Boolean),
+      }))
+      .filter((c) => c.name);
+
+    for (const c of cleanedColors) {
+      if (!c.name) {
+        setError("Each color needs a name.");
+        return;
+      }
+    }
+
+    const cleanedSpecs = specs
+      .map((s) => ({
+        label: s.label.trim(),
+        value: s.value.trim(),
+      }))
+      .filter((s) => s.label || s.value);
+
+    for (const s of cleanedSpecs) {
+      if (!s.label || !s.value) {
+        setError("Each spec needs both a label and a value.");
+        return;
+      }
     }
 
     const cleanedReviews = reviewDrafts
@@ -237,6 +376,9 @@ export default function AdminProductsPage() {
         categories: categoryIds,
         description: description.trim(),
         images,
+        colorOptions: cleanedColors,
+        specs: cleanedSpecs,
+        essentials: essentialIds,
         price: priceNum,
         mrp: mrpNum,
         stock: Number(stock) || 0,
@@ -309,8 +451,15 @@ export default function AdminProductsPage() {
               {editingId ? "Update product" : "Add a product"}
             </h1>
             <p className="mt-2 max-w-xl text-[var(--fg-muted)]">
-              Follow the steps. You can also add shop comments that show on the
-              product page.
+              Follow the numbered steps. First pick where it belongs (category +
+              subtype), then brand, name, price, and photos.
+            </p>
+            <p className="mt-2 text-sm text-[var(--fg-muted)]">
+              Missing a shelf like Strings?{" "}
+              <Link href="/admin/shop-by-category" className="underline">
+                Add it under Categories
+              </Link>{" "}
+              first, then come back here.
             </p>
           </div>
           {editingId && (
@@ -323,10 +472,22 @@ export default function AdminProductsPage() {
         <form onSubmit={onSave} className="mt-8 space-y-8">
           <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
-              Step 1 · What is it?
+              Step 1 · Where does it belong?
+            </p>
+            <p className="text-sm text-[var(--fg-muted)]">
+              Example: <strong className="font-medium text-[var(--fg)]">Guitars</strong>{" "}
+              → subtype{" "}
+              <strong className="font-medium text-[var(--fg)]">Acoustic</strong>{" "}
+              or{" "}
+              <strong className="font-medium text-[var(--fg)]">Bass</strong>.
+              Don’t put Acoustic in the main list — add it under Guitars in{" "}
+              <Link href="/admin/shop-by-category" className="underline">
+                Categories
+              </Link>
+              .
             </p>
             <label className="field-label" htmlFor="parent">
-              Main category
+              Main category (type)
             </label>
             <select
               id="parent"
@@ -345,26 +506,54 @@ export default function AdminProductsPage() {
                 </option>
               ))}
             </select>
+            {parents.length === 0 && (
+              <p className="text-sm text-[var(--danger)]">
+                No categories yet.{" "}
+                <Link href="/admin/shop-by-category" className="underline">
+                  Create one in Categories
+                </Link>{" "}
+                first.
+              </p>
+            )}
 
             {parentId && children.length > 0 && (
               <>
                 <label className="field-label" htmlFor="child">
-                  Type (optional but helpful)
+                  Subtype (required) — Acoustic, Bass, Electric…
                 </label>
                 <select
                   id="child"
                   className="input"
                   value={childId}
                   onChange={(e) => setChildId(e.target.value)}
+                  required
                 >
-                  <option value="">Any / general</option>
+                  <option value="">Choose subtype…</option>
                   {children.map((c) => (
                     <option key={c._id} value={c._id}>
                       {c.name}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-[var(--fg-muted)]">
+                  Products are filed under the subtype so filters stay tidy.
+                </p>
               </>
+            )}
+
+            {parentId && children.length === 0 && (
+              <p className="rounded border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-2.5 text-sm text-[var(--fg-muted)]">
+                This main category has no subtypes yet. Add “Acoustic Guitars”,
+                “Bass”, etc. under it in{" "}
+                <Link
+                  href="/admin/shop-by-category"
+                  className="font-medium text-[var(--fg)] underline"
+                >
+                  Categories
+                </Link>
+                , then pick them here. You can still save under the main
+                category for now.
+              </p>
             )}
           </section>
 
@@ -485,10 +674,10 @@ export default function AdminProductsPage() {
               />
               <span>
                 <span className="block font-medium text-[var(--fg)]">
-                  Show on homepage
+                  Pin near top of Best Sellers
                 </span>
                 <span className="mt-0.5 block text-[var(--fg-muted)]">
-                  Appears in Bestsellers on the main page when checked.
+                  Helps this product show first in its category on the homepage.
                 </span>
               </span>
             </label>
@@ -499,7 +688,9 @@ export default function AdminProductsPage() {
               Step 4 · Photos
             </p>
             <p className="text-sm text-[var(--fg-muted)]">
-              Drop 1–4 photos. First photo is the main shop picture.
+              Default photos (shown when no color is selected). First photo is
+              the main shop picture. You can also reuse these for colors below —
+              they won’t be deleted.
             </p>
             <ImageDropzone
               values={images}
@@ -509,6 +700,399 @@ export default function AdminProductsPage() {
               label="Drop product photos here"
               aspect={1}
             />
+          </section>
+
+          <section className="space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
+                Step 4b · Colors (optional)
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost inline-flex items-center gap-1.5 text-sm"
+                onClick={() => setColorOptions((list) => [...list, emptyColor()])}
+              >
+                <Plus className="h-4 w-4" />
+                Add color
+              </button>
+            </div>
+            <p className="text-sm text-[var(--fg-muted)]">
+              Add a name + swatch for each color. Photos are optional — if you
+              skip them, the Step 4 gallery is used. Reuse Step 4 photos or
+              upload new ones per color.
+            </p>
+
+            {colorOptions.length === 0 && (
+              <p className="text-sm text-[var(--fg-muted)]">
+                No colors — shoppers won’t see color circles on the card.
+              </p>
+            )}
+
+            {colorOptions.map((c, idx) => (
+              <div
+                key={c.key}
+                className="space-y-3 border border-[var(--line)] p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold">Color {idx + 1}</p>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm text-[var(--danger)]"
+                    onClick={() =>
+                      setColorOptions((list) => list.filter((x) => x.key !== c.key))
+                    }
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Remove
+                  </button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                  <div>
+                    <label className="field-label" htmlFor={`color-name-${c.key}`}>
+                      Color name
+                    </label>
+                    <input
+                      id={`color-name-${c.key}`}
+                      className="input"
+                      placeholder="e.g. Sunburst, Lake Placid Blue"
+                      value={c.name}
+                      onChange={(e) =>
+                        setColorOptions((list) =>
+                          list.map((x) =>
+                            x.key === c.key ? { ...x, name: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label" htmlFor={`color-swatch-${c.key}`}>
+                      Swatch
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-11 w-11 shrink-0 rounded-full border border-black/20 shadow-inner"
+                        style={{ backgroundColor: normalizeHex(c.swatch) }}
+                        title={normalizeHex(c.swatch)}
+                        aria-hidden
+                      />
+                      {/*
+                        Uncontrolled color input — controlled type=color breaks
+                        the native picker in Chrome/Safari while dragging.
+                      */}
+                      <input
+                        id={`color-swatch-${c.key}`}
+                        type="color"
+                        defaultValue={normalizeHex(c.swatch)}
+                        className="h-11 w-14 cursor-pointer border border-[var(--line)] bg-white p-1"
+                        ref={(el) => {
+                          if (el && el.value !== normalizeHex(c.swatch)) {
+                            // Keep native picker in sync when hex was typed
+                            el.value = normalizeHex(c.swatch);
+                          }
+                        }}
+                        onInput={(e) => {
+                          const next = normalizeHex(
+                            (e.target as HTMLInputElement).value
+                          );
+                          setColorOptions((list) =>
+                            list.map((x) =>
+                              x.key === c.key ? { ...x, swatch: next } : x
+                            )
+                          );
+                        }}
+                        onChange={(e) => {
+                          const next = normalizeHex(e.target.value);
+                          setColorOptions((list) =>
+                            list.map((x) =>
+                              x.key === c.key ? { ...x, swatch: next } : x
+                            )
+                          );
+                        }}
+                      />
+                      <input
+                        className="input w-28 font-mono text-sm"
+                        value={c.swatch}
+                        onChange={(e) =>
+                          setColorOptions((list) =>
+                            list.map((x) =>
+                              x.key === c.key
+                                ? { ...x, swatch: e.target.value }
+                                : x
+                            )
+                          )
+                        }
+                        onBlur={(e) => {
+                          const next = normalizeHex(e.target.value);
+                          setColorOptions((list) =>
+                            list.map((x) =>
+                              x.key === c.key ? { ...x, swatch: next } : x
+                            )
+                          );
+                        }}
+                        placeholder="#888888"
+                        spellCheck={false}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <p className="field-label mb-0">Photos for this color</p>
+                    {images.length > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() =>
+                          setColorOptions((list) =>
+                            list.map((x) => {
+                              if (x.key !== c.key) return x;
+                              const merged = [...x.images];
+                              for (const url of images) {
+                                if (!merged.includes(url)) merged.push(url);
+                              }
+                              return { ...x, images: merged };
+                            })
+                          )
+                        }
+                      >
+                        Use all Step 4 photos
+                      </button>
+                    )}
+                  </div>
+
+                  {images.length > 0 ? (
+                    <div className="rounded border border-[var(--line)] bg-[var(--bg-soft)] p-3">
+                      <p className="text-xs font-medium text-[var(--fg)]">
+                        Already uploaded (Step 4) — click to add / remove for this
+                        color
+                      </p>
+                      <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
+                        Your Step 4 gallery stays intact either way.
+                      </p>
+                      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                        {images.map((url) => {
+                          const used = c.images.includes(url);
+                          return (
+                            <button
+                              key={url}
+                              type="button"
+                              title={
+                                used
+                                  ? "Remove from this color"
+                                  : "Add to this color"
+                              }
+                              onClick={() =>
+                                setColorOptions((list) =>
+                                  list.map((x) => {
+                                    if (x.key !== c.key) return x;
+                                    if (used) {
+                                      return {
+                                        ...x,
+                                        images: x.images.filter((u) => u !== url),
+                                      };
+                                    }
+                                    return {
+                                      ...x,
+                                      images: [...x.images, url],
+                                    };
+                                  })
+                                )
+                              }
+                              className={`relative overflow-hidden border-2 bg-white transition ${
+                                used
+                                  ? "border-[var(--accent)]"
+                                  : "border-[var(--line)] opacity-80 hover:opacity-100"
+                              }`}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={url}
+                                alt=""
+                                className="aspect-square w-full object-contain"
+                              />
+                              <span
+                                className={`absolute bottom-0 inset-x-0 py-0.5 text-center text-[10px] font-semibold ${
+                                  used
+                                    ? "bg-[var(--accent)] text-white"
+                                    : "bg-black/55 text-white"
+                                }`}
+                              >
+                                {used ? "Added ✓" : "Tap to use"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[var(--fg-muted)]">
+                      Upload default photos in Step 4 first if you want to reuse
+                      them here.
+                    </p>
+                  )}
+
+                  <div>
+                    <p className="field-label">Or upload new photos for this color</p>
+                    <ImageDropzone
+                      values={c.images}
+                      onChange={(urls) =>
+                        setColorOptions((list) =>
+                          list.map((x) =>
+                            x.key === c.key ? { ...x, images: urls } : x
+                          )
+                        )
+                      }
+                      multiple
+                      alt={c.name || `Color ${idx + 1}`}
+                      label="Drop extra photos for this color"
+                      aspect={1}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </section>
+
+          <section className="space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
+                Step 4c · Specs (optional)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() =>
+                    setSpecs((list) => {
+                      const existing = new Set(
+                        list.map((s) => s.label.trim().toLowerCase())
+                      );
+                      const extras = COMMON_SPEC_LABELS.filter(
+                        (l) => !existing.has(l.toLowerCase())
+                      ).map((label) => emptySpec(label));
+                      return [...list, ...extras];
+                    })
+                  }
+                >
+                  Add guitar spec fields
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost inline-flex items-center gap-1.5 text-sm"
+                  onClick={() => setSpecs((list) => [...list, emptySpec()])}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add row
+                </button>
+              </div>
+            </div>
+            <p className="text-sm text-[var(--fg-muted)]">
+              Label on the left, value on the right — like Number Of Strings → 6.
+              Leave empty if you don’t need specs.
+            </p>
+
+            {specs.length === 0 && (
+              <p className="text-sm text-[var(--fg-muted)]">
+                No specs yet. Use “Add guitar spec fields” for a ready list, or
+                “Add row” for a custom line.
+              </p>
+            )}
+
+            {specs.length > 0 && (
+              <div className="space-y-2">
+                {specs.map((s) => (
+                  <div key={s.key} className="flex flex-wrap items-start gap-2">
+                    <input
+                      className="input min-w-0 flex-1"
+                      placeholder="Label (e.g. Body Material)"
+                      value={s.label}
+                      onChange={(e) =>
+                        setSpecs((list) =>
+                          list.map((x) =>
+                            x.key === s.key ? { ...x, label: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                    <input
+                      className="input min-w-0 flex-1"
+                      placeholder="Value (e.g. Poplar)"
+                      value={s.value}
+                      onChange={(e) =>
+                        setSpecs((list) =>
+                          list.map((x) =>
+                            x.key === s.key ? { ...x, value: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="icon-btn h-11 w-11 text-[var(--danger)]"
+                      aria-label="Remove spec"
+                      onClick={() =>
+                        setSpecs((list) => list.filter((x) => x.key !== s.key))
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
+              Step 4d · Essentials (optional)
+            </p>
+            <p className="text-sm text-[var(--fg-muted)]">
+              Pick products to show under “Essentials” on the product page. If
+              you pick fewer than four, we auto-fill from accessories / same
+              brand.
+            </p>
+            {items.filter((p) => p._id !== editingId).length === 0 ? (
+              <p className="text-sm text-[var(--fg-muted)]">
+                Save other products first, then come back to pick essentials.
+              </p>
+            ) : (
+              <ul className="max-h-56 space-y-1 overflow-y-auto border border-[var(--line)] p-2">
+                {items
+                  .filter((p) => p._id !== editingId)
+                  .map((p) => {
+                    const checked = essentialIds.includes(p._id);
+                    return (
+                      <li key={p._id}>
+                        <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-[var(--bg-soft)]">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              setEssentialIds((ids) =>
+                                checked
+                                  ? ids.filter((id) => id !== p._id)
+                                  : ids.length >= 8
+                                    ? ids
+                                    : [...ids, p._id]
+                              )
+                            }
+                          />
+                          <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                          <span className="shrink-0 text-xs text-[var(--fg-muted)]">
+                            {formatINR(p.price)}
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+              </ul>
+            )}
+            {essentialIds.length > 0 && (
+              <p className="text-xs text-[var(--fg-muted)]">
+                {essentialIds.length} selected
+                {essentialIds.length >= 8 ? " (max 8)" : ""}
+              </p>
+            )}
           </section>
 
           <section className="space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
@@ -666,7 +1250,7 @@ export default function AdminProductsPage() {
             href="/admin/shop-by-category"
             className="text-sm text-[var(--accent)]"
           >
-            Edit category photos →
+            Manage categories →
           </Link>
         </div>
         <ul className="mt-4 max-h-[70vh] space-y-2 overflow-auto">

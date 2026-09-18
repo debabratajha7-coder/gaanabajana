@@ -3,6 +3,8 @@ import { connectDB } from "@/lib/db";
 import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
+import { mapColorOptions } from "@/lib/product-card";
+import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
 
 export const dynamic = "force-dynamic";
 
@@ -88,33 +90,34 @@ export default async function CollectionPage({
         </div>
       )}
 
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {products.map((p) => (
-          <ProductCard
-            key={String(p._id)}
-            product={{
-              _id: String(p._id),
-              title: p.title,
-              slug: p.slug,
-              price: p.price,
-              mrp: p.mrp,
-              images: p.images,
-              ratingAvg: p.ratingAvg,
-              ratingCount: p.ratingCount,
-              brandName:
-                p.brand && typeof p.brand === "object" && "name" in p.brand
-                  ? String((p.brand as { name?: string }).name || "")
-                  : null,
-            }}
-          />
-        ))}
-      </div>
-      {products.length === 0 && (
-        <div className="mt-12 text-center">
-          <p className="text-[var(--fg-muted)]">Nothing in this collection yet.</p>
-          <Link href="/" className="btn btn-ghost mt-6">
-            Back home
-          </Link>
+      {products.length === 0 ? (
+        <ComingSoonEmpty categoryName={category.name} />
+      ) : (
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((p) => (
+            <ProductCard
+              key={String(p._id)}
+              product={{
+                _id: String(p._id),
+                title: p.title,
+                slug: p.slug,
+                price: p.price,
+                mrp: p.mrp,
+                images: p.images,
+                colorOptions: mapColorOptions(
+                  p.colorOptions as
+                    | { name?: string; swatch?: string; images?: string[] }[]
+                    | undefined
+                ),
+                ratingAvg: p.ratingAvg,
+                ratingCount: p.ratingCount,
+                brandName:
+                  p.brand && typeof p.brand === "object" && "name" in p.brand
+                    ? String((p.brand as { name?: string }).name || "")
+                    : null,
+              }}
+            />
+          ))}
         </div>
       )}
     </div>

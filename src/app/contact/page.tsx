@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { PageContent } from "@/models/PageContent";
 import { getSiteSettings } from "@/models/SiteSettings";
+import { STORE_NAME, TRADE_NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,19 @@ export default async function ContactPage() {
         />
       ) : (
         <p className="mt-6 max-w-2xl text-[var(--fg-muted)]">
-          Reach Gaanabajana for product questions, orders, and returns.
+          Reach {STORE_NAME} ({TRADE_NAME}) for product questions, orders, and
+          returns.
         </p>
       )}
 
       <div className="mt-8 max-w-xl space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-6">
+        <div>
+          <p className="eyebrow">Business / trade name</p>
+          <p className="mt-2 text-sm font-medium">{TRADE_NAME}</p>
+          <p className="mt-1 text-xs text-[var(--fg-muted)]">
+            Online store: {STORE_NAME}
+          </p>
+        </div>
         <div>
           <p className="eyebrow">Phone</p>
           <div className="mt-2 space-y-1 text-sm">

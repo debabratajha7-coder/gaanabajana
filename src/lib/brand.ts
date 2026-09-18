@@ -2,6 +2,9 @@
 export const STORE_NAME = "Gaana Bajana";
 export const STORE_WORDMARK = "Gaana Bajana";
 
+/** Legal / trade name (PhonePe & business registration) */
+export const TRADE_NAME = "M/S THE GUITAR SHOP";
+
 /** Normalize any old spelling from DB / cache */
 export function brandWordmark(name?: string | null) {
   const raw = (name || STORE_NAME).trim().toLowerCase();

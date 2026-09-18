@@ -22,6 +22,24 @@ const productSchema = z.object({
   description: z.string().optional(),
   shortDescription: z.string().optional(),
   images: z.array(z.string()).optional(),
+  colorOptions: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        swatch: z.string().min(1),
+        images: z.array(z.string()).default([]),
+      })
+    )
+    .optional(),
+  specs: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        value: z.string().min(1),
+      })
+    )
+    .optional(),
+  essentials: z.array(z.string()).optional(),
   price: z.number(),
   mrp: z.number(),
   stock: z.number().optional(),
@@ -82,6 +100,7 @@ export async function GET(req: NextRequest) {
         Product.findById(id)
           .populate("brand", "name")
           .populate("categories", "name parent")
+          .populate("essentials", "title slug price images")
           .lean(),
         Review.find({ product: id })
           .sort({ createdAt: -1 })
@@ -109,6 +128,19 @@ export async function GET(req: NextRequest) {
             name: c.name,
             parent: c.parent ? String(c.parent) : null,
           })),
+          essentials: ((product.essentials || []) as Array<{
+            _id?: unknown;
+            title?: string;
+            slug?: string;
+          }>).map((e) =>
+            e && typeof e === "object" && e._id
+              ? {
+                  _id: String(e._id),
+                  title: e.title,
+                  slug: e.slug,
+                }
+              : { _id: String(e) }
+          ),
         },
         reviews: reviews.map((r) => ({
           _id: String(r._id),

@@ -123,8 +123,8 @@ export default function AdminBrandsPage() {
               {editingId ? "Edit brand" : "Brands"}
             </h1>
             <p className="mt-2 text-[var(--fg-muted)]">
-              Add the company name, then upload its logo. Logos show in the
-              “Brands we stock” panel on the home page.
+              Add brand names and logos for the “Top Brands” strip on the home
+              page. You can also type a new brand while adding a product.
             </p>
           </div>
           {editingId && (

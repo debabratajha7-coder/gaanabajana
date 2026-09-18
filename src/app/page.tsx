@@ -5,7 +5,8 @@ import { Category } from "@/models/Category";
 import { Brand } from "@/models/Brand";
 import { BlogPost } from "@/models/BlogPost";
 import { getSiteSettings } from "@/models/SiteSettings";
-import { ProductCardData } from "@/components/product/ProductCard";
+import type { ProductCardData } from "@/lib/product-card";
+import { mapColorOptions } from "@/lib/product-card";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroStage } from "@/components/home/HeroStage";
@@ -27,6 +28,7 @@ function toCard(p: {
   price: number;
   mrp: number;
   images?: string[];
+  colorOptions?: { name?: string; swatch?: string; images?: string[] }[];
   ratingAvg?: number;
   ratingCount?: number;
   brand?: LeanBrand;
@@ -39,6 +41,7 @@ function toCard(p: {
     price: p.price,
     mrp: p.mrp,
     images: p.images,
+    colorOptions: mapColorOptions(p.colorOptions),
     ratingAvg: p.ratingAvg,
     ratingCount: p.ratingCount,
     brandName: p.brand?.name || null,

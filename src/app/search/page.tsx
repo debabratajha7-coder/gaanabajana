@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
+import { mapColorOptions } from "@/lib/product-card";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,11 @@ export default async function SearchPage({
               price: p.price,
               mrp: p.mrp,
               images: p.images,
+              colorOptions: mapColorOptions(
+                p.colorOptions as
+                  | { name?: string; swatch?: string; images?: string[] }[]
+                  | undefined
+              ),
               brandName:
                 p.brand && typeof p.brand === "object" && "name" in p.brand
                   ? String((p.brand as { name?: string }).name || "")

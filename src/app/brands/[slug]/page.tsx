@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { connectDB } from "@/lib/db";
 import { Brand } from "@/models/Brand";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
+import { mapColorOptions } from "@/lib/product-card";
+import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
 
 export const dynamic = "force-dynamic";
 
@@ -32,12 +33,10 @@ export default async function BrandPage({
     <div className="container-gb py-12">
       <h1 className="font-[family-name:var(--font-display)] text-4xl">{name}</h1>
       {products.length === 0 ? (
-        <div className="mt-8 max-w-lg text-[var(--fg-muted)]">
-          <p>No products listed for {name} yet.</p>
-          <Link href="/collections/guitars" className="btn btn-primary mt-6 inline-flex">
-            Browse catalog
-          </Link>
-        </div>
+        <ComingSoonEmpty
+          title="Products coming soon"
+          categoryName={name}
+        />
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           {products.map((p) => (
@@ -50,6 +49,11 @@ export default async function BrandPage({
                 price: p.price,
                 mrp: p.mrp,
                 images: p.images,
+                colorOptions: mapColorOptions(
+                  p.colorOptions as
+                    | { name?: string; swatch?: string; images?: string[] }[]
+                    | undefined
+                ),
                 brandName: name,
                 ratingAvg: p.ratingAvg,
                 ratingCount: p.ratingCount,

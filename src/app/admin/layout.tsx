@@ -38,16 +38,16 @@ const primary: {
   permission: AdminPermission;
 }[] = [
   { href: "/admin", label: "Home", icon: LayoutDashboard, permission: "dashboard" },
-  { href: "/admin/products", label: "Add a product", icon: Package, permission: "products" },
+  { href: "/admin/products", label: "Products", icon: Package, permission: "products" },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag, permission: "orders" },
   {
     href: "/admin/shop-by-category",
-    label: "Shop by category",
+    label: "Categories",
     icon: LayoutGrid,
     permission: "catalog",
   },
   { href: "/admin/brands", label: "Brands", icon: Tag, permission: "catalog" },
-  { href: "/admin/website", label: "Site", icon: Palette, permission: "website" },
+  { href: "/admin/website", label: "Website", icon: Palette, permission: "website" },
 ];
 
 const more: {
@@ -206,7 +206,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {user.name || "Admin"}
             </p>
             <p className="mb-4 text-xs text-[var(--fg-muted)]">
-              {user.isSuperAdmin ? "Main admin · full control" : "Staff access"}
+              {user.isSuperAdmin
+                ? "Main admin · Categories → Brands → Products"
+                : "Staff access"}
             </p>
             <nav className="grid gap-0.5">
               {allowedPrimary.map(({ href, label, icon: Icon }) => {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { STORE_NAME } from "@/lib/brand";
+import { STORE_NAME, TRADE_NAME } from "@/lib/brand";
 
 type Settings = {
   storeName?: string;
@@ -21,6 +21,9 @@ export function Footer({ settings }: { settings?: Settings }) {
         <div>
           <p className="display text-3xl" suppressHydrationWarning>
             {settings?.storeName || STORE_NAME}
+          </p>
+          <p className="mt-2 text-sm font-medium text-[var(--footer-fg)]">
+            {TRADE_NAME}
           </p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--fg-muted)]">
             {settings?.tagline ||
@@ -104,8 +107,14 @@ export function Footer({ settings }: { settings?: Settings }) {
           </div>
         </div>
       </div>
-      <div className="border-t border-[var(--line)] py-4 text-center text-[11px] tracking-wide text-[var(--fg-muted)]">
-        © {new Date().getFullYear()} {STORE_NAME}
+      <div className="border-t border-[var(--line)] px-4 py-4 text-center text-[11px] leading-relaxed tracking-wide text-[var(--fg-muted)]">
+        <p>
+          © {new Date().getFullYear()} {STORE_NAME}. Operated by{" "}
+          <span className="text-[var(--footer-fg)]">{TRADE_NAME}</span>.
+        </p>
+        <p className="mt-1">
+          All prices in INR. Payments processed securely via PhonePe.
+        </p>
       </div>
     </footer>
   );

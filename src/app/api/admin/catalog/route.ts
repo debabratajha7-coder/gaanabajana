@@ -36,9 +36,18 @@ export async function POST(req: Request) {
           image: z.string().optional(),
         })
         .parse(body);
+      let slug = slugify(data.name);
+      const exists = await Category.findOne({ slug }).lean();
+      if (exists) {
+        const suffix = data.parent
+          ? String(data.parent).slice(-5)
+          : String(Date.now()).slice(-5);
+        slug = `${slug}-${suffix}`;
+      }
       const category = await Category.create({
         ...data,
-        slug: slugify(data.name),
+        parent: data.parent || null,
+        slug,
       });
       return NextResponse.json({ category });
     }

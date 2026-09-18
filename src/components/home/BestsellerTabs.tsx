@@ -63,9 +63,25 @@ export function BestsellerTabs({
           ))}
         </div>
       ) : (
-        <p className="py-8 text-center text-sm text-[var(--fg-muted)]">
-          No products in this category yet.
-        </p>
+        <div className="border border-[var(--line)] bg-white px-4 py-10 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
+            Coming soon
+          </p>
+          <p className="mt-2 text-sm font-medium text-[var(--fg)]">
+            Products for {activeTab?.label || "this category"} are coming soon
+          </p>
+          <p className="mt-1 text-sm text-[var(--fg-muted)]">
+            We’re stocking this shelf — check back shortly.
+          </p>
+          {activeTab && (
+            <Link
+              href={activeTab.href}
+              className="mt-4 inline-block text-sm font-medium underline underline-offset-2"
+            >
+              Open full category
+            </Link>
+          )}
+        </div>
       )}
     </div>
   );

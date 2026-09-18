@@ -210,17 +210,21 @@ export default function AdminSitePage() {
     { id: "store" as const, label: "1. Store info" },
     { id: "banner" as const, label: "2. Home banner" },
     { id: "home" as const, label: "3. Home sections" },
-    { id: "categories" as const, label: "4. Shop by category" },
+    { id: "categories" as const, label: "4. Category tiles" },
     { id: "shipping" as const, label: "5. Shipping & social" },
     { id: "pages" as const, label: "6. Site pages" },
   ];
 
   return (
     <div className="max-w-3xl">
-      <h1 className="display text-3xl sm:text-4xl">Site</h1>
-      <p className="mt-2 text-[var(--fg-muted)]">
-        Update every text and photo shoppers see. Go section by section — then
-        Save.
+      <h1 className="display text-3xl sm:text-4xl">Website</h1>
+      <p className="mt-2 max-w-2xl text-[var(--fg-muted)]">
+        Edit the homepage banner, section titles, Why us cards, stats, and store
+        contact. Go section by section, then Save. Product shelves live under{" "}
+        <Link href="/admin/shop-by-category" className="underline">
+          Categories
+        </Link>
+        .
       </p>
       {msg && <p className="mt-3 text-sm text-[var(--success)]">{msg}</p>}
 
@@ -435,17 +439,14 @@ export default function AdminSitePage() {
 
       {section === "categories" && (
         <div className="mt-8 space-y-4">
-          <h2 className="display text-2xl">Shop by category tiles</h2>
+          <h2 className="display text-2xl">Homepage category tiles</h2>
           <p className="text-sm text-[var(--fg-muted)]">
-            Change the name and front photo for each tile. Software & Plugins is
-            hidden from the shop.
-          </p>
-          <p className="text-sm">
-            Full editor also at{" "}
+            Quick photo/name edits. To add subtypes (Strings, Accessories…) or
+            new main categories, use the full{" "}
             <Link href="/admin/shop-by-category" className="underline">
-              Shop by category
-            </Link>
-            .
+              Categories
+            </Link>{" "}
+            page.
           </p>
           {parents.map((c) => (
             <article

@@ -2,8 +2,11 @@ import Link from "next/link";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { Review } from "@/models/Review";
+import { Category } from "@/models/Category";
 import { ProductBuyBox } from "@/components/product/ProductBuyBox";
+import { resolveProductEssentials } from "@/lib/product-essentials";
 import { toPlain } from "@/lib/utils";
+import type { Types } from "mongoose";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +38,7 @@ export default async function ProductPage({
 
   const product = await Product.findOne({ slug, isActive: true })
     .populate("brand", "name slug")
+    .populate("categories", "name slug parent")
     .lean();
   if (!product) {
     return (
@@ -49,13 +53,43 @@ export default async function ProductPage({
     );
   }
 
-  const reviews = await Review.find({ product: product._id, approved: true })
-    .populate("user", "name")
-    .sort({ createdAt: -1 })
-    .limit(40)
-    .lean();
+  const [reviews, essentials] = await Promise.all([
+    Review.find({ product: product._id, approved: true })
+      .populate("user", "name")
+      .sort({ createdAt: -1 })
+      .limit(40)
+      .lean(),
+    resolveProductEssentials(product, 4),
+  ]);
 
   const brand = product.brand as { name?: string; slug?: string } | null;
+  const cats = (product.categories || []) as Array<{
+    _id: Types.ObjectId;
+    name?: string;
+    slug?: string;
+    parent?: Types.ObjectId | null;
+  }>;
+
+  let categoryTrail: { name: string; slug: string }[] = [];
+  const child = cats.find((c) => c.parent);
+  const parentFromList = cats.find((c) => !c.parent);
+  if (child?.parent) {
+    const parentDoc =
+      parentFromList ||
+      (await Category.findById(child.parent).select("name slug").lean());
+    if (parentDoc?.name && parentDoc.slug) {
+      categoryTrail.push({ name: parentDoc.name, slug: parentDoc.slug });
+    }
+    if (child.name && child.slug) {
+      categoryTrail.push({ name: child.name, slug: child.slug });
+    }
+  } else if (parentFromList?.name && parentFromList.slug) {
+    categoryTrail = [
+      { name: parentFromList.name, slug: parentFromList.slug },
+    ];
+  } else if (cats[0]?.name && cats[0]?.slug) {
+    categoryTrail = [{ name: cats[0].name, slug: cats[0].slug }];
+  }
 
   return (
     <ProductBuyBox
@@ -68,13 +102,29 @@ export default async function ProductPage({
         description: product.description,
         shortDescription: product.shortDescription,
         images: product.images || [],
+        colorOptions: ((product.colorOptions || []) as Array<{
+          name?: string;
+          swatch?: string;
+          images?: string[] | undefined;
+        }>)
+          .filter((c) => c.name)
+          .map((c) => ({
+            name: String(c.name),
+            swatch: c.swatch || "#888888",
+            images: (c.images || []).filter(Boolean),
+          })),
+        specs: ((product.specs || []) as Array<{ label?: string; value?: string }>)
+          .filter((s) => s.label && s.value)
+          .map((s) => ({
+            label: String(s.label),
+            value: String(s.value),
+          })),
         stock: product.stock,
         weightKg: product.weightKg,
         ratingAvg: product.ratingAvg,
         ratingCount: product.ratingCount,
-        brand: brand
-          ? { name: brand.name, slug: brand.slug }
-          : null,
+        brand: brand ? { name: brand.name, slug: brand.slug } : null,
+        categoryTrail,
         variants: ((product.variants || []) as Array<{
           sku: string;
           name: string;
@@ -93,6 +143,7 @@ export default async function ProductPage({
           image: v.image,
         })),
       })}
+      essentials={toPlain(essentials)}
       reviews={toPlain(
         reviews.map((r) => {
           const user = r.user as { name?: string } | null;

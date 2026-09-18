@@ -10,6 +10,17 @@ export type ProductVariant = {
   image?: string;
 };
 
+export type ProductColorOption = {
+  name: string;
+  swatch: string;
+  images: string[];
+};
+
+export type ProductSpec = {
+  label: string;
+  value: string;
+};
+
 export interface IProduct {
   _id: Types.ObjectId;
   title: string;
@@ -19,6 +30,10 @@ export interface IProduct {
   description: string;
   shortDescription?: string;
   images: string[];
+  colorOptions: ProductColorOption[];
+  specs: ProductSpec[];
+  /** Curated “essentials” / frequently-bought-with products */
+  essentials: Types.ObjectId[];
   variants: ProductVariant[];
   price: number;
   mrp: number;
@@ -51,6 +66,23 @@ const VariantSchema = new Schema(
   { _id: false }
 );
 
+const ColorOptionSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    swatch: { type: String, default: "#888888" },
+    images: [{ type: String }],
+  },
+  { _id: false }
+);
+
+const SpecSchema = new Schema(
+  {
+    label: { type: String, required: true },
+    value: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const ProductSchema = new Schema<IProduct>(
   {
     title: { type: String, required: true },
@@ -60,6 +92,9 @@ const ProductSchema = new Schema<IProduct>(
     description: { type: String, default: "" },
     shortDescription: String,
     images: [{ type: String }],
+    colorOptions: { type: [ColorOptionSchema], default: [] },
+    specs: { type: [SpecSchema], default: [] },
+    essentials: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     variants: [VariantSchema],
     price: { type: Number, required: true },
     mrp: { type: Number, required: true },
@@ -83,4 +118,9 @@ const ProductSchema = new Schema<IProduct>(
 
 ProductSchema.index({ title: "text", tags: "text", shortDescription: "text" });
 
-export const Product = models.Product || model<IProduct>("Product", ProductSchema);
+// Re-register on HMR so new schema paths (colorOptions, specs, essentials) are not stripped
+if (models.Product) {
+  delete models.Product;
+}
+
+export const Product = model<IProduct>("Product", ProductSchema);
