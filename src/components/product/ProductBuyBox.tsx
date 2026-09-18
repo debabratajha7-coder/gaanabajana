@@ -5,14 +5,13 @@ import { useMemo, useState } from "react";
 import { formatINR, discountPercent } from "@/lib/utils";
 import { useCart } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/ui/Toast";
-import { ProductCard } from "@/components/product/ProductCard";
-import type { ProductCardData } from "@/lib/product-card";
 import {
   ChevronDown,
   ChevronUp,
   Heart,
   Truck,
 } from "lucide-react";
+import type { ReactNode } from "react";
 
 type ColorOption = {
   name: string;
@@ -52,17 +51,10 @@ const THUMB_VISIBLE = 5;
 
 export function ProductBuyBox({
   product,
-  reviews,
-  essentials = [],
+  children,
 }: {
   product: Product;
-  reviews: {
-    rating: number;
-    title?: string;
-    body: string;
-    user?: { name?: string };
-  }[];
-  essentials?: ProductCardData[];
+  children?: ReactNode;
 }) {
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -167,7 +159,7 @@ export function ProductBuyBox({
   const trail = product.categoryTrail || [];
 
   return (
-    <>
+    <div className="fade-in-soft">
       <div className="container-gb pt-4 sm:pt-6">
         <nav
           aria-label="Breadcrumb"
@@ -255,6 +247,8 @@ export function ProductBuyBox({
               src={image}
               alt={product.title}
               className="aspect-square w-full object-contain p-4 sm:p-8"
+              fetchPriority="high"
+              decoding="async"
             />
           </div>
           {gallery.length > 1 && (
@@ -482,56 +476,23 @@ export function ProductBuyBox({
         </div>
       </div>
 
-      {essentials.length > 0 && (
-        <section className="container-gb border-t border-[var(--line)] py-10 sm:py-12">
-          <h2 className="text-xl font-semibold text-[var(--fg)] sm:text-2xl">
-            Essentials
-          </h2>
-          <p className="mt-1 text-sm text-[var(--fg-muted)]">
-            Pair it with the gear most shoppers add next
-          </p>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-            {essentials.map((p) => (
-              <ProductCard key={p._id} product={p} />
-            ))}
-          </div>
-        </section>
+      {(product.shortDescription || product.description) && (
+        <div className="container-gb space-y-6 border-t border-[var(--line)] py-10 sm:py-12">
+          {product.shortDescription && (
+            <p className="max-w-3xl text-base leading-relaxed text-[var(--fg-muted)]">
+              {product.shortDescription}
+            </p>
+          )}
+          {product.description && (
+            <div
+              className="prose-gb max-w-3xl"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+          )}
+        </div>
       )}
 
-      <div className="container-gb space-y-10 border-t border-[var(--line)] py-10 sm:py-12">
-        {product.shortDescription && (
-          <p className="max-w-3xl text-base leading-relaxed text-[var(--fg-muted)]">
-            {product.shortDescription}
-          </p>
-        )}
-
-        {product.description && (
-          <div
-            className="prose-gb max-w-3xl"
-            dangerouslySetInnerHTML={{ __html: product.description }}
-          />
-        )}
-
-        <div>
-          <h2 className="text-lg font-semibold text-[var(--fg)] sm:text-xl">
-            Reviews
-          </h2>
-          <div className="mt-4 max-w-2xl space-y-3">
-            {reviews.length === 0 && (
-              <p className="text-sm text-[var(--fg-muted)]">No reviews yet.</p>
-            )}
-            {reviews.map((r, i) => (
-              <div key={i} className="border border-[var(--line)] p-4">
-                <p className="text-sm text-[var(--accent)]">
-                  ★ {r.rating} · {r.user?.name || "Customer"}
-                </p>
-                {r.title && <p className="mt-1 font-medium">{r.title}</p>}
-                <p className="mt-1 text-sm text-[var(--fg-muted)]">{r.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {children}
 
       {/* Sticky ATC — sits above mobile bottom nav; flush on desktop */}
       <div className="fixed inset-x-0 bottom-[calc(4.5rem+var(--safe-bottom))] z-40 border-t border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_94%,transparent)] px-3 py-2.5 backdrop-blur-xl lg:bottom-0 lg:px-6">
@@ -602,6 +563,6 @@ export function ProductBuyBox({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

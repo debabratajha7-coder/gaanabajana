@@ -32,6 +32,55 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   );
 }
 
+export function ProductPageSkeleton() {
+  return (
+    <div className="fade-in-soft">
+      <div className="container-gb pt-4 sm:pt-6">
+        <Skeleton className="h-4 w-64 max-w-full" />
+      </div>
+      <div className="container-gb grid gap-6 py-5 sm:gap-8 sm:py-8 lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(300px,400px)] lg:items-start">
+        <div className="hidden flex-col gap-2 lg:flex">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[68px] w-[68px]" />
+          ))}
+        </div>
+        <Skeleton className="aspect-square w-full" />
+        <div className="space-y-4">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-9 w-40" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-24 w-full" />
+          <div className="flex gap-2 pt-2">
+            <Skeleton className="h-11 flex-1" />
+            <Skeleton className="h-11 flex-1" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProductSecondarySkeleton() {
+  return (
+    <div className="container-gb space-y-8 border-t border-[var(--line)] py-10">
+      <div>
+        <Skeleton className="h-7 w-36" />
+        <Skeleton className="mt-2 h-4 w-56" />
+        <div className="mt-6">
+          <ProductGridSkeleton count={4} />
+        </div>
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-6 w-24" />
+        <Skeleton className="h-20 w-full max-w-2xl" />
+      </div>
+    </div>
+  );
+}
+
 export function CollectionSkeleton() {
   return (
     <div className="container-gb py-10">
@@ -74,7 +123,10 @@ export function HomeSkeleton() {
         <Skeleton className="h-8 w-48" />
         <div className="scroll-row md:grid md:grid-cols-4 md:gap-4 md:overflow-visible">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[4/3] w-[70vw] max-w-[260px] md:w-auto md:max-w-none" />
+            <Skeleton
+              key={i}
+              className="aspect-[4/3] w-[70vw] max-w-[260px] md:w-auto md:max-w-none"
+            />
           ))}
         </div>
       </div>

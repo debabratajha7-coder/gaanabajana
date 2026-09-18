@@ -1,10 +1,6 @@
 import { Types } from "mongoose";
 import { Product } from "@/models/Product";
-import { Category } from "@/models/Category";
 import { mapColorOptions, type ProductCardData } from "@/lib/product-card";
-
-const ACCESSORY_RE =
-  /accessor|string|cable|pedal|tuner|strap|bag|case|capo|pick|stand|cable|amp|headphone/i;
 
 const ESSENTIAL_TAGS = ["essential", "essentials", "accessory", "accessories"];
 
@@ -38,15 +34,20 @@ function toCard(
   };
 }
 
+function safeObjectIds(ids: string[]) {
+  return ids
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+}
+
 /**
- * Curated essentials first (admin picks), then auto-fill from
- * accessory categories / tags, then same brand.
+ * Curated essentials first, then one lightweight auto-fill query
+ * (same brand / accessory tags). Kept intentionally cheap for PDP.
  */
 export async function resolveProductEssentials(
   product: {
     _id: Types.ObjectId | string;
     brand?: Types.ObjectId | { _id?: Types.ObjectId } | null;
-    categories?: (Types.ObjectId | string)[];
     essentials?: (Types.ObjectId | { _id?: Types.ObjectId } | string)[];
   },
   limit = 4
@@ -58,30 +59,37 @@ export async function resolveProductEssentials(
       if (e && typeof e === "object" && "_id" in e && e._id) return String(e._id);
       return String(e);
     })
-    .filter((id) => id && id !== selfId);
+    .filter((id) => id && id !== selfId && Types.ObjectId.isValid(id));
 
   const ordered: ProductCardData[] = [];
   const seen = new Set<string>([selfId]);
 
   if (curatedIds.length) {
-    const curated = await Product.find({
-      _id: { $in: curatedIds },
-      isActive: true,
-    })
-      .populate("brand", "name")
-      .lean();
-    const byId = new Map(curated.map((p) => [String(p._id), p]));
-    for (const id of curatedIds) {
-      const p = byId.get(id);
-      if (!p || seen.has(id)) continue;
-      seen.add(id);
-      ordered.push(
-        toCard({
-          ...p,
-          brand: p.brand as { name?: string } | null,
-        })
-      );
-      if (ordered.length >= limit) return ordered;
+    try {
+      const curated = await Product.find({
+        _id: { $in: safeObjectIds(curatedIds) },
+        isActive: true,
+      })
+        .select(
+          "title slug price mrp images colorOptions ratingAvg ratingCount onSale brand"
+        )
+        .populate("brand", "name")
+        .lean();
+      const byId = new Map(curated.map((p) => [String(p._id), p]));
+      for (const id of curatedIds) {
+        const p = byId.get(id);
+        if (!p || seen.has(id)) continue;
+        seen.add(id);
+        ordered.push(
+          toCard({
+            ...p,
+            brand: p.brand as { name?: string } | null,
+          })
+        );
+        if (ordered.length >= limit) return ordered;
+      }
+    } catch (err) {
+      console.error("essentials curated failed", err);
     }
   }
 
@@ -93,107 +101,36 @@ export async function resolveProductEssentials(
       ? product.brand._id
       : product.brand;
 
-  const accessoryCats = await Category.find({
-    $or: [{ name: ACCESSORY_RE }, { slug: ACCESSORY_RE }],
-    isActive: true,
-  })
-    .select("_id")
-    .lean();
-  const accessoryCatIds = accessoryCats.map((c) => c._id);
-
-  const excludeIds = [...seen]
-    .filter((id) => Types.ObjectId.isValid(id))
-    .map((id) => new Types.ObjectId(id));
-
-  let candidates: Array<{
-    _id: Types.ObjectId;
-    title: string;
-    slug: string;
-    price: number;
-    mrp: number;
-    images?: string[];
-    colorOptions?: { name?: string; swatch?: string; images?: string[] }[];
-    ratingAvg?: number;
-    ratingCount?: number;
-    onSale?: boolean;
-    tags?: string[];
-    categories?: unknown[];
-    brand?: { _id?: Types.ObjectId; name?: string } | Types.ObjectId | null;
-  }> = [];
   try {
-    candidates = (await Product.find({
-      _id: { $nin: excludeIds },
+    const fill = await Product.find({
+      _id: { $nin: safeObjectIds([...seen]) },
       isActive: true,
       $or: [
         { tags: { $in: ESSENTIAL_TAGS } },
-        ...(accessoryCatIds.length
-          ? [{ categories: { $in: accessoryCatIds } }]
-          : []),
         ...(brandId ? [{ brand: brandId }] : []),
       ],
     } as Record<string, unknown>)
+      .select(
+        "title slug price mrp images colorOptions ratingAvg ratingCount onSale brand tags"
+      )
       .populate("brand", "name")
       .sort({ featured: -1, updatedAt: -1 })
-      .limit(24)
-      .lean()) as typeof candidates;
-  } catch (err) {
-    console.error("essentials candidates failed", err);
-    candidates = [];
-  }
+      .limit(need)
+      .lean();
 
-  const score = (p: (typeof candidates)[number]) => {
-    let s = 0;
-    const tags = ((p.tags || []) as string[]).map((t: string) =>
-      String(t).toLowerCase()
-    );
-    if (tags.some((t: string) => ESSENTIAL_TAGS.includes(t))) s += 4;
-    const cats = ((p.categories || []) as unknown[]).map(String);
-    if (cats.some((c: string) => accessoryCatIds.some((a) => String(a) === c)))
-      s += 3;
-    if (brandId && String(p.brand?._id || p.brand) === String(brandId)) s += 1;
-    return s;
-  };
-
-  candidates.sort((a, b) => score(b) - score(a));
-
-  for (const p of candidates) {
-    const id = String(p._id);
-    if (seen.has(id)) continue;
-    seen.add(id);
-    ordered.push(
-      toCard({
-        ...p,
-        brand: p.brand as { name?: string } | null,
-      })
-    );
-    if (ordered.length >= limit) break;
-  }
-
-  if (ordered.length < limit) {
-    try {
-      const more = await Product.find({
-        _id: {
-          $nin: [...seen]
-            .filter((id) => Types.ObjectId.isValid(id))
-            .map((id) => new Types.ObjectId(id)),
-        },
-        isActive: true,
-      } as Record<string, unknown>)
-        .populate("brand", "name")
-        .sort({ featured: -1, updatedAt: -1 })
-        .limit(limit - ordered.length)
-        .lean();
-      for (const p of more) {
-        ordered.push(
-          toCard({
-            ...p,
-            brand: p.brand as { name?: string } | null,
-          })
-        );
-      }
-    } catch (err) {
-      console.error("essentials fill failed", err);
+    for (const p of fill) {
+      const id = String(p._id);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      ordered.push(
+        toCard({
+          ...p,
+          brand: p.brand as { name?: string } | null,
+        })
+      );
     }
+  } catch (err) {
+    console.error("essentials fill failed", err);
   }
 
   return ordered;

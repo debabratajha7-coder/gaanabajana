@@ -1,23 +1,16 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
-import { Review } from "@/models/Review";
 import { Category } from "@/models/Category";
 import { ProductBuyBox } from "@/components/product/ProductBuyBox";
-import { resolveProductEssentials } from "@/lib/product-essentials";
+import { ProductSecondary } from "@/components/product/ProductSecondary";
+import { ProductSecondarySkeleton } from "@/components/ui/Skeleton";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { toPlain } from "@/lib/utils";
 import type { Types } from "mongoose";
 
 export const dynamic = "force-dynamic";
-
-type ReviewRow = {
-  rating: number;
-  title?: string;
-  body: string;
-  authorName?: string;
-  user?: { name?: string } | null;
-};
 
 export default async function ProductPage({
   params,
@@ -81,27 +74,6 @@ export default async function ProductPage({
     );
   }
 
-  let reviews: ReviewRow[] = [];
-  let essentials: Awaited<ReturnType<typeof resolveProductEssentials>> = [];
-
-  try {
-    const [reviewDocs, essentialDocs] = await Promise.all([
-      Review.find({ product: product._id, approved: true })
-        .populate("user", "name")
-        .sort({ createdAt: -1 })
-        .limit(40)
-        .lean(),
-      resolveProductEssentials(product, 4).catch((err) => {
-        console.error("essentials failed", err);
-        return [] as Awaited<ReturnType<typeof resolveProductEssentials>>;
-      }),
-    ]);
-    reviews = reviewDocs as ReviewRow[];
-    essentials = essentialDocs;
-  } catch (err) {
-    console.error("product secondary data failed", slug, err);
-  }
-
   const brand = product.brand as { name?: string; slug?: string } | null;
   const cats = (product.categories || []) as Array<{
     _id: Types.ObjectId;
@@ -135,10 +107,12 @@ export default async function ProductPage({
     console.error("category trail failed", err);
   }
 
+  const productId = String(product._id);
+
   return (
     <ProductBuyBox
       product={toPlain({
-        _id: String(product._id),
+        _id: productId,
         title: product.title,
         slug: product.slug,
         price: product.price,
@@ -190,20 +164,10 @@ export default async function ProductPage({
           image: v.image,
         })),
       })}
-      essentials={toPlain(essentials)}
-      reviews={toPlain(
-        reviews.map((r) => {
-          const user = r.user as { name?: string } | null;
-          return {
-            rating: r.rating,
-            title: r.title,
-            body: r.body,
-            user: {
-              name: r.authorName || user?.name || "Customer",
-            },
-          };
-        })
-      )}
-    />
+    >
+      <Suspense fallback={<ProductSecondarySkeleton />}>
+        <ProductSecondary productId={productId} />
+      </Suspense>
+    </ProductBuyBox>
   );
 }

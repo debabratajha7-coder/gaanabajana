@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type MouseEvent } from "react";
 import { motion } from "motion/react";
 import { formatINR, discountPercent } from "@/lib/utils";
@@ -11,6 +12,7 @@ export type { ProductCardData, ProductColorOptionData } from "@/lib/product-card
 const MAX_SWATCHES = 4;
 
 export function ProductCard({ product }: { product: ProductCardData }) {
+  const router = useRouter();
   const colors = (product.colorOptions || []).filter((c) => c.name);
   const [selected, setSelected] = useState<number | null>(null);
   const save = discountPercent(product.price, product.mrp);
@@ -33,6 +35,8 @@ export function ProductCard({ product }: { product: ProductCardData }) {
     <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
       <Link
         href={`/products/${product.slug}`}
+        prefetch
+        onPointerEnter={() => router.prefetch(`/products/${product.slug}`)}
         className="group block overflow-hidden border border-[var(--line)] bg-white transition duration-300 hover:border-[var(--line-strong)] hover:shadow-sm"
       >
         <div className="relative aspect-[4/5] overflow-hidden border-b border-[var(--line)] bg-[var(--bg-soft)]">
