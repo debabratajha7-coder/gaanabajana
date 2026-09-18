@@ -101,23 +101,45 @@ export async function resolveProductEssentials(
     .lean();
   const accessoryCatIds = accessoryCats.map((c) => c._id);
 
-  const excludeIds = [...seen].map((id) => new Types.ObjectId(id));
+  const excludeIds = [...seen]
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
 
-  const candidates = await Product.find({
-    _id: { $nin: excludeIds },
-    isActive: true,
-    $or: [
-      { tags: { $in: ESSENTIAL_TAGS } },
-      ...(accessoryCatIds.length
-        ? [{ categories: { $in: accessoryCatIds } }]
-        : []),
-      ...(brandId ? [{ brand: brandId }] : []),
-    ],
-  } as Record<string, unknown>)
-    .populate("brand", "name")
-    .sort({ featured: -1, updatedAt: -1 })
-    .limit(24)
-    .lean();
+  let candidates: Array<{
+    _id: Types.ObjectId;
+    title: string;
+    slug: string;
+    price: number;
+    mrp: number;
+    images?: string[];
+    colorOptions?: { name?: string; swatch?: string; images?: string[] }[];
+    ratingAvg?: number;
+    ratingCount?: number;
+    onSale?: boolean;
+    tags?: string[];
+    categories?: unknown[];
+    brand?: { _id?: Types.ObjectId; name?: string } | Types.ObjectId | null;
+  }> = [];
+  try {
+    candidates = (await Product.find({
+      _id: { $nin: excludeIds },
+      isActive: true,
+      $or: [
+        { tags: { $in: ESSENTIAL_TAGS } },
+        ...(accessoryCatIds.length
+          ? [{ categories: { $in: accessoryCatIds } }]
+          : []),
+        ...(brandId ? [{ brand: brandId }] : []),
+      ],
+    } as Record<string, unknown>)
+      .populate("brand", "name")
+      .sort({ featured: -1, updatedAt: -1 })
+      .limit(24)
+      .lean()) as typeof candidates;
+  } catch (err) {
+    console.error("essentials candidates failed", err);
+    candidates = [];
+  }
 
   const score = (p: (typeof candidates)[number]) => {
     let s = 0;
@@ -148,21 +170,29 @@ export async function resolveProductEssentials(
   }
 
   if (ordered.length < limit) {
-    const more = await Product.find({
-      _id: { $nin: [...seen].map((id) => new Types.ObjectId(id)) },
-      isActive: true,
-    } as Record<string, unknown>)
-      .populate("brand", "name")
-      .sort({ featured: -1, updatedAt: -1 })
-      .limit(limit - ordered.length)
-      .lean();
-    for (const p of more) {
-      ordered.push(
-        toCard({
-          ...p,
-          brand: p.brand as { name?: string } | null,
-        })
-      );
+    try {
+      const more = await Product.find({
+        _id: {
+          $nin: [...seen]
+            .filter((id) => Types.ObjectId.isValid(id))
+            .map((id) => new Types.ObjectId(id)),
+        },
+        isActive: true,
+      } as Record<string, unknown>)
+        .populate("brand", "name")
+        .sort({ featured: -1, updatedAt: -1 })
+        .limit(limit - ordered.length)
+        .lean();
+      for (const p of more) {
+        ordered.push(
+          toCard({
+            ...p,
+            brand: p.brand as { name?: string } | null,
+          })
+        );
+      }
+    } catch (err) {
+      console.error("essentials fill failed", err);
     }
   }
 

@@ -7,7 +7,6 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/ui/Toast";
 import { ProductCard } from "@/components/product/ProductCard";
 import type { ProductCardData } from "@/lib/product-card";
-import { sanitizeHtml } from "@/lib/sanitize";
 import {
   ChevronDown,
   ChevronUp,
@@ -509,9 +508,7 @@ export function ProductBuyBox({
         {product.description && (
           <div
             className="prose-gb max-w-3xl"
-            dangerouslySetInnerHTML={{
-              __html: sanitizeHtml(product.description),
-            }}
+            dangerouslySetInnerHTML={{ __html: product.description }}
           />
         )}
 

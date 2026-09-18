@@ -5,10 +5,19 @@ import { Review } from "@/models/Review";
 import { Category } from "@/models/Category";
 import { ProductBuyBox } from "@/components/product/ProductBuyBox";
 import { resolveProductEssentials } from "@/lib/product-essentials";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { toPlain } from "@/lib/utils";
 import type { Types } from "mongoose";
 
 export const dynamic = "force-dynamic";
+
+type ReviewRow = {
+  rating: number;
+  title?: string;
+  body: string;
+  authorName?: string;
+  user?: { name?: string } | null;
+};
 
 export default async function ProductPage({
   params,
@@ -36,10 +45,29 @@ export default async function ProductPage({
     );
   }
 
-  const product = await Product.findOne({ slug, isActive: true })
-    .populate("brand", "name slug")
-    .populate("categories", "name slug parent")
-    .lean();
+  let product;
+  try {
+    product = await Product.findOne({ slug, isActive: true })
+      .populate("brand", "name slug")
+      .populate("categories", "name slug parent")
+      .lean();
+  } catch (err) {
+    console.error("product lookup failed", slug, err);
+    return (
+      <div className="container-gb py-16 text-center">
+        <h1 className="font-[family-name:var(--font-display)] text-3xl">
+          Product temporarily unavailable
+        </h1>
+        <p className="mt-3 text-[var(--fg-muted)]">
+          Please refresh in a moment.
+        </p>
+        <Link href="/" className="btn btn-primary mt-6">
+          Home
+        </Link>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="container-gb py-16 text-center">
@@ -53,14 +81,26 @@ export default async function ProductPage({
     );
   }
 
-  const [reviews, essentials] = await Promise.all([
-    Review.find({ product: product._id, approved: true })
-      .populate("user", "name")
-      .sort({ createdAt: -1 })
-      .limit(40)
-      .lean(),
-    resolveProductEssentials(product, 4),
-  ]);
+  let reviews: ReviewRow[] = [];
+  let essentials: Awaited<ReturnType<typeof resolveProductEssentials>> = [];
+
+  try {
+    const [reviewDocs, essentialDocs] = await Promise.all([
+      Review.find({ product: product._id, approved: true })
+        .populate("user", "name")
+        .sort({ createdAt: -1 })
+        .limit(40)
+        .lean(),
+      resolveProductEssentials(product, 4).catch((err) => {
+        console.error("essentials failed", err);
+        return [] as Awaited<ReturnType<typeof resolveProductEssentials>>;
+      }),
+    ]);
+    reviews = reviewDocs as ReviewRow[];
+    essentials = essentialDocs;
+  } catch (err) {
+    console.error("product secondary data failed", slug, err);
+  }
 
   const brand = product.brand as { name?: string; slug?: string } | null;
   const cats = (product.categories || []) as Array<{
@@ -71,24 +111,28 @@ export default async function ProductPage({
   }>;
 
   let categoryTrail: { name: string; slug: string }[] = [];
-  const child = cats.find((c) => c.parent);
-  const parentFromList = cats.find((c) => !c.parent);
-  if (child?.parent) {
-    const parentDoc =
-      parentFromList ||
-      (await Category.findById(child.parent).select("name slug").lean());
-    if (parentDoc?.name && parentDoc.slug) {
-      categoryTrail.push({ name: parentDoc.name, slug: parentDoc.slug });
+  try {
+    const child = cats.find((c) => c.parent);
+    const parentFromList = cats.find((c) => !c.parent);
+    if (child?.parent) {
+      const parentDoc =
+        parentFromList ||
+        (await Category.findById(child.parent).select("name slug").lean());
+      if (parentDoc?.name && parentDoc.slug) {
+        categoryTrail.push({ name: parentDoc.name, slug: parentDoc.slug });
+      }
+      if (child.name && child.slug) {
+        categoryTrail.push({ name: child.name, slug: child.slug });
+      }
+    } else if (parentFromList?.name && parentFromList.slug) {
+      categoryTrail = [
+        { name: parentFromList.name, slug: parentFromList.slug },
+      ];
+    } else if (cats[0]?.name && cats[0]?.slug) {
+      categoryTrail = [{ name: cats[0].name, slug: cats[0].slug }];
     }
-    if (child.name && child.slug) {
-      categoryTrail.push({ name: child.name, slug: child.slug });
-    }
-  } else if (parentFromList?.name && parentFromList.slug) {
-    categoryTrail = [
-      { name: parentFromList.name, slug: parentFromList.slug },
-    ];
-  } else if (cats[0]?.name && cats[0]?.slug) {
-    categoryTrail = [{ name: cats[0].name, slug: cats[0].slug }];
+  } catch (err) {
+    console.error("category trail failed", err);
   }
 
   return (
@@ -99,7 +143,7 @@ export default async function ProductPage({
         slug: product.slug,
         price: product.price,
         mrp: product.mrp,
-        description: product.description,
+        description: sanitizeHtml(product.description || ""),
         shortDescription: product.shortDescription,
         images: product.images || [],
         colorOptions: ((product.colorOptions || []) as Array<{
@@ -113,7 +157,10 @@ export default async function ProductPage({
             swatch: c.swatch || "#888888",
             images: (c.images || []).filter(Boolean),
           })),
-        specs: ((product.specs || []) as Array<{ label?: string; value?: string }>)
+        specs: ((product.specs || []) as Array<{
+          label?: string;
+          value?: string;
+        }>)
           .filter((s) => s.label && s.value)
           .map((s) => ({
             label: String(s.label),

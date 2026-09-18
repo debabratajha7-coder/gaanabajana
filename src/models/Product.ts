@@ -1,4 +1,4 @@
-import { Schema, models, model, Types } from "mongoose";
+import { Schema, models, model, Types, type Model } from "mongoose";
 
 export type ProductVariant = {
   sku: string;
@@ -118,9 +118,6 @@ const ProductSchema = new Schema<IProduct>(
 
 ProductSchema.index({ title: "text", tags: "text", shortDescription: "text" });
 
-// Re-register on HMR so new schema paths (colorOptions, specs, essentials) are not stripped
-if (models.Product) {
-  delete models.Product;
-}
-
-export const Product = model<IProduct>("Product", ProductSchema);
+export const Product: Model<IProduct> =
+  (models.Product as Model<IProduct>) ||
+  model<IProduct>("Product", ProductSchema);
