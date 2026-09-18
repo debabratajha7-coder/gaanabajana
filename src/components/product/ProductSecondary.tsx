@@ -64,7 +64,7 @@ export async function ProductSecondary({
     /* keep empty */
   }
 
-  const plainEssentials = toPlain(essentials);
+  const plainEssentials = toPlain(essentials) || [];
   const plainReviews = toPlain(
     reviews.map((r) => {
       const user = r.user as { name?: string } | null;
@@ -75,7 +75,7 @@ export async function ProductSecondary({
         user: { name: r.authorName || user?.name || "Customer" },
       };
     })
-  );
+  ) || [];
 
   return (
     <div className="fade-in-soft">

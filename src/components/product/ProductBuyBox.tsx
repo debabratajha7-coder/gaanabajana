@@ -9,6 +9,8 @@ import {
   ChevronDown,
   ChevronUp,
   Heart,
+  Minus,
+  Plus,
   Truck,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -58,6 +60,9 @@ export function ProductBuyBox({
 }) {
   const { addItem } = useCart();
   const { toast } = useToast();
+  const images = product.images ?? [];
+  const variants = product.variants ?? [];
+  const specs = product.specs ?? [];
   const colors = useMemo(
     () => (product.colorOptions || []).filter((c) => c.name),
     [product.colorOptions]
@@ -72,7 +77,7 @@ export function ProductBuyBox({
   const [pincode, setPincode] = useState("");
   const [deliveryMsg, setDeliveryMsg] = useState<string | null>(null);
 
-  const variant = product.variants[variantIdx] || {
+  const variant = variants[variantIdx] || {
     name: "Standard",
     price: product.price,
     mrp: product.mrp,
@@ -84,8 +89,8 @@ export function ProductBuyBox({
   const gallery =
     selected?.images?.length
       ? selected.images
-      : product.images.length
-        ? product.images
+      : images.length
+        ? images
         : [variant.image || "/placeholder-product.jpg"];
 
   const image = gallery[activeImage] || gallery[0];
@@ -361,14 +366,14 @@ export function ProductBuyBox({
             </div>
           )}
 
-          {product.variants.length > 1 && (
+          {variants.length > 1 && (
             <div className="mt-5">
               <p className="mb-2 text-sm text-[var(--fg)]">
                 Option:{" "}
                 <span className="font-medium">{variant.name}</span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {product.variants.map((v, i) => (
+                {variants.map((v, i) => (
                   <button
                     key={v.sku}
                     type="button"
@@ -457,11 +462,11 @@ export function ProductBuyBox({
             <Heart className="h-4 w-4" /> Save to wishlist
           </button>
 
-          {!!product.specs?.length && (
+          {!!specs.length && (
             <div className="mt-6 border-t border-[var(--line)] pt-5">
               <h2 className="text-sm font-semibold text-[var(--fg)]">Specs</h2>
               <dl className="mt-3 max-h-[28rem] divide-y divide-[var(--line)] overflow-y-auto border border-[var(--line)]">
-                {product.specs.map((s) => (
+                {specs.map((s) => (
                   <div
                     key={`${s.label}-${s.value}`}
                     className="grid grid-cols-2 gap-3 px-3 py-2 text-sm"
@@ -522,7 +527,7 @@ export function ProductBuyBox({
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
                 aria-label="Decrease quantity"
               >
-                ‹
+                <Minus className="h-3.5 w-3.5" />
               </button>
               <span className="min-w-[1.5rem] text-center text-sm font-medium">
                 {qty}
@@ -535,7 +540,7 @@ export function ProductBuyBox({
                 }
                 aria-label="Increase quantity"
               >
-                ›
+                <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
             <button
