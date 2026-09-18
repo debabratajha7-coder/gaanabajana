@@ -12,13 +12,24 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  let products: Awaited<ReturnType<typeof Product.find>> = [];
+  let products: {
+    _id: unknown;
+    title: string;
+    slug: string;
+    price: number;
+    mrp: number;
+    images?: string[];
+    colorOptions?: { name?: string; swatch?: string; images?: string[] }[];
+    brand?: { name?: string } | null;
+    ratingAvg?: number;
+    ratingCount?: number;
+  }[] = [];
   let dbOk = true;
 
   try {
     await connectDB();
     if (q) {
-      products = await Product.find({
+      products = (await Product.find({
         isActive: true,
         $or: [
           { title: { $regex: q, $options: "i" } },
@@ -27,7 +38,7 @@ export default async function SearchPage({
       })
         .populate("brand", "name")
         .limit(48)
-        .lean();
+        .lean()) as typeof products;
     }
   } catch {
     dbOk = false;

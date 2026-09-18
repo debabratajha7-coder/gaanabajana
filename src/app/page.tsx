@@ -51,10 +51,17 @@ function toCard(p: {
 
 export default async function HomePage() {
   let settings;
-  let featured: Awaited<ReturnType<typeof Product.find>> = [];
-  let parents: Awaited<ReturnType<typeof Category.find>> = [];
+  let featured: Parameters<typeof toCard>[0][] = [];
+  let parents: { _id: unknown; name: string; slug: string; image?: string }[] = [];
   let brands: { _id: string; name: string; slug: string; logo?: string }[] = [];
-  let posts: Awaited<ReturnType<typeof BlogPost.find>> = [];
+  let posts: {
+    _id: unknown;
+    title: string;
+    slug: string;
+    excerpt?: string;
+    coverImage?: string;
+    publishedAt?: Date;
+  }[] = [];
   const productsByTab: Record<string, ProductCardData[]> = {};
 
   try {
@@ -69,9 +76,9 @@ export default async function HomePage() {
       Brand.find({ isActive: true }).sort({ name: 1 }).limit(24).lean(),
       BlogPost.find({ published: true }).sort({ publishedAt: -1 }).limit(3).lean(),
     ]);
-    featured = featuredDocs;
-    parents = parentDocs;
-    posts = postDocs;
+    featured = featuredDocs as Parameters<typeof toCard>[0][];
+    parents = parentDocs as typeof parents;
+    posts = postDocs as typeof posts;
     brands = brandDocs.map((b) => ({
       _id: String(b._id),
       name: b.name,

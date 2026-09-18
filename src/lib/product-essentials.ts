@@ -113,7 +113,7 @@ export async function resolveProductEssentials(
         : []),
       ...(brandId ? [{ brand: brandId }] : []),
     ],
-  })
+  } as Record<string, unknown>)
     .populate("brand", "name")
     .sort({ featured: -1, updatedAt: -1 })
     .limit(24)
@@ -151,7 +151,7 @@ export async function resolveProductEssentials(
     const more = await Product.find({
       _id: { $nin: [...seen].map((id) => new Types.ObjectId(id)) },
       isActive: true,
-    })
+    } as Record<string, unknown>)
       .populate("brand", "name")
       .sort({ featured: -1, updatedAt: -1 })
       .limit(limit - ordered.length)
