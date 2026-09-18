@@ -1,47 +1,30 @@
 import Link from "next/link";
-import { connectDB } from "@/lib/db";
-import { Product } from "@/models/Product";
+import { loadProducts } from "@/lib/catalog-query";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
+import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 
 export const dynamic = "force-dynamic";
 
-async function loadSaleProducts(filter: Record<string, unknown>) {
-  try {
-    await connectDB();
-    return await Product.find({ isActive: true, ...filter })
-      .populate("brand", "name")
-      .limit(48)
-      .lean();
-  } catch {
-    return null;
-  }
-}
-
-function DbDown() {
-  return (
-    <div className="container-gb py-16 text-center">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl">
-        Catalog temporarily unavailable
-      </h1>
-      <p className="mt-3 text-[var(--fg-muted)]">
-        Database not connected. See{" "}
-        <Link href="/api/health" className="text-[var(--accent)]">
-          /api/health
-        </Link>
-        .
-      </p>
-    </div>
-  );
-}
-
 export default async function DealsPage() {
-  const products = await loadSaleProducts({ onSale: true });
-  if (!products) return <DbDown />;
+  let products;
+  try {
+    products = await loadProducts({ onSale: true });
+  } catch (err) {
+    console.error("deals page failure", err);
+    return (
+      <AutoRetry
+        title="Taking a moment…"
+        message="We’re loading deals. Retrying automatically."
+        storageKey="deals"
+      />
+    );
+  }
 
   return (
     <div className="container-gb py-12">
+      <ClearAutoRetry storageKey="deals" />
       <h1 className="font-[family-name:var(--font-display)] text-4xl">Deals</h1>
       <div className="mt-4 flex gap-3 text-sm">
         <Link href="/deals/sale" className="text-[var(--accent)]">

@@ -1,18 +1,29 @@
-import { connectDB } from "@/lib/db";
-import { Product } from "@/models/Product";
+import { loadProducts } from "@/lib/catalog-query";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
+import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 
 export const dynamic = "force-dynamic";
 
 export default async function SalePage() {
-  await connectDB();
-  const products = await Product.find({ isActive: true, onSale: true })
-    .populate("brand", "name")
-    .lean();
+  let products;
+  try {
+    products = await loadProducts({ onSale: true }, 96);
+  } catch (err) {
+    console.error("sale page failure", err);
+    return (
+      <AutoRetry
+        title="Taking a moment…"
+        message="We’re loading sale items. Retrying automatically."
+        storageKey="deals-sale"
+      />
+    );
+  }
+
   return (
     <div className="container-gb py-12">
+      <ClearAutoRetry storageKey="deals-sale" />
       <h1 className="font-[family-name:var(--font-display)] text-4xl">Sale</h1>
       {products.length === 0 ? (
         <ComingSoonEmpty categoryName="Sale" />

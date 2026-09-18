@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { connectDB } from "@/lib/db";
-import { Product } from "@/models/Product";
+import { connectDB, isTransientDbError } from "@/lib/db";
+import { getProductBySlug } from "@/lib/products";
 import { Category } from "@/models/Category";
 import { ProductBuyBox } from "@/components/product/ProductBuyBox";
 import { ProductSecondary } from "@/components/product/ProductSecondary";
 import { ProductSecondarySkeleton } from "@/components/ui/Skeleton";
+import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { toPlain } from "@/lib/utils";
 import type { Types } from "mongoose";
@@ -19,45 +20,18 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
 
-  try {
-    await connectDB();
-  } catch {
-    return (
-      <div className="container-gb py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Product unavailable
-        </h1>
-        <p className="mt-3 text-[var(--fg-muted)]">
-          Database is not connected on this host. Check{" "}
-          <Link href="/api/health" className="text-[var(--accent)]">
-            /api/health
-          </Link>
-          .
-        </p>
-      </div>
-    );
-  }
-
   let product;
   try {
-    product = await Product.findOne({ slug, isActive: true })
-      .populate("brand", "name slug")
-      .populate("categories", "name slug parent")
-      .lean();
+    product = await getProductBySlug(slug);
   } catch (err) {
-    console.error("product lookup failed", slug, err);
+    const kind = isTransientDbError(err) ? "transient" : "fatal";
+    console.error(`product page ${kind} failure`, slug, err);
     return (
-      <div className="container-gb py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Product temporarily unavailable
-        </h1>
-        <p className="mt-3 text-[var(--fg-muted)]">
-          Please refresh in a moment.
-        </p>
-        <Link href="/" className="btn btn-primary mt-6">
-          Home
-        </Link>
-      </div>
+      <AutoRetry
+        title="Taking a moment…"
+        message="We’re loading this product. Hang tight — retrying automatically."
+        storageKey={`product:${slug}`}
+      />
     );
   }
 
@@ -84,6 +58,7 @@ export default async function ProductPage({
 
   let categoryTrail: { name: string; slug: string }[] = [];
   try {
+    await connectDB();
     const child = cats.find((c) => c.parent);
     const parentFromList = cats.find((c) => !c.parent);
     if (child?.parent) {
@@ -110,64 +85,67 @@ export default async function ProductPage({
   const productId = String(product._id);
 
   return (
-    <ProductBuyBox
-      product={toPlain({
-        _id: productId,
-        title: product.title,
-        slug: product.slug,
-        price: product.price,
-        mrp: product.mrp,
-        description: sanitizeHtml(product.description || ""),
-        shortDescription: product.shortDescription,
-        images: product.images || [],
-        colorOptions: ((product.colorOptions || []) as Array<{
-          name?: string;
-          swatch?: string;
-          images?: string[] | undefined;
-        }>)
-          .filter((c) => c.name)
-          .map((c) => ({
-            name: String(c.name),
-            swatch: c.swatch || "#888888",
-            images: (c.images || []).filter(Boolean),
+    <>
+      <ClearAutoRetry storageKey={`product:${slug}`} />
+      <ProductBuyBox
+        product={toPlain({
+          _id: productId,
+          title: product.title,
+          slug: product.slug,
+          price: product.price,
+          mrp: product.mrp,
+          description: sanitizeHtml(product.description || ""),
+          shortDescription: product.shortDescription,
+          images: product.images || [],
+          colorOptions: ((product.colorOptions || []) as Array<{
+            name?: string;
+            swatch?: string;
+            images?: string[] | undefined;
+          }>)
+            .filter((c) => c.name)
+            .map((c) => ({
+              name: String(c.name),
+              swatch: c.swatch || "#888888",
+              images: (c.images || []).filter(Boolean),
+            })),
+          specs: ((product.specs || []) as Array<{
+            label?: string;
+            value?: string;
+          }>)
+            .filter((s) => s.label && s.value)
+            .map((s) => ({
+              label: String(s.label),
+              value: String(s.value),
+            })),
+          stock: product.stock,
+          weightKg: product.weightKg,
+          ratingAvg: product.ratingAvg,
+          ratingCount: product.ratingCount,
+          brand: brand ? { name: brand.name, slug: brand.slug } : null,
+          categoryTrail,
+          variants: ((product.variants || []) as Array<{
+            sku: string;
+            name: string;
+            color?: string;
+            price: number;
+            mrp: number;
+            stock: number;
+            image?: string;
+          }>).map((v) => ({
+            sku: v.sku,
+            name: v.name,
+            color: v.color,
+            price: v.price,
+            mrp: v.mrp,
+            stock: v.stock,
+            image: v.image,
           })),
-        specs: ((product.specs || []) as Array<{
-          label?: string;
-          value?: string;
-        }>)
-          .filter((s) => s.label && s.value)
-          .map((s) => ({
-            label: String(s.label),
-            value: String(s.value),
-          })),
-        stock: product.stock,
-        weightKg: product.weightKg,
-        ratingAvg: product.ratingAvg,
-        ratingCount: product.ratingCount,
-        brand: brand ? { name: brand.name, slug: brand.slug } : null,
-        categoryTrail,
-        variants: ((product.variants || []) as Array<{
-          sku: string;
-          name: string;
-          color?: string;
-          price: number;
-          mrp: number;
-          stock: number;
-          image?: string;
-        }>).map((v) => ({
-          sku: v.sku,
-          name: v.name,
-          color: v.color,
-          price: v.price,
-          mrp: v.mrp,
-          stock: v.stock,
-          image: v.image,
-        })),
-      })}
-    >
-      <Suspense fallback={<ProductSecondarySkeleton />}>
-        <ProductSecondary productId={productId} />
-      </Suspense>
-    </ProductBuyBox>
+        })}
+      >
+        <Suspense fallback={<ProductSecondarySkeleton />}>
+          <ProductSecondary productId={productId} />
+        </Suspense>
+      </ProductBuyBox>
+    </>
   );
 }

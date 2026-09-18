@@ -1,57 +1,20 @@
 import Link from "next/link";
-import { connectDB } from "@/lib/db";
+import { connectDB, isTransientDbError, resetDBCache } from "@/lib/db";
 import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
+import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 
 export const dynamic = "force-dynamic";
 
-export default async function CollectionPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-
-  try {
-    await connectDB();
-  } catch {
-    return (
-      <div className="container-gb py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Catalog temporarily unavailable
-        </h1>
-        <p className="mx-auto mt-3 max-w-lg text-[var(--fg-muted)]">
-          The database is not connected on this host yet. Add{" "}
-          <code className="text-[var(--accent)]">MONGODB_URI</code> in Vercel
-          env vars, allow Atlas access from anywhere (<code>0.0.0.0/0</code>),
-          redeploy, then run <code>npm run seed</code> against that database.
-        </p>
-        <Link href="/api/health" className="btn btn-ghost mt-6">
-          Check health
-        </Link>
-      </div>
-    );
-  }
-
+async function loadCollection(slug: string) {
+  await connectDB();
   const category = await Category.findOne({ slug, isActive: true }).lean();
   if (!category) {
-    return (
-      <div className="container-gb py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Collection not found
-        </h1>
-        <p className="mt-3 text-[var(--fg-muted)]">
-          No category named “{slug}”. Seed the database or create it in admin.
-        </p>
-        <Link href="/" className="btn btn-primary mt-6">
-          Home
-        </Link>
-      </div>
-    );
+    return { category: null as null, children: [] as [], products: [] as [] };
   }
 
   const children = await Category.find({
@@ -59,7 +22,6 @@ export default async function CollectionPage({
     isActive: true,
   }).lean();
   const ids = await resolveCatalogCategoryIds(category);
-
   const products = await Product.find({
     isActive: true,
     categories: { $in: ids },
@@ -68,8 +30,67 @@ export default async function CollectionPage({
     .sort({ createdAt: -1 })
     .lean();
 
+  return { category, children, products };
+}
+
+export default async function CollectionPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  let data: Awaited<ReturnType<typeof loadCollection>>;
+  try {
+    data = await loadCollection(slug);
+  } catch (err) {
+    if (isTransientDbError(err)) {
+      try {
+        resetDBCache();
+        data = await loadCollection(slug);
+      } catch (retryErr) {
+        console.error("collection page transient failure", slug, retryErr);
+        return (
+          <AutoRetry
+            title="Taking a moment…"
+            message="We’re loading this collection. Retrying automatically."
+            storageKey={`collection:${slug}`}
+          />
+        );
+      }
+    } else {
+      console.error("collection page failure", slug, err);
+      return (
+        <AutoRetry
+          title="Taking a moment…"
+          message="We’re loading this collection. Retrying automatically."
+          storageKey={`collection:${slug}`}
+        />
+      );
+    }
+  }
+
+  const { category, children, products } = data;
+
+  if (!category) {
+    return (
+      <div className="container-gb py-16 text-center">
+        <h1 className="font-[family-name:var(--font-display)] text-3xl">
+          Collection not found
+        </h1>
+        <p className="mt-3 text-[var(--fg-muted)]">
+          No category named “{slug}”.
+        </p>
+        <Link href="/" className="btn btn-primary mt-6">
+          Home
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="container-gb py-10 sm:py-12">
+      <ClearAutoRetry storageKey={`collection:${slug}`} />
       <p className="eyebrow">Collection</p>
       <h1 className="display mt-2 text-3xl sm:text-4xl md:text-5xl">
         {category.name}

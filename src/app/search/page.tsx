@@ -1,10 +1,25 @@
 import Link from "next/link";
-import { connectDB } from "@/lib/db";
+import { connectDB, isTransientDbError, resetDBCache } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
+import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 
 export const dynamic = "force-dynamic";
+
+async function searchProducts(q: string) {
+  await connectDB();
+  return Product.find({
+    isActive: true,
+    $or: [
+      { title: { $regex: q, $options: "i" } },
+      { tags: { $regex: q, $options: "i" } },
+    ],
+  })
+    .populate("brand", "name")
+    .limit(48)
+    .lean();
+}
 
 export default async function SearchPage({
   searchParams,
@@ -12,40 +27,48 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  let products: {
-    _id: unknown;
-    title: string;
-    slug: string;
-    price: number;
-    mrp: number;
-    images?: string[];
-    colorOptions?: { name?: string; swatch?: string; images?: string[] }[];
-    brand?: { name?: string } | null;
-    ratingAvg?: number;
-    ratingCount?: number;
-  }[] = [];
-  let dbOk = true;
+  let products: Awaited<ReturnType<typeof searchProducts>> = [];
+  let dbFailed = false;
 
-  try {
-    await connectDB();
-    if (q) {
-      products = (await Product.find({
-        isActive: true,
-        $or: [
-          { title: { $regex: q, $options: "i" } },
-          { tags: { $regex: q, $options: "i" } },
-        ],
-      })
-        .populate("brand", "name")
-        .limit(48)
-        .lean()) as typeof products;
+  if (q) {
+    try {
+      products = await searchProducts(q);
+    } catch (err) {
+      if (isTransientDbError(err)) {
+        try {
+          resetDBCache();
+          products = await searchProducts(q);
+        } catch (retryErr) {
+          console.error("search page transient failure", retryErr);
+          dbFailed = true;
+        }
+      } else {
+        console.error("search page failure", err);
+        dbFailed = true;
+      }
     }
-  } catch {
-    dbOk = false;
+  } else {
+    try {
+      await connectDB();
+    } catch (err) {
+      console.error("search page connect failure", err);
+      dbFailed = true;
+    }
+  }
+
+  if (dbFailed) {
+    return (
+      <AutoRetry
+        title="Taking a moment…"
+        message="We’re loading search. Retrying automatically."
+        storageKey={`search:${q || ""}`}
+      />
+    );
   }
 
   return (
     <div className="container-gb py-12">
+      <ClearAutoRetry storageKey={`search:${q || ""}`} />
       <p className="eyebrow">Find gear</p>
       <h1 className="display mt-2 text-3xl sm:text-4xl">
         {q ? `Results for “${q}”` : "Search"}
@@ -59,16 +82,6 @@ export default async function SearchPage({
           className="input"
         />
       </form>
-
-      {!dbOk && (
-        <p className="mt-8 text-[var(--fg-muted)]">
-          Catalog unavailable. Check{" "}
-          <Link href="/api/health" className="text-[var(--accent)]">
-            /api/health
-          </Link>
-          .
-        </p>
-      )}
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {products.map((p) => (
@@ -97,7 +110,7 @@ export default async function SearchPage({
         ))}
       </div>
 
-      {q && dbOk && products.length === 0 && (
+      {q && products.length === 0 && (
         <div className="mt-10 text-center">
           <p className="text-[var(--fg-muted)]">No results. Try another word.</p>
           <Link href="/collections/guitars" className="btn btn-primary mt-6">
@@ -106,7 +119,7 @@ export default async function SearchPage({
         </div>
       )}
 
-      {!q && dbOk && (
+      {!q && (
         <p className="mt-8 text-[var(--fg-muted)]">
           Type a product name above, or{" "}
           <Link href="/collections/guitars" className="text-[var(--accent)]">
