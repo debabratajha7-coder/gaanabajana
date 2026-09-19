@@ -377,7 +377,7 @@ export function Header({
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 border-b border-[var(--line)] bg-white"
+      className="glass-nav sticky top-0 z-50"
     >
       <div className="hidden bg-[#1a1a1a] sm:block">
         <div className="container-gb flex items-center justify-between gap-4 py-1.5 text-[11px] tracking-wide text-white/80">

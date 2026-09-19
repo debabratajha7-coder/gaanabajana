@@ -23,8 +23,11 @@ export default function AccountOrdersPage() {
   }, []);
 
   return (
+    <div className="mesh-bg">
     <div className="container-gb py-12">
-      <h1 className="font-[family-name:var(--font-display)] text-4xl">My orders</h1>
+      <div className="glass-panel p-5 sm:p-7">
+        <h1 className="display text-3xl sm:text-4xl">My orders</h1>
+      </div>
       <div className="mt-8 space-y-3">
         {orders.length === 0 && (
           <p className="text-[var(--fg-muted)]">No orders yet.</p>
@@ -33,7 +36,7 @@ export default function AccountOrdersPage() {
           <Link
             key={o.orderNumber}
             href={`/account/orders/${o.orderNumber}`}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-5"
+            className="glass-panel flex flex-wrap items-center justify-between gap-3 p-5"
           >
             <div>
               <p className="font-medium">{o.orderNumber}</p>
@@ -46,6 +49,7 @@ export default function AccountOrdersPage() {
           </Link>
         ))}
       </div>
+    </div>
     </div>
   );
 }

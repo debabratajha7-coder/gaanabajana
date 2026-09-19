@@ -24,7 +24,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_94%,transparent)] backdrop-blur-2xl lg:hidden"
+      className="mobile-bottom-nav glass-bar fixed inset-x-0 bottom-0 z-50 lg:hidden"
       style={{ paddingBottom: "var(--safe-bottom)" }}
     >
       <div className="mx-auto grid max-w-lg grid-cols-5 px-1.5 pt-1.5 pb-1.5">

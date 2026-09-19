@@ -2,6 +2,7 @@ import { Schema, models, model, Types } from "mongoose";
 
 export type WhyItem = { title: string; body: string };
 export type StatItem = { value: string; label: string };
+export type HomeReviewItem = { quote: string; source?: string };
 
 export interface ISiteSettings {
   _id: Types.ObjectId;
@@ -11,6 +12,9 @@ export interface ISiteSettings {
   email: string;
   whatsapp?: string;
   address?: string;
+  storeHours?: string;
+  googleRatingLabel?: string;
+  googleReviewsUrl?: string;
   freeShippingThreshold: number;
   shippingFee: number;
   heroHeadline: string;
@@ -29,6 +33,8 @@ export interface ISiteSettings {
   homeWhyTitle: string;
   homeWhyItems: WhyItem[];
   homeStats: StatItem[];
+  homeReviewsTitle?: string;
+  homeReviews: HomeReviewItem[];
   social: {
     facebook?: string;
     instagram?: string;
@@ -53,6 +59,21 @@ const DEFAULT_STATS: StatItem[] = [
   { value: "Pan-India", label: "Delivery" },
 ];
 
+const DEFAULT_REVIEWS: HomeReviewItem[] = [
+  {
+    quote: "Nice service, good accessories quality — best.",
+    source: "Google Review",
+  },
+  {
+    quote: "Very cool experience and we got the things at a very suitable price.",
+    source: "Google Review",
+  },
+  {
+    quote: "Lovely place and the owner’s behavior is lovely.",
+    source: "Google Review",
+  },
+];
+
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
     storeName: { type: String, default: "Gaana Bajana" },
@@ -68,6 +89,9 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       default:
         "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
     },
+    storeHours: { type: String, default: "Open daily until 9:00 PM" },
+    googleRatingLabel: { type: String, default: "4.8+ ★ Google" },
+    googleReviewsUrl: { type: String, default: "" },
     freeShippingThreshold: { type: Number, default: 1000 },
     shippingFee: { type: Number, default: 99 },
     heroHeadline: {
@@ -113,6 +137,16 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       ],
       default: DEFAULT_STATS,
     },
+    homeReviewsTitle: { type: String, default: "What musicians say" },
+    homeReviews: {
+      type: [
+        {
+          quote: { type: String },
+          source: { type: String },
+        },
+      ],
+      default: DEFAULT_REVIEWS,
+    },
     social: {
       facebook: String,
       instagram: String,
@@ -137,6 +171,22 @@ export async function getSiteSettings() {
     }
     if (!existing.homeStats?.length) {
       existing.homeStats = DEFAULT_STATS;
+      dirty = true;
+    }
+    if (!existing.homeReviews?.length) {
+      existing.homeReviews = DEFAULT_REVIEWS;
+      dirty = true;
+    }
+    if (!existing.storeHours) {
+      existing.storeHours = "Open daily until 9:00 PM";
+      dirty = true;
+    }
+    if (!existing.googleRatingLabel) {
+      existing.googleRatingLabel = "4.8+ ★ Google";
+      dirty = true;
+    }
+    if (!existing.homeReviewsTitle) {
+      existing.homeReviewsTitle = "What musicians say";
       dirty = true;
     }
     if (dirty) await existing.save();

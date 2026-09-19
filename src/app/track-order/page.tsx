@@ -31,8 +31,10 @@ export default function TrackOrderPage() {
   }
 
   return (
+    <div className="mesh-bg">
     <div className="container-gb mx-auto max-w-lg py-12">
-      <h1 className="font-[family-name:var(--font-display)] text-4xl">Track your order</h1>
+      <div className="glass-panel-strong p-5 sm:p-7">
+      <h1 className="display text-3xl sm:text-4xl">Track your order</h1>
       <form onSubmit={onSubmit} className="mt-8 space-y-3">
         <input
           className="input"
@@ -54,7 +56,7 @@ export default function TrackOrderPage() {
       </form>
       {error && <p className="mt-4 text-[var(--danger)]">{error}</p>}
       {result && (
-        <div className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
+        <div className="mt-6 glass-panel p-5">
           <p>
             <strong>{result.orderNumber}</strong>
           </p>
@@ -69,6 +71,8 @@ export default function TrackOrderPage() {
           )}
         </div>
       )}
+      </div>
+    </div>
     </div>
   );
 }

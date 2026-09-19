@@ -11,7 +11,9 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
+      <div className="mesh-bg">
       <div className="container-gb flex min-h-[55vh] flex-col items-center justify-center py-16 text-center">
+        <div className="glass-panel-strong max-w-md p-8">
         <p className="eyebrow">Cart</p>
         <h1 className="display mt-3 text-3xl sm:text-4xl">Your cart is empty</h1>
         <p className="mt-3 max-w-sm text-[var(--fg-muted)]">
@@ -20,11 +22,14 @@ export default function CartPage() {
         <Link href="/collections/guitars" className="btn btn-primary mt-8">
           Continue shopping
         </Link>
+        </div>
+      </div>
       </div>
     );
   }
 
   return (
+    <div className="mesh-bg">
     <div className="container-gb grid gap-8 py-10 lg:grid-cols-[1fr_320px] lg:gap-12">
       <div>
         <p className="eyebrow">Your bag</p>
@@ -33,7 +38,7 @@ export default function CartPage() {
           {items.map((item) => (
             <div
               key={`${item.productId}-${item.variantName}`}
-              className="flex gap-4 rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-3.5 sm:p-4"
+              className="glass-panel flex gap-4 p-3.5 sm:p-4"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -78,7 +83,7 @@ export default function CartPage() {
         </div>
       </div>
 
-      <aside className="surface h-fit p-6">
+      <aside className="glass-panel-strong h-fit p-6">
         <p className="text-sm text-[var(--fg-muted)]">Subtotal</p>
         <p className="mt-1 text-3xl font-semibold text-[var(--accent)]">
           {formatINR(subtotal)}
@@ -96,6 +101,7 @@ export default function CartPage() {
           Keep shopping
         </Link>
       </aside>
+    </div>
     </div>
   );
 }

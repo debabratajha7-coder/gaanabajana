@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { brandWordmark } from "@/lib/brand";
@@ -12,6 +13,9 @@ type HeroStageProps = {
   subheadline: string;
   ctaLabel: string;
   ctaHref: string;
+  visitHref?: string;
+  ratingLabel?: string;
+  ratingHref?: string;
 };
 
 export function HeroStage({
@@ -21,6 +25,9 @@ export function HeroStage({
   subheadline,
   ctaLabel,
   ctaHref,
+  visitHref = "/stores",
+  ratingLabel = "4.8+ ★ Google",
+  ratingHref,
 }: HeroStageProps) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
@@ -39,55 +46,89 @@ export function HeroStage({
 
   const ease = [0.22, 1, 0.36, 1] as const;
 
+  const trustChip = ratingLabel ? (
+    ratingHref ? (
+      <a
+        href={ratingHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/85 underline-offset-2 hover:underline"
+      >
+        {ratingLabel}
+      </a>
+    ) : (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/85">
+        {ratingLabel}
+      </span>
+    )
+  ) : null;
+
+  const trustChipMobile = ratingLabel ? (
+    ratingHref ? (
+      <a
+        href={ratingHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/80 underline-offset-2 hover:underline"
+      >
+        {ratingLabel}
+      </a>
+    ) : (
+      <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/80">
+        {ratingLabel}
+      </span>
+    )
+  ) : null;
+
   return (
     <section ref={ref} className="relative md:min-h-[88vh]">
-      {/* Phone: image panel, then white copy band below. */}
-      <div className="md:hidden">
-        <div className="px-3 pt-3">
-          <div className="overflow-hidden rounded-2xl bg-[var(--bg-elevated)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={image} alt="" className="block h-auto w-full" />
-          </div>
-        </div>
-
-        <div className="bg-white px-5 pb-8 pt-6 text-center">
+      {/* Phone: fuller-bleed image with overlay copy */}
+      <div className="relative overflow-hidden md:hidden">
+        <div className="relative min-h-[78vh]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
           <motion.div
             initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease }}
-            className="mx-auto flex max-w-[22rem] flex-col items-center"
+            className="relative flex min-h-[78vh] flex-col justify-end px-5 pb-10 pt-24"
           >
             <p
-              className="display text-[clamp(2.15rem,10vw,3.1rem)] leading-[0.9] tracking-[-0.04em] text-[#111]"
+              className="display text-[clamp(2.15rem,10vw,3.1rem)] leading-[0.9] tracking-[-0.04em] text-white [text-shadow:0_2px_20px_rgba(0,0,0,0.5)]"
               suppressHydrationWarning
             >
               {brandWordmark(storeName)}
             </p>
 
-            <span
-              aria-hidden
-              className="mt-3 h-px w-16 bg-[var(--line-strong)]"
-            />
-
-            <h1 className="mt-3 text-[0.95rem] font-medium leading-snug text-[var(--fg)]">
+            <h1 className="mt-4 max-w-sm text-[0.95rem] font-medium leading-snug text-white/95">
               {headline}
             </h1>
 
-            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/75">
               {subheadline}
             </p>
 
             <div className="mt-5 flex w-full flex-col gap-2.5">
-              <Link href={ctaHref} className="btn btn-primary w-full justify-center rounded-full">
+              <Link
+                href={ctaHref}
+                className="btn btn-primary group w-full justify-center rounded-full"
+              >
                 {ctaLabel}
+                <ArrowRight className="ml-1.5 h-4 w-4 transition group-hover:translate-x-0.5" />
               </Link>
               <Link
-                href="/deals"
-                className="btn btn-ghost w-full justify-center rounded-full"
+                href={visitHref}
+                className="btn w-full justify-center rounded-full border border-white/35 bg-transparent text-white hover:border-white hover:bg-white/10"
               >
-                View deals
+                Visit store
               </Link>
             </div>
+            {trustChipMobile}
           </motion.div>
         </div>
       </div>
@@ -141,18 +182,29 @@ export function HeroStage({
               initial={reduce ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.26, ease }}
-              className="mt-8 flex flex-wrap gap-3"
+              className="mt-8 flex flex-wrap items-center gap-3"
             >
-              <Link href={ctaHref} className="btn btn-primary">
+              <Link href={ctaHref} className="btn btn-primary group">
                 {ctaLabel}
+                <ArrowRight className="ml-1.5 h-4 w-4 transition group-hover:translate-x-0.5" />
               </Link>
               <Link
-                href="/deals"
+                href={visitHref}
                 className="btn border border-white/30 bg-transparent text-white hover:border-white hover:bg-white/10"
               >
-                View deals
+                Visit store
               </Link>
             </motion.div>
+            {trustChip && (
+              <motion.div
+                initial={reduce ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.36, ease }}
+                className="mt-4"
+              >
+                {trustChip}
+              </motion.div>
+            )}
           </div>
         </motion.div>
       </div>

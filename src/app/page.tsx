@@ -15,6 +15,8 @@ import { CategoryCarousel } from "@/components/home/CategoryCarousel";
 import { BestsellerTabs } from "@/components/home/BestsellerTabs";
 import { WhyUsGrid } from "@/components/home/WhyUsGrid";
 import { StatsStrip } from "@/components/home/StatsStrip";
+import { ReviewsStrip } from "@/components/home/ReviewsStrip";
+import { VisitStoreBand } from "@/components/home/VisitStoreBand";
 import { filterPublicCategories } from "@/lib/public-catalog";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 
@@ -53,7 +55,13 @@ function toCard(p: {
 export default async function HomePage() {
   let settings;
   let featured: Parameters<typeof toCard>[0][] = [];
-  let parents: { _id: unknown; name: string; slug: string; image?: string }[] = [];
+  let parents: {
+    _id: unknown;
+    name: string;
+    slug: string;
+    image?: string;
+    description?: string;
+  }[] = [];
   let brands: { _id: string; name: string; slug: string; logo?: string }[] = [];
   let posts: {
     _id: unknown;
@@ -133,12 +141,42 @@ export default async function HomePage() {
       homeWhyTitle: "Why Gaana Bajana",
       homeWhyItems: [],
       homeStats: [],
+      homeReviewsTitle: "What musicians say",
+      homeReviews: [
+        {
+          quote: "Nice service, good accessories quality — best.",
+          source: "Google Review",
+        },
+        {
+          quote:
+            "Very cool experience and we got the things at a very suitable price.",
+          source: "Google Review",
+        },
+        {
+          quote: "Lovely place and the owner’s behavior is lovely.",
+          source: "Google Review",
+        },
+      ],
+      phone: "+91 9563754563, +91 7679586321",
+      address: "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
+      storeHours: "Open daily until 9:00 PM",
+      googleRatingLabel: "4.8+ ★ Google",
+      googleReviewsUrl: "",
     };
   }
 
   const shopParents = filterPublicCategories(
     parents.map((c) => ({ ...c, slug: c.slug, name: c.name }))
   );
+
+  const CATEGORY_BLURBS: Record<string, string> = {
+    guitars: "Warm acoustics to stage-ready electrics.",
+    "ukuleles-and-violins": "Compact starters and strings for every level.",
+    "keyboards-and-pianos": "Learn, practice, and perform.",
+    "studio-and-recording": "Mics, interfaces, and monitors.",
+    "drums-and-percussion": "Kits, cajons, and the essentials.",
+    other: "Live sound, wind, and more.",
+  };
 
   const tabs = shopParents.slice(0, 5).map((c) => ({
     id: String(c._id),
@@ -158,6 +196,12 @@ export default async function HomePage() {
       label: s.label,
     })
   );
+  const reviews = (settings.homeReviews || []).map(
+    (r: { quote: string; source?: string }) => ({
+      quote: r.quote,
+      source: r.source,
+    })
+  );
 
   return (
     <>
@@ -168,6 +212,9 @@ export default async function HomePage() {
         subheadline={settings.heroSubheadline}
         ctaLabel={settings.heroCtaLabel}
         ctaHref={settings.heroCtaHref}
+        visitHref="/stores"
+        ratingLabel={settings.googleRatingLabel || "4.8+ ★ Google"}
+        ratingHref={settings.googleReviewsUrl || undefined}
       />
 
       <section className="bg-white">
@@ -185,6 +232,8 @@ export default async function HomePage() {
                 name: c.name,
                 slug: c.slug,
                 image: c.image,
+                description:
+                  c.description || CATEGORY_BLURBS[c.slug] || undefined,
               }))}
             />
           </Reveal>
@@ -215,6 +264,13 @@ export default async function HomePage() {
         items={whyItems}
       />
 
+      <ReviewsStrip
+        title={settings.homeReviewsTitle || "What musicians say"}
+        ratingLabel={settings.googleRatingLabel}
+        reviewsUrl={settings.googleReviewsUrl || undefined}
+        reviews={reviews}
+      />
+
       <section className="bg-white">
         <div className="container-gb section-gb">
           <Reveal>
@@ -230,6 +286,13 @@ export default async function HomePage() {
       </section>
 
       <StatsStrip items={stats} />
+
+      <VisitStoreBand
+        storeName={settings.storeName || "Gaana Bajana"}
+        address={settings.address}
+        phone={settings.phone}
+        hours={settings.storeHours}
+      />
 
       {posts.length > 0 && (
         <section className="bg-white">

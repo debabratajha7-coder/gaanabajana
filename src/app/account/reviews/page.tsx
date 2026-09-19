@@ -46,12 +46,13 @@ export default function MyReviewsPage() {
   }
 
   return (
+    <div className="mesh-bg">
     <div className="container-gb grid gap-10 py-12 lg:grid-cols-2">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-4xl">My reviews</h1>
+        <h1 className="display text-4xl">My reviews</h1>
         <div className="mt-6 space-y-3">
           {reviews.map((r) => (
-            <div key={r._id} className="rounded-2xl border border-[var(--line)] p-4">
+            <div key={r._id} className="glass-panel p-4">
               <p className="font-medium">{r.product?.title}</p>
               <p className="text-sm text-[var(--accent)]">
                 ★ {r.rating} · {r.approved ? "Approved" : "Pending"}
@@ -61,8 +62,8 @@ export default function MyReviewsPage() {
           ))}
         </div>
       </div>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">Write a review</h2>
+      <form onSubmit={onSubmit} className="glass-panel space-y-3 p-5 sm:p-6">
+        <h2 className="display text-2xl">Write a review</h2>
         <input
           className="input"
           placeholder="Product ID (from product URL admin / API)"
@@ -96,6 +97,7 @@ export default function MyReviewsPage() {
           Submit
         </button>
       </form>
+    </div>
     </div>
   );
 }

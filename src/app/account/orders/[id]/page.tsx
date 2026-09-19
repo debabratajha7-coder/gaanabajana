@@ -29,11 +29,13 @@ export default function AccountOrderDetailPage() {
   if (!order) return <div className="container-gb py-12">Loading…</div>;
 
   return (
+    <div className="mesh-bg">
     <div className="container-gb py-12">
+      <div className="glass-panel p-5 sm:p-7">
       <Link href="/account/orders" className="text-sm text-[var(--accent)]">
         ← Orders
       </Link>
-      <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl">
+      <h1 className="mt-4 display text-3xl sm:text-4xl">
         {order.orderNumber}
       </h1>
       <p className="mt-2 text-[var(--fg-muted)]">
@@ -49,9 +51,10 @@ export default function AccountOrderDetailPage() {
           )}
         </p>
       )}
-      <ul className="mt-8 space-y-2">
+      </div>
+      <ul className="glass-panel mt-8 space-y-2 p-5">
         {order.items.map((i, idx) => (
-          <li key={idx} className="flex justify-between border-b border-[var(--line)] py-3">
+          <li key={idx} className="flex justify-between border-b border-[var(--line)] py-3 last:border-0">
             <span>
               {i.title} × {i.qty}
             </span>
@@ -59,8 +62,8 @@ export default function AccountOrderDetailPage() {
           </li>
         ))}
       </ul>
-      <div className="mt-8">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl">Timeline</h2>
+      <div className="glass-panel mt-8 p-5">
+        <h2 className="display text-2xl">Timeline</h2>
         <ul className="mt-3 space-y-2 text-sm text-[var(--fg-muted)]">
           {order.timeline?.map((t, i) => (
             <li key={i}>
@@ -70,6 +73,7 @@ export default function AccountOrderDetailPage() {
           ))}
         </ul>
       </div>
+    </div>
     </div>
   );
 }

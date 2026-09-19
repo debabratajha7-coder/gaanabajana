@@ -76,6 +76,7 @@ export default function AddressesPage() {
   }
 
   return (
+    <div className="mesh-bg">
     <div className="container-gb grid gap-10 py-12 lg:grid-cols-2">
       <div>
         <h1 className="display text-4xl">Addresses</h1>
@@ -83,7 +84,7 @@ export default function AddressesPage() {
           {addresses.map((a) => (
             <div
               key={a._id}
-              className="border border-[var(--line)] bg-[var(--bg-elevated)] p-4"
+              className="glass-panel p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <p className="font-medium">
@@ -123,7 +124,7 @@ export default function AddressesPage() {
           )}
         </div>
       </div>
-      <form onSubmit={onSubmit} className="space-y-3">
+      <form onSubmit={onSubmit} className="glass-panel space-y-3 p-5 sm:p-6">
         <h2 className="display text-2xl">Add address</h2>
         {(
           [
@@ -162,6 +163,7 @@ export default function AddressesPage() {
           Save address
         </button>
       </form>
+    </div>
     </div>
   );
 }
