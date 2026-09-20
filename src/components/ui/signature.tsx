@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { parse as parseFont } from "opentype.js";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,8 @@ interface SignatureProps {
   fontUrl?: string;
   /** Tighter crop + lighter stroke for nav/wordmarks */
   compact?: boolean;
+  /** Periodic left→right gold shine (header wordmark) */
+  shine?: boolean;
 }
 
 async function loadFont(url: string) {
@@ -46,7 +48,9 @@ export function Signature({
   once = true,
   fontUrl,
   compact = false,
+  shine = false,
 }: SignatureProps) {
+  const reduceMotion = useReducedMotion() ?? false;
   const [paths, setPaths] = useState<string[]>([]);
   const [width, setWidth] = useState<number>(300);
   const height = fontSize * (compact ? 2.15 : 3);
@@ -58,7 +62,9 @@ export function Signature({
     : 2;
   const maskStroke = fontSize * (compact ? 0.16 : 0.22);
   const letterStagger = compact ? 0.12 : 0.2;
-  const maskId = `signature-reveal-${useId().replace(/:/g, "")}`;
+  const uid = useId().replace(/:/g, "");
+  const maskId = `signature-reveal-${uid}`;
+  const shineId = `signature-gold-${uid}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -120,6 +126,10 @@ export function Signature({
     visible: { pathLength: 1, opacity: 1 },
   };
 
+  const shineActive = shine && !reduceMotion;
+  const paint = shineActive ? `url(#${shineId})` : color;
+  const sweep = Math.max(width * 0.45, 80);
+
   return (
     <motion.svg
       key={paths.length}
@@ -130,6 +140,7 @@ export function Signature({
       className={cn(
         "overflow-visible text-foreground",
         compact && "opacity-[0.92]",
+        shine && "signature-logo-shine",
         className
       )}
       initial="hidden"
@@ -140,6 +151,32 @@ export function Signature({
       aria-label={text}
     >
       <defs>
+        {shineActive ? (
+          <linearGradient
+            id={shineId}
+            gradientUnits="userSpaceOnUse"
+            x1={0}
+            y1={0}
+            x2={sweep}
+            y2={0}
+          >
+            <stop offset="0%" stopColor="currentColor" />
+            <stop offset="28%" stopColor="#b8860b" />
+            <stop offset="42%" stopColor="#e8c56a" />
+            <stop offset="50%" stopColor="#fff8dc" />
+            <stop offset="58%" stopColor="#e8c56a" />
+            <stop offset="72%" stopColor="#b8860b" />
+            <stop offset="100%" stopColor="currentColor" />
+            <animateTransform
+              attributeName="gradientTransform"
+              type="translate"
+              values={`${-sweep * 1.2} 0; ${width + sweep * 0.2} 0; ${width + sweep * 0.2} 0`}
+              keyTimes="0; 0.28; 1"
+              dur="7.5s"
+              repeatCount="indefinite"
+            />
+          </linearGradient>
+        ) : null}
         <mask id={maskId} maskUnits="userSpaceOnUse">
           {paths.map((d, i) => (
             <motion.path
@@ -172,7 +209,7 @@ export function Signature({
         <motion.path
           key={i}
           d={d}
-          stroke={color}
+          stroke={paint}
           strokeWidth={strokeWidth}
           fill="none"
           variants={variants}
@@ -195,7 +232,7 @@ export function Signature({
 
       <g mask={`url(#${maskId})`}>
         {paths.map((d, i) => (
-          <path key={i} d={d} fill={color} />
+          <path key={i} d={d} fill={paint} />
         ))}
       </g>
     </motion.svg>

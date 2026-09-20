@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Reveal } from "@/components/ui/Reveal";
 import { AnnotatedPhrase } from "@/components/ui/annotate-phrase";
 import {
@@ -13,7 +12,7 @@ type Review = {
   source?: string;
 };
 
-const ACCENTS = ["#c8102e", "#8f0b20", "#2a2a2a", "#e8ddd0", "#c8102e"];
+const ACCENTS = ["#d4af37", "#c9a227", "#b8860b", "#e8c56a", "#a67c2d"];
 const AVATARS = [
   "/reviews/review-avatar-01.png",
   "/reviews/review-avatar-02.png",
@@ -56,6 +55,7 @@ export function ReviewsStrip({
 
   const items = toOrbitItems(reviews.slice(0, 5), ratingLabel);
   const mid = Math.min(1, Math.max(0, items.length - 1));
+  const addYoursHref = reviewsUrl;
 
   return (
     <section className="border-t border-[var(--line)] bg-[var(--reviews-band)]">
@@ -106,22 +106,31 @@ export function ReviewsStrip({
               spread={items.length <= 3 ? 108 : 96}
               lift={34}
               href={reviewsUrl || undefined}
+              cardClassName="orbit-review-gold"
               className="min-h-[380px] overflow-visible p-1 sm:min-h-[360px] sm:p-2"
             />
           </div>
         </Reveal>
 
-        {reviewsUrl ? (
+        {addYoursHref ? (
           <Reveal delay={0.14}>
-            <div className="mt-1 text-center">
-              <Link
-                href={reviewsUrl}
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-4 sm:mt-4">
+              <a
+                href={addYoursHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary px-5 text-sm"
+              >
+                Add yours
+              </a>
+              <a
+                href={addYoursHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-[var(--accent)] underline underline-offset-2"
               >
                 View Google reviews
-              </Link>
+              </a>
             </div>
           </Reveal>
         ) : null}

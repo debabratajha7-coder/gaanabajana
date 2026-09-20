@@ -19,6 +19,10 @@ import { ReviewsStrip } from "@/components/home/ReviewsStrip";
 import { VisitStoreBand } from "@/components/home/VisitStoreBand";
 import { filterPublicCategories } from "@/lib/public-catalog";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
+import {
+  DEFAULT_GOOGLE_REVIEWS_URL,
+  resolveGoogleReviewsUrl,
+} from "@/lib/google-reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -162,7 +166,7 @@ export default async function HomePage() {
       address: "M9VC F4C Medical More, Kawakhari, West Bengal, 734011, India",
       storeHours: "Open daily until 9:00 PM",
       googleRatingLabel: "4.8+ ★ Google",
-      googleReviewsUrl: "",
+      googleReviewsUrl: DEFAULT_GOOGLE_REVIEWS_URL,
     };
   }
 
@@ -204,6 +208,12 @@ export default async function HomePage() {
     })
   );
 
+  const googleReviewsUrl = resolveGoogleReviewsUrl({
+    url: settings.googleReviewsUrl,
+    storeName: settings.storeName,
+    address: settings.address,
+  });
+
   return (
     <>
       <HeroStage
@@ -215,7 +225,7 @@ export default async function HomePage() {
         ctaHref={settings.heroCtaHref}
         visitHref="/stores"
         ratingLabel={settings.googleRatingLabel || "4.8+ ★ Google"}
-        ratingHref={settings.googleReviewsUrl || undefined}
+        ratingHref={googleReviewsUrl}
       />
 
       <section>
@@ -268,7 +278,7 @@ export default async function HomePage() {
       <ReviewsStrip
         title={settings.homeReviewsTitle || "What musicians say"}
         ratingLabel={settings.googleRatingLabel}
-        reviewsUrl={settings.googleReviewsUrl || undefined}
+        reviewsUrl={googleReviewsUrl}
         reviews={reviews}
       />
 

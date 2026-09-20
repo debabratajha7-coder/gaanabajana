@@ -46,9 +46,8 @@ export function Header({
   const [q, setQ] = useState("");
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [heroInView, setHeroInView] = useState(true);
-  const isHome = pathname === "/";
-  const showCategoryNav = !isHome || heroInView;
+  const [showCategoryNav, setShowCategoryNav] = useState(true);
+  const showCategoryNavRef = useRef(true);
 
   useEffect(() => {
     setMounted(true);
@@ -66,57 +65,38 @@ export function Header({
   }, [pathname]);
 
   useEffect(() => {
-    if (!isHome) {
-      setHeroInView(true);
-      return;
-    }
+    // Hysteresis: hide well below top; only reopen when fully at top.
+    // Prevents sticky height changes from fighting scrollY near the edge.
+    const SHOW_AT = 4;
+    const HIDE_AFTER = 72;
+    showCategoryNavRef.current = true;
+    setShowCategoryNav(true);
 
-    let io: IntersectionObserver | null = null;
-    let mo: MutationObserver | null = null;
-    let cancelled = false;
-    let heroEl: Element | null = null;
-
-    function syncFromRect() {
-      if (!heroEl || cancelled) return;
-      const rect = heroEl.getBoundingClientRect();
-      // Any part of the hero in the viewport → show category strip again
-      setHeroInView(rect.bottom > 1 && rect.top < window.innerHeight);
-    }
-
-    function attach(hero: Element) {
-      heroEl = hero;
-      io = new IntersectionObserver(
-        () => syncFromRect(),
-        { threshold: [0, 0.01, 0.1] }
-      );
-      io.observe(hero);
-      syncFromRect();
-      window.addEventListener("scroll", syncFromRect, { passive: true });
-      window.addEventListener("resize", syncFromRect);
-    }
-
-    const existing = document.querySelector("[data-hero-stage]");
-    if (existing) {
-      attach(existing);
-    } else {
-      mo = new MutationObserver(() => {
-        const hero = document.querySelector("[data-hero-stage]");
-        if (!hero) return;
-        mo?.disconnect();
-        mo = null;
-        if (!cancelled) attach(hero);
-      });
-      mo.observe(document.body, { childList: true, subtree: true });
-    }
-
-    return () => {
-      cancelled = true;
-      mo?.disconnect();
-      io?.disconnect();
-      window.removeEventListener("scroll", syncFromRect);
-      window.removeEventListener("resize", syncFromRect);
+    let ticking = false;
+    const sync = () => {
+      ticking = false;
+      const y = window.scrollY;
+      const shown = showCategoryNavRef.current;
+      let next = shown;
+      if (shown && y > HIDE_AFTER) next = false;
+      else if (!shown && y <= SHOW_AT) next = true;
+      if (next === shown) return;
+      showCategoryNavRef.current = next;
+      setShowCategoryNav(next);
     };
-  }, [isHome, pathname]);
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(sync);
+    };
+    sync();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -529,21 +509,20 @@ export function Header({
         </div>
       </div>
 
-      <motion.nav
-        initial={false}
-        animate={
-          showCategoryNav
-            ? { height: "auto", opacity: 1 }
-            : { height: 0, opacity: 0 }
-        }
-        transition={
-          reduce
-            ? { duration: 0 }
-            : { duration: 0.32, ease: [0.22, 1, 0.36, 1] }
-        }
-        className="hidden overflow-hidden border-t border-[var(--line)] lg:block"
+      <div
+        className={`hidden overflow-hidden border-[var(--line)] lg:block ${
+          showCategoryNav ? "border-t" : "border-t-0"
+        }`}
+        style={{
+          maxHeight: showCategoryNav ? "3rem" : 0,
+          opacity: showCategoryNav ? 1 : 0,
+          transition: reduce
+            ? "none"
+            : "max-height 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease",
+        }}
         aria-label="Categories"
         aria-hidden={!showCategoryNav}
+        role="navigation"
       >
         <div className="container-gb flex flex-wrap items-center gap-x-0 gap-y-0 py-0">
           {parents.slice(0, 8).map((p) => (
@@ -579,7 +558,7 @@ export function Header({
             Deals
           </Link>
         </div>
-      </motion.nav>
+      </div>
 
       {menu}
     </header>

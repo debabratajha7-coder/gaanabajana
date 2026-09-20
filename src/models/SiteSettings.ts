@@ -1,4 +1,8 @@
 import { Schema, models, model, Types } from "mongoose";
+import {
+  DEFAULT_GOOGLE_REVIEWS_URL,
+  resolveGoogleReviewsUrl,
+} from "@/lib/google-reviews";
 
 export type WhyItem = { title: string; body: string };
 export type StatItem = { value: string; label: string };
@@ -92,7 +96,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     },
     storeHours: { type: String, default: "Open daily until 9:00 PM" },
     googleRatingLabel: { type: String, default: "4.8+ ★ Google" },
-    googleReviewsUrl: { type: String, default: "" },
+    googleReviewsUrl: { type: String, default: DEFAULT_GOOGLE_REVIEWS_URL },
     freeShippingThreshold: { type: Number, default: 1000 },
     shippingFee: { type: Number, default: 99 },
     heroHeadline: {
@@ -192,6 +196,11 @@ export async function getSiteSettings() {
     }
     if (!existing.homeReviewsTitle) {
       existing.homeReviewsTitle = "What musicians say";
+      dirty = true;
+    }
+    if (!existing.googleReviewsUrl?.trim() ||
+      existing.googleReviewsUrl.includes("/maps/search/")) {
+      existing.googleReviewsUrl = resolveGoogleReviewsUrl();
       dirty = true;
     }
     if (dirty) await existing.save();

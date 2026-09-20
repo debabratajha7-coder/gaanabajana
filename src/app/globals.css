@@ -737,6 +737,59 @@ a {
   animation: fade-in-soft 0.35s ease-out both;
 }
 
+/* Why Us marquee — cream on dark, dark on light */
+.why-us-velocity span {
+  color: #1a160f;
+  -webkit-text-fill-color: #1a160f;
+}
+
+html[data-theme="dark"] .why-us-velocity span {
+  color: #fdfdec;
+  -webkit-text-fill-color: #fdfdec;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signature-logo-shine animateTransform {
+    display: none;
+  }
+}
+
+/* Review orbit cards — golden metallic panel */
+.orbit-review-card,
+.orbit-review-gold {
+  border-color: color-mix(in oklab, #d4af37 55%, transparent) !important;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, #fff4c8 22%, var(--bg-elevated)) 0%,
+      color-mix(in oklab, #d4af37 14%, var(--bg-elevated)) 42%,
+      color-mix(in oklab, #8a6a28 10%, var(--bg-elevated)) 100%
+    ) !important;
+  color: var(--fg);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 244, 200, 0.35),
+    inset 0 -1px 0 rgba(138, 106, 40, 0.18) !important;
+}
+
+html[data-theme="dark"] .orbit-review-card,
+html[data-theme="dark"] .orbit-review-gold {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, #e8c56a 16%, #1a1610) 0%,
+      color-mix(in oklab, #d4af37 12%, #14120e) 45%,
+      color-mix(in oklab, #6b4e1e 18%, #0e0c0a) 100%
+    ) !important;
+  border-color: color-mix(in oklab, #d4af37 40%, transparent) !important;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.45),
+    0 4px 14px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 230, 160, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35) !important;
+}
+
 @keyframes soft-zoom {
   from {
     transform: scale(1.08);

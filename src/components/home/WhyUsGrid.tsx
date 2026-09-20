@@ -32,11 +32,11 @@ export function WhyUsGrid({
         </div>
       </div>
 
-      <div className="pb-10 pt-2 sm:pb-12">
+      <div className="why-us-velocity pb-10 pt-2 sm:pb-12">
         <ScrollBasedVelocity
           text={band}
           default_velocity={0.85}
-          className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,4.5vw,3.25rem)] font-semibold tracking-[-0.03em] text-[var(--fg)]"
+          className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,4.5vw,3.25rem)] font-semibold tracking-[-0.03em]"
         />
       </div>
     </section>

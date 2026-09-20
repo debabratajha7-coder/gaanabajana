@@ -152,11 +152,11 @@ function Portrait({ item }: { item: OrbitStackItem }) {
 
 /** Review media — stippled portrait when image is set, else accent wash */
 function QuoteMedia({ item }: { item: OrbitStackItem }) {
-  const accent = item.accent ?? "#c8102e";
+  const accent = item.accent ?? "#d4af37";
 
   if (item.image) {
     return (
-      <div className="relative aspect-[1.65] w-full overflow-hidden rounded-[calc(var(--radius-glass)-2px)] border border-[var(--line)] bg-[#eceae6]">
+      <div className="relative aspect-[1.65] w-full overflow-hidden rounded-[calc(var(--radius-glass)-2px)] border border-[#d4af37]/35 bg-[#eceae6]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.image}
@@ -169,7 +169,7 @@ function QuoteMedia({ item }: { item: OrbitStackItem }) {
 
   return (
     <div
-      className="relative flex aspect-[1.65] w-full items-end overflow-hidden rounded-[calc(var(--radius-glass)-2px)] border border-[var(--line)] bg-[var(--bg-soft)]"
+      className="relative flex aspect-[1.65] w-full items-end overflow-hidden rounded-[calc(var(--radius-glass)-2px)] border border-[#d4af37]/35 bg-[var(--bg-soft)]"
       style={
         {
           "--quote-accent": accent,
@@ -317,7 +317,7 @@ export function OrbitCardStack({
               className={cn(
                 "absolute left-1/2 top-1/2 origin-bottom cursor-pointer outline-none transition-[transform]",
                 isReview
-                  ? "w-[min(68vw,15rem)] rounded-[var(--radius-glass)] border border-[var(--line-strong)] bg-[var(--bg-elevated)] p-3 text-[var(--fg)] shadow-[0_18px_40px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.08)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] sm:w-[min(72vw,16.5rem)]"
+                  ? "orbit-review-card w-[min(68vw,15rem)] rounded-[var(--radius-glass)] border p-3 focus-visible:ring-2 focus-visible:ring-[#d4af37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] sm:w-[min(72vw,16.5rem)]"
                   : "w-[min(78vw,21rem)] rounded-[1.9rem] border border-black/10 bg-[#e9e6df] p-4 text-[#141414] focus-visible:ring-2 focus-visible:ring-zinc-950/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
                 cardClassName
               )}
@@ -367,7 +367,7 @@ export function OrbitCardStack({
                     className={cn(
                       "absolute right-2.5 top-2.5 grid place-items-center rounded-full shadow-lg transition",
                       isReview
-                        ? "size-8 bg-[var(--fg)] text-[var(--bg)] shadow-black/15 hover:opacity-90"
+                        ? "size-8 bg-gradient-to-br from-[#fff4c8] via-[#d4af37] to-[#8a6a28] text-[#1a1408] shadow-black/20 hover:brightness-110"
                         : "size-10 bg-zinc-950 text-white shadow-black/20"
                     )}
                     onClick={(e) => {
@@ -382,18 +382,18 @@ export function OrbitCardStack({
 
               {isReview ? (
                 <div className="px-1 pb-0.5 pt-3">
-                  <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+                  <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#a67c2d] dark:text-[#e8c56a]">
                     {item.role}
                   </p>
                   <p className="mt-2 text-[0.88rem] font-medium leading-[1.4] tracking-[-0.01em] text-[var(--fg)] sm:text-[0.92rem]">
                     “{item.description}”
                   </p>
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--line)] pt-2.5">
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#d4af37]/35 pt-2.5">
                     <span className="text-xs font-semibold text-[var(--fg)]">
                       {item.name}
                     </span>
                     {item.stat ? (
-                      <span className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+                      <span className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-[#b8860b]">
                         {item.stat}
                       </span>
                     ) : null}
