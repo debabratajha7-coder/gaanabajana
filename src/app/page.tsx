@@ -241,8 +241,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-[var(--line)]">
-        <div className="container-gb section-gb">
+      <section className="relative isolate overflow-hidden border-t border-[var(--line)] bg-[var(--bestsellers-band)]">
+        {/* Soft stage wash — keeps the band from reading as a flat slab */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120%_80%_at_50%_0%,color-mix(in_oklab,var(--accent)_8%,transparent)_0%,transparent_55%)]"
+        />
+        <div className="container-gb section-gb relative">
           <Reveal>
             <SectionHeader
               title={settings.homeBestsellersTitle || "Best Sellers"}

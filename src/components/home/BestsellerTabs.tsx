@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { themedProductImage } from "@/lib/product-image";
 import type { ProductCardData } from "@/components/product/ProductCard";
 import { usePdpThemeOptional } from "@/components/product/PdpTheme";
@@ -10,6 +10,14 @@ import { ScrollTiltedGrid } from "@/components/ui/scroll-tilted-grid";
 type Tab = { id: string; label: string; href: string };
 
 const MAX_PER_TAB = 6;
+
+function readBestsellersFill() {
+  if (typeof document === "undefined") return "E3D9CB";
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue("--bestsellers-band-fill")
+    .trim();
+  return raw || "E3D9CB";
+}
 
 export function BestsellerTabs({
   tabs,
@@ -21,7 +29,25 @@ export function BestsellerTabs({
   const first = tabs[0]?.id || "all";
   const [active, setActive] = useState(first);
   const theme = usePdpThemeOptional();
-  const fillHex = theme?.theme === "dark" ? "0A0A0A" : "F7F5F3";
+  const [bandFill, setBandFill] = useState("E3D9CB");
+
+  useEffect(() => {
+    const sync = () => setBandFill(readBestsellersFill());
+    sync();
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => obs.disconnect();
+  }, []);
+
+  const fillHex =
+    theme?.theme === "dark"
+      ? "1C1712"
+      : theme?.theme === "light"
+        ? "E3D9CB"
+        : bandFill;
 
   const items = useMemo(() => {
     const list = productsByTab[active] || productsByTab[first] || [];
@@ -50,7 +76,7 @@ export function BestsellerTabs({
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-2 sm:mb-8 sm:gap-3">
+      <div className="mb-5 flex items-center gap-2 sm:mb-8 sm:gap-3">
         <div className="min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex w-max items-center gap-1.5 px-0.5 sm:gap-2">
             {tabs.map((t) => {
@@ -60,7 +86,7 @@ export function BestsellerTabs({
                   key={t.id}
                   type="button"
                   onClick={() => setActive(t.id)}
-                  className={`glass-chip shrink-0 whitespace-nowrap !rounded-full px-3.5 py-2 text-[12px] font-semibold transition sm:text-[13px] ${
+                  className={`glass-chip shrink-0 whitespace-nowrap !rounded-full px-3 py-1.5 text-[12px] font-semibold transition sm:px-3.5 sm:py-2 sm:text-[13px] ${
                     on
                       ? "!border-[color-mix(in_oklab,var(--accent)_45%,var(--line))] !bg-[color-mix(in_oklab,var(--accent)_12%,var(--glass))] text-[var(--accent)]"
                       : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
@@ -75,7 +101,7 @@ export function BestsellerTabs({
         {activeTab && (
           <Link
             href={activeTab.href}
-            className="glass-chip shrink-0 whitespace-nowrap !rounded-full px-3 py-2 text-[12px] font-medium text-[var(--fg-muted)] underline-offset-2 hover:text-[var(--accent)] hover:underline sm:text-[13px]"
+            className="glass-chip shrink-0 whitespace-nowrap !rounded-full px-2.5 py-1.5 text-[12px] font-medium text-[var(--fg-muted)] underline-offset-2 hover:text-[var(--accent)] hover:underline sm:px-3 sm:py-2 sm:text-[13px]"
           >
             View all
           </Link>
@@ -88,7 +114,7 @@ export function BestsellerTabs({
           images={images}
           variant="stage"
           smoothScroll={false}
-          sectionPadding="1.25rem"
+          sectionPadding="0.35rem"
           rounded="var(--radius-glass, 1rem)"
           maxTilt={48}
           maxBlur={4}

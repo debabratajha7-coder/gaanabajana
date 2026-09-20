@@ -95,22 +95,35 @@ function GalleryTile({
       const distance = Math.abs(position - 0.5) * 2;
       const signed = (position - 0.5) * 2;
       const eased = distance * distance * (3 - 2 * distance);
-      const x = side * eased * (isStage ? 12 : 18);
-      const y = -signed * eased * (isStage ? 16 : 24);
-      const tilt = -signed * (isStage ? maxTilt * 0.7 : maxTilt);
-      const roll = side * signed * (isStage ? 2 : 3);
-      const skew = -side * signed * (isStage ? 4 : 7);
+      // Soften tilt/skew on phones so the rack stays readable
+      const phone = window.matchMedia("(max-width: 639px)").matches;
+      const stageMul = phone ? 0.35 : 1;
+      const x = side * eased * (isStage ? 12 * stageMul : 18);
+      const y = -signed * eased * (isStage ? 16 * stageMul : 24);
+      const tilt =
+        -signed * (isStage ? maxTilt * (phone ? 0.25 : 0.7) : maxTilt);
+      const roll = side * signed * (isStage ? (phone ? 0.6 : 2) : 3);
+      const skew = -side * signed * (isStage ? (phone ? 1.2 : 4) : 7);
 
-      tile.style.setProperty("--tile-blur", `${eased * maxBlur}px`);
-      tile.style.setProperty("--tile-brightness", String(1 - eased * 0.35));
-      tile.style.setProperty("--tile-saturation", String(1 - eased * 0.35));
+      tile.style.setProperty(
+        "--tile-blur",
+        `${eased * (phone && isStage ? Math.min(maxBlur, 1.5) : maxBlur)}px`
+      );
+      tile.style.setProperty(
+        "--tile-brightness",
+        String(1 - eased * (phone && isStage ? 0.12 : 0.35))
+      );
+      tile.style.setProperty(
+        "--tile-saturation",
+        String(1 - eased * (phone && isStage ? 0.12 : 0.35))
+      );
       tile.style.setProperty(
         "--tile-image-scale",
         String(isStage ? 1 + eased * 0.06 : 1.03 + eased * 0.15)
       );
       tile.style.setProperty(
         "--tile-transform",
-        `translate3d(${x}%, ${y}%, ${eased * (isStage ? 100 : 180)}px) rotateX(${tilt}deg) rotateZ(${roll}deg) skewX(${skew}deg)`
+        `translate3d(${x}%, ${y}%, ${eased * (isStage ? (phone ? 24 : 100) : 180)}px) rotateX(${tilt}deg) rotateZ(${roll}deg) skewX(${skew}deg)`
       );
     };
     const schedule = () => {
@@ -148,7 +161,7 @@ function GalleryTile({
       src={image.src}
       alt={image.alt}
       className={cn(
-        "mx-auto h-full max-h-[280px] w-auto max-w-full object-contain sm:max-h-[340px]",
+        "mx-auto h-full max-h-[190px] w-auto max-w-full object-contain sm:max-h-[280px] md:max-h-[340px]",
         tiltOn && "[transform:scale(var(--tile-image-scale))]"
       )}
       loading={index < 4 ? "eager" : "lazy"}
@@ -190,7 +203,7 @@ function GalleryTile({
       )}
       style={
         isStage
-          ? { minHeight: "12rem", borderRadius: rounded }
+          ? { minHeight: "9.5rem", borderRadius: rounded }
           : { aspectRatio, borderRadius: rounded }
       }
     >
@@ -203,9 +216,9 @@ function GalleryTile({
 
   const chip =
     isStage && image.title ? (
-      <figcaption className="mt-3 flex justify-center px-1">
-        <span className="glass-chip max-w-full !rounded-xl px-3 py-2 text-left sm:px-3.5">
-          <span className="line-clamp-1 text-[11px] font-semibold text-[var(--fg)] sm:text-xs">
+      <figcaption className="mt-2 flex justify-center px-0.5 sm:mt-3 sm:px-1">
+        <span className="glass-chip max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:!rounded-xl sm:px-3.5 sm:py-2">
+          <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
             {image.title}
           </span>
         </span>
@@ -222,7 +235,7 @@ function GalleryTile({
   return (
     <figure
       ref={tileRef}
-      className={cn("m-0", side > 0 && !reduceMotion && "pt-12 sm:pt-20")}
+      className={cn("m-0", side > 0 && !reduceMotion && "pt-5 sm:pt-14 md:pt-20")}
       style={variables}
     >
       {image.href ? (
@@ -243,7 +256,7 @@ function StageStaticGrid({
   images: readonly ScrollTiltedGridImage[];
 }) {
   return (
-    <div className="mx-auto grid w-full max-w-[720px] grid-cols-2 gap-x-4 gap-y-8 px-2 sm:gap-x-8 sm:gap-y-10">
+    <div className="mx-auto grid w-full max-w-[720px] grid-cols-2 gap-x-3 gap-y-7 px-1.5 sm:gap-x-8 sm:gap-y-10 sm:px-2">
       {images.map((image) => (
         <Link
           key={`${image.href}-${image.src}`}
@@ -256,7 +269,7 @@ function StageStaticGrid({
             <img
               src={image.src}
               alt={image.alt}
-              className="max-h-[220px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.04] sm:max-h-[280px]"
+              className="max-h-[190px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.04] sm:max-h-[280px]"
               loading="lazy"
             />
             {typeof image.priceValue === "number" ? (
@@ -267,8 +280,8 @@ function StageStaticGrid({
             ) : null}
           </div>
           {image.title ? (
-            <span className="glass-chip mt-3 max-w-full !rounded-xl px-3 py-2 text-left">
-              <span className="line-clamp-1 text-[11px] font-semibold text-[var(--fg)] sm:text-xs">
+            <span className="glass-chip mt-2 max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:mt-3 sm:!rounded-xl sm:px-3 sm:py-2">
+              <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
                 {image.title}
               </span>
             </span>
@@ -345,7 +358,7 @@ export function ScrollTiltedGrid({
         className={cn(
           "mx-auto grid w-full grid-cols-2 items-start",
           isStage
-            ? "max-w-[720px] gap-x-4 gap-y-12 px-2 sm:gap-x-8 sm:gap-y-16 sm:px-4"
+            ? "max-w-[720px] gap-x-3 gap-y-7 px-1.5 sm:gap-x-8 sm:gap-y-16 sm:px-4"
             : "max-w-5xl gap-x-4 gap-y-16 px-4 sm:gap-x-10 sm:gap-y-28 sm:px-10 lg:gap-x-16"
         )}
         style={{ paddingBlock: sectionPadding }}

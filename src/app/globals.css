@@ -28,6 +28,9 @@
   --glass-border: rgba(255, 255, 255, 0.55);
   --glass-shadow: 0 8px 32px rgba(17, 17, 17, 0.06);
   --reviews-band: #e9e4dc;
+  /* Warm maple stage — sits between page cream and reviews taupe */
+  --bestsellers-band: #e3d9cb;
+  --bestsellers-band-fill: E3D9CB;
   --pdp-page: var(--bg);
   --pdp-panel: var(--bg-elevated);
   --pdp-border: var(--line);
@@ -48,6 +51,9 @@ html[data-theme="dark"] {
   --glass-border: rgba(255, 255, 255, 0.14);
   --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   --reviews-band: #14110f;
+  /* Warm espresso stage — lifts products off pure black */
+  --bestsellers-band: #1c1712;
+  --bestsellers-band-fill: 1C1712;
   --footer-bg: #050505;
   --footer-fg: #f5f5f5;
   --footer-muted: #8a8a8a;
