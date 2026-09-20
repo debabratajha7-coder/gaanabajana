@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
 import { CartBadge } from "@/components/ui/CartBadge";
+import { PdpThemeToggle } from "@/components/product/PdpTheme";
+import { Signature } from "@/components/ui/signature";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { brandWordmark } from "@/lib/brand";
 
@@ -44,6 +46,9 @@ export function Header({
   const [q, setQ] = useState("");
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [heroInView, setHeroInView] = useState(true);
+  const isHome = pathname === "/";
+  const showCategoryNav = !isHome || heroInView;
 
   useEffect(() => {
     setMounted(true);
@@ -59,6 +64,59 @@ export function Header({
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isHome) {
+      setHeroInView(true);
+      return;
+    }
+
+    let io: IntersectionObserver | null = null;
+    let mo: MutationObserver | null = null;
+    let cancelled = false;
+    let heroEl: Element | null = null;
+
+    function syncFromRect() {
+      if (!heroEl || cancelled) return;
+      const rect = heroEl.getBoundingClientRect();
+      // Any part of the hero in the viewport → show category strip again
+      setHeroInView(rect.bottom > 1 && rect.top < window.innerHeight);
+    }
+
+    function attach(hero: Element) {
+      heroEl = hero;
+      io = new IntersectionObserver(
+        () => syncFromRect(),
+        { threshold: [0, 0.01, 0.1] }
+      );
+      io.observe(hero);
+      syncFromRect();
+      window.addEventListener("scroll", syncFromRect, { passive: true });
+      window.addEventListener("resize", syncFromRect);
+    }
+
+    const existing = document.querySelector("[data-hero-stage]");
+    if (existing) {
+      attach(existing);
+    } else {
+      mo = new MutationObserver(() => {
+        const hero = document.querySelector("[data-hero-stage]");
+        if (!hero) return;
+        mo?.disconnect();
+        mo = null;
+        if (!cancelled) attach(hero);
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    }
+
+    return () => {
+      cancelled = true;
+      mo?.disconnect();
+      io?.disconnect();
+      window.removeEventListener("scroll", syncFromRect);
+      window.removeEventListener("resize", syncFromRect);
+    };
+  }, [isHome, pathname]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -118,15 +176,23 @@ export function Header({
               animate={reduce ? { opacity: 1 } : { x: 0 }}
               exit={reduce ? { opacity: 0 } : { x: "-100%" }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-y-0 left-0 flex w-[min(100vw-3.25rem,19.5rem)] max-w-full flex-col border-r border-[var(--line)] bg-white shadow-[8px_0_32px_rgba(0,0,0,0.12)]"
+              className="absolute inset-y-0 left-0 flex w-[min(100vw-3.25rem,19.5rem)] max-w-full flex-col border-r border-[var(--line)] bg-[var(--bg-elevated)] shadow-[8px_0_32px_color-mix(in_oklab,var(--fg)_12%,transparent)]"
             >
               <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3.5 py-3">
                 <Link
                   href="/"
-                  className="display max-w-[70%] whitespace-nowrap text-[clamp(1.05rem,5vw,1.25rem)]"
+                  className="flex max-w-[70%] items-center text-[var(--fg)]"
                   onClick={close}
+                  aria-label={wordmark}
                 >
-                  {wordmark}
+                  <Signature
+                    text={wordmark}
+                    color="currentColor"
+                    fontSize={18}
+                    duration={1.05}
+                    compact
+                    className="h-7 w-auto max-w-full"
+                  />
                 </Link>
                 <button
                   type="button"
@@ -415,14 +481,17 @@ export function Header({
 
         <Link
           href="/"
-          className="min-w-0 max-w-[min(52vw,14rem)] shrink sm:max-w-none md:shrink-0"
+          className="flex min-w-0 max-w-[min(50vw,12.5rem)] shrink items-center text-[var(--fg)] sm:max-w-[13.5rem] md:shrink-0"
+          aria-label={wordmark}
         >
-          <span
-            className="display block whitespace-nowrap text-[clamp(1rem,4.6vw,1.35rem)] leading-none tracking-[-0.03em] text-[#111] sm:text-2xl sm:tracking-normal md:text-[1.85rem]"
-            suppressHydrationWarning
-          >
-            {wordmark}
-          </span>
+          <Signature
+            text={wordmark}
+            color="currentColor"
+            fontSize={21}
+            duration={1.05}
+            compact
+            className="h-[1.85rem] w-auto max-w-full sm:h-8"
+          />
         </Link>
 
         <form onSubmit={goSearch} className="ml-auto hidden max-w-xl flex-1 md:flex">
@@ -442,6 +511,7 @@ export function Header({
         </form>
 
         <div className="ml-auto flex items-center gap-0.5 md:ml-0 md:gap-1">
+          <PdpThemeToggle />
           <Link
             href={user ? "/account" : "/login"}
             aria-label="Account"
@@ -459,23 +529,40 @@ export function Header({
         </div>
       </div>
 
-      <nav className="container-gb hidden border-t border-[var(--line)] lg:block">
-        <div className="flex flex-wrap items-center gap-x-0 gap-y-0 py-0">
+      <motion.nav
+        initial={false}
+        animate={
+          showCategoryNav
+            ? { height: "auto", opacity: 1 }
+            : { height: 0, opacity: 0 }
+        }
+        transition={
+          reduce
+            ? { duration: 0 }
+            : { duration: 0.32, ease: [0.22, 1, 0.36, 1] }
+        }
+        className="hidden overflow-hidden border-t border-[var(--line)] lg:block"
+        aria-label="Categories"
+        aria-hidden={!showCategoryNav}
+      >
+        <div className="container-gb flex flex-wrap items-center gap-x-0 gap-y-0 py-0">
           {parents.slice(0, 8).map((p) => (
             <div key={p._id} className="group relative">
               <Link
                 href={`/collections/${p.slug}`}
-                className="inline-flex items-center px-3.5 py-3 text-[13px] font-medium text-[#222] transition hover:text-[var(--accent)]"
+                className="inline-flex items-center px-3.5 py-3 text-[13px] font-medium text-[var(--fg)] transition hover:text-[var(--accent)]"
+                tabIndex={showCategoryNav ? undefined : -1}
               >
                 {p.name}
               </Link>
               {childrenOf(p._id).length > 0 && (
-                <div className="invisible absolute left-0 top-full z-40 min-w-[220px] border border-[var(--line)] bg-white p-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
+                <div className="glass-panel-strong invisible absolute left-0 top-full z-40 min-w-[220px] p-1 opacity-0 transition group-hover:visible group-hover:opacity-100">
                   {childrenOf(p._id).map((c) => (
                     <Link
                       key={c._id}
                       href={`/collections/${c.slug}`}
                       className="block border-b border-[var(--line)] px-3 py-2.5 text-[13px] text-[var(--fg-muted)] last:border-b-0 hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]"
+                      tabIndex={showCategoryNav ? undefined : -1}
                     >
                       {c.name}
                     </Link>
@@ -487,11 +574,12 @@ export function Header({
           <Link
             href="/deals"
             className="inline-flex items-center px-3.5 py-3 text-[13px] font-semibold text-[var(--accent)] transition hover:opacity-80"
+            tabIndex={showCategoryNav ? undefined : -1}
           >
             Deals
           </Link>
         </div>
-      </nav>
+      </motion.nav>
 
       {menu}
     </header>

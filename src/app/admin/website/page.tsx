@@ -145,6 +145,7 @@ export default function AdminSitePage() {
           homeCategoriesTitle: settings.homeCategoriesTitle,
           homeBestsellersEyebrow: settings.homeBestsellersEyebrow,
           homeBestsellersTitle: settings.homeBestsellersTitle,
+          homeBestsellersSubtitle: settings.homeBestsellersSubtitle,
           homeBrandsEyebrow: settings.homeBrandsEyebrow,
           homeBrandsTitle: settings.homeBrandsTitle,
           homeBlogEyebrow: settings.homeBlogEyebrow,
@@ -354,6 +355,12 @@ export default function AdminSitePage() {
               label="Bestsellers — title"
               value={String(settings.homeBestsellersTitle ?? "Best Sellers")}
               onChange={(v) => set("homeBestsellersTitle", v)}
+            />
+            <Field
+              id="homeBestsellersSubtitle"
+              label="Bestsellers — subtitle (optional)"
+              value={String(settings.homeBestsellersSubtitle ?? "")}
+              onChange={(v) => set("homeBestsellersSubtitle", v)}
             />
             <Field
               id="homeBrandsTitle"

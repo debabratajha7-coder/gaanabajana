@@ -53,7 +53,7 @@ export default function CartPage() {
                 {item.variantName && (
                   <p className="mt-0.5 text-sm text-[var(--fg-muted)]">{item.variantName}</p>
                 )}
-                <p className="mt-1.5 font-medium text-[var(--accent)]">
+                <p className="mt-1.5 font-medium text-[var(--price)]">
                   {formatINR(item.price)}
                 </p>
                 <div className="mt-3 flex items-center gap-3">
@@ -85,7 +85,7 @@ export default function CartPage() {
 
       <aside className="glass-panel-strong h-fit p-6">
         <p className="text-sm text-[var(--fg-muted)]">Subtotal</p>
-        <p className="mt-1 text-3xl font-semibold text-[var(--accent)]">
+        <p className="mt-1 text-3xl font-semibold text-[var(--price)]">
           {formatINR(subtotal)}
         </p>
         <p className="mt-2 text-xs text-[var(--fg-muted)]">

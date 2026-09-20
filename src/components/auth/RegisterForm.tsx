@@ -154,7 +154,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
           <li
             key={s.id}
             className={`h-1 flex-1 rounded-full transition ${
-              i <= stepIndex ? "bg-white" : "bg-[var(--line)]"
+              i <= stepIndex ? "bg-[var(--fg)]" : "bg-[var(--line)]"
             }`}
             title={s.label}
           />

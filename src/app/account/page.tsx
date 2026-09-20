@@ -80,7 +80,7 @@ export default function AccountPage() {
           <Link
             key={href}
             href={href}
-            className="group flex gap-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-5 transition hover:border-[var(--accent)]"
+            className="group flex gap-4 glass-panel p-5 transition hover:border-[var(--accent)]"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-[var(--line)] bg-[var(--bg-soft)] text-[var(--accent)] transition group-hover:border-[var(--accent)]">
               <Icon className="h-5 w-5" />
@@ -96,7 +96,7 @@ export default function AccountPage() {
         {user.role === "admin" && (
           <Link
             href="/admin"
-            className="group flex gap-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-5 transition hover:border-[var(--accent)]"
+            className="group flex gap-4 glass-panel p-5 transition hover:border-[var(--accent)]"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-[var(--line)] bg-[var(--bg-soft)] text-[var(--accent)]">
               <LayoutDashboard className="h-5 w-5" />

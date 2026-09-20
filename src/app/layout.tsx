@@ -3,6 +3,7 @@ import { Syne, Outfit, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { PdpThemeProvider } from "@/components/product/PdpTheme";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -46,15 +47,25 @@ export default async function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${display.variable} ${body.variable} ${brand.variable} h-full`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0){document.documentElement.setAttribute("data-theme","light");return;}var t=localStorage.getItem("site-theme")||localStorage.getItem("pdp-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="flex min-h-full flex-col antialiased">
         <CartProvider>
           <ToastProvider>
-            <Header categories={categories} settings={settings} />
-            <main className="flex-1">{children}</main>
-            <Footer settings={settings} />
-            <MobileBottomNav />
+            <PdpThemeProvider>
+              <Header categories={categories} settings={settings} />
+              <main className="flex-1">{children}</main>
+              <Footer settings={settings} />
+              <MobileBottomNav />
+            </PdpThemeProvider>
           </ToastProvider>
         </CartProvider>
       </body>

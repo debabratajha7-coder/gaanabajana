@@ -36,7 +36,7 @@ export function ComingSoonEmpty({
           aria-modal="true"
           aria-labelledby="coming-soon-title"
         >
-          <div className="relative w-full max-w-md border border-[var(--line)] bg-white p-6 text-center shadow-xl">
+          <div className="glass-panel-strong relative w-full max-w-md p-6 text-center">
             <button
               type="button"
               className="absolute right-3 top-3 icon-btn h-9 w-9"

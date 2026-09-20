@@ -1,11 +1,45 @@
+"use client";
+
 import Link from "next/link";
 import { Reveal } from "@/components/ui/Reveal";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { AnnotatedPhrase } from "@/components/ui/annotate-phrase";
+import {
+  OrbitCardStack,
+  type OrbitStackItem,
+} from "@/components/ui/orbit-card-stack";
 
 type Review = {
   quote: string;
   source?: string;
 };
+
+const ACCENTS = ["#c8102e", "#8f0b20", "#2a2a2a", "#e8ddd0", "#c8102e"];
+const AVATARS = [
+  "/reviews/review-avatar-01.png",
+  "/reviews/review-avatar-02.png",
+  "/reviews/review-avatar-03.png",
+];
+
+function compactRating(label?: string): string {
+  if (!label) return "Review";
+  const m = label.match(/[\d.]+/);
+  return m ? `${m[0]} ★` : "Review";
+}
+
+function toOrbitItems(reviews: Review[], ratingLabel?: string): OrbitStackItem[] {
+  return reviews.map((r, i) => {
+    const source = (r.source || "Google review").replace(/\s+/g, " ").trim();
+    const role = /google/i.test(source) ? "Google review" : source;
+    return {
+      name: "Verified buyer",
+      role,
+      description: r.quote,
+      accent: ACCENTS[i % ACCENTS.length],
+      stat: compactRating(ratingLabel),
+      image: AVATARS[i % AVATARS.length],
+    };
+  });
+}
 
 export function ReviewsStrip({
   title = "What musicians say",
@@ -20,16 +54,34 @@ export function ReviewsStrip({
 }) {
   if (!reviews.length) return null;
 
+  const items = toOrbitItems(reviews.slice(0, 5), ratingLabel);
+  const mid = Math.min(1, Math.max(0, items.length - 1));
+
   return (
-    <section className="border-t border-[var(--line)] bg-white">
+    <section className="border-t border-[var(--line)] bg-[var(--reviews-band)]">
       <div className="container-gb section-gb">
         <Reveal>
-          <SectionHeader title={title} centered />
+          <div className="mb-8 sm:mb-10">
+            <div className="section-title-line">
+              <h2 className="text-xl font-bold tracking-tight text-[var(--fg)] sm:text-2xl">
+                <AnnotatedPhrase
+                  text={title}
+                  phrase="musicians"
+                  variant="wavy"
+                  color="text-[var(--accent)]"
+                  delay={0.3}
+                  className="text-xl font-bold tracking-tight text-[var(--fg)] sm:text-2xl"
+                />
+              </h2>
+            </div>
+          </div>
         </Reveal>
         {(ratingLabel || reviewsUrl) && (
           <Reveal delay={0.04}>
-            <p className="mt-2 text-center text-sm text-[var(--fg-muted)]">
-              {ratingLabel ? <span className="font-medium text-[var(--fg)]">{ratingLabel}</span> : null}
+            <p className="-mt-4 mb-2 text-center text-sm text-[var(--fg-muted)] sm:-mt-5">
+              {ratingLabel ? (
+                <span className="font-medium text-[var(--fg)]">{ratingLabel}</span>
+              ) : null}
               {ratingLabel && reviewsUrl ? " · " : null}
               {reviewsUrl ? (
                 <a
@@ -44,23 +96,24 @@ export function ReviewsStrip({
             </p>
           </Reveal>
         )}
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {reviews.slice(0, 3).map((r, i) => (
-            <Reveal key={i} delay={0.06 + i * 0.06}>
-              <blockquote className="border border-[var(--line)] bg-[var(--bg-soft)] p-5 sm:p-6">
-                <p className="text-sm leading-relaxed text-[var(--fg)] sm:text-[0.95rem]">
-                  “{r.quote}”
-                </p>
-                <footer className="mt-4 text-xs font-medium uppercase tracking-[0.14em] text-[var(--fg-muted)]">
-                  {r.source || "Google Review"}
-                </footer>
-              </blockquote>
-            </Reveal>
-          ))}
-        </div>
+
+        <Reveal delay={0.08}>
+          <div className="relative">
+            <OrbitCardStack
+              variant="review"
+              items={items}
+              defaultActiveIndex={mid}
+              spread={items.length <= 3 ? 108 : 96}
+              lift={34}
+              href={reviewsUrl || undefined}
+              className="min-h-[340px] overflow-visible p-1 sm:min-h-[360px] sm:p-2"
+            />
+          </div>
+        </Reveal>
+
         {reviewsUrl ? (
-          <Reveal delay={0.22}>
-            <div className="mt-8 text-center">
+          <Reveal delay={0.14}>
+            <div className="mt-1 text-center">
               <Link
                 href={reviewsUrl}
                 target="_blank"

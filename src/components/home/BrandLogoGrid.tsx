@@ -23,7 +23,7 @@ export function BrandLogoGrid({ brands }: { brands: BrandTile[] }) {
         <Link
           key={b._id}
           href={`/brands/${b.slug}`}
-          className="flex aspect-[5/3] items-center justify-center border border-black bg-white px-4 transition hover:bg-neutral-50 sm:px-6"
+          className="glass-panel flex aspect-[5/3] items-center justify-center px-4 transition hover:border-[var(--line-strong)] sm:px-6"
           title={b.name}
           aria-label={b.name}
         >

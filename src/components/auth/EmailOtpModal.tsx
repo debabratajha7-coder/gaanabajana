@@ -42,7 +42,7 @@ export function EmailOtpModal({
       aria-modal="true"
       aria-labelledby="email-otp-title"
     >
-      <div className="w-full max-w-md border border-[var(--line)] bg-[var(--bg-elevated)] p-6 shadow-xl">
+      <div className="glass-panel-strong w-full max-w-md p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-muted)]">
           Almost there
         </p>

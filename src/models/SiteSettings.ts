@@ -26,6 +26,7 @@ export interface ISiteSettings {
   homeCategoriesTitle: string;
   homeBestsellersEyebrow: string;
   homeBestsellersTitle: string;
+  homeBestsellersSubtitle?: string;
   homeBrandsEyebrow: string;
   homeBrandsTitle: string;
   homeBlogEyebrow: string;
@@ -114,6 +115,10 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     homeCategoriesTitle: { type: String, default: "Explore By Category" },
     homeBestsellersEyebrow: { type: String, default: "Curated" },
     homeBestsellersTitle: { type: String, default: "Best Sellers" },
+    homeBestsellersSubtitle: {
+      type: String,
+      default: "",
+    },
     homeBrandsEyebrow: { type: String, default: "Trusted names" },
     homeBrandsTitle: { type: String, default: "Top Brands" },
     homeBlogEyebrow: { type: String, default: "Learn" },

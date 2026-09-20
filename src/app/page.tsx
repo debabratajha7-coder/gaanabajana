@@ -112,7 +112,7 @@ export default async function HomePage() {
         })
           .populate("brand", "name slug")
           .sort({ featured: -1, ratingCount: -1, updatedAt: -1 })
-          .limit(8)
+          .limit(6)
           .lean();
         productsByTab[String(cat._id)] = docs.map((p) =>
           toCard({ ...p, brand: p.brand as LeanBrand })
@@ -134,6 +134,7 @@ export default async function HomePage() {
       homeCategoriesTitle: "Explore By Category",
       homeBestsellersEyebrow: "Curated",
       homeBestsellersTitle: "Best Sellers",
+      homeBestsellersSubtitle: "",
       homeBrandsEyebrow: "Trusted names",
       homeBrandsTitle: "Top Brands",
       homeBlogEyebrow: "Learn",
@@ -217,7 +218,7 @@ export default async function HomePage() {
         ratingHref={settings.googleReviewsUrl || undefined}
       />
 
-      <section className="bg-white">
+      <section>
         <div className="container-gb section-gb">
           <Reveal>
             <SectionHeader
@@ -240,7 +241,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-[var(--line)] bg-[var(--bg-soft)]">
+      <section className="border-t border-[var(--line)]">
         <div className="container-gb section-gb">
           <Reveal>
             <SectionHeader
@@ -271,7 +272,7 @@ export default async function HomePage() {
         reviews={reviews}
       />
 
-      <section className="bg-white">
+      <section>
         <div className="container-gb section-gb">
           <Reveal>
             <SectionHeader
@@ -292,10 +293,11 @@ export default async function HomePage() {
         address={settings.address}
         phone={settings.phone}
         hours={settings.storeHours}
+        image={settings.heroImage}
       />
 
       {posts.length > 0 && (
-        <section className="bg-white">
+        <section>
           <div className="container-gb section-gb">
             <Reveal>
               <SectionHeader
@@ -309,7 +311,7 @@ export default async function HomePage() {
                 <Reveal key={String(post._id)} delay={i * 0.06}>
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="group flex flex-col overflow-hidden border border-[var(--line)] bg-white transition hover:shadow-sm sm:flex-row"
+                    className="glass-panel group flex flex-col overflow-hidden transition hover:border-[var(--line-strong)] sm:flex-row"
                   >
                     {post.coverImage && (
                       // eslint-disable-next-line @next/next/no-img-element

@@ -155,7 +155,7 @@ export default function CheckoutPage() {
           {loading ? "Redirecting…" : `Pay ${formatINR(total)}`}
         </button>
       </form>
-      <aside className="h-fit rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-6">
+      <aside className="glass-panel-strong h-fit p-6">
         <h2 className="font-[family-name:var(--font-display)] text-2xl">Summary</h2>
         <ul className="mt-4 space-y-2 text-sm">
           {items.map((i) => (
@@ -176,7 +176,7 @@ export default function CheckoutPage() {
             <span>Shipping</span>
             <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>
           </div>
-          <div className="flex justify-between text-lg text-[var(--accent)]">
+          <div className="flex justify-between text-lg text-[var(--price)]">
             <span>Total</span>
             <span>{formatINR(total)}</span>
           </div>

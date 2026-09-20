@@ -65,51 +65,75 @@ export async function ProductSecondary({
   }
 
   const plainEssentials = toPlain(essentials) || [];
-  const plainReviews = toPlain(
-    reviews.map((r) => {
-      const user = r.user as { name?: string } | null;
-      return {
-        rating: r.rating,
-        title: r.title,
-        body: r.body,
-        user: { name: r.authorName || user?.name || "Customer" },
-      };
-    })
-  ) || [];
+  const plainReviews =
+    toPlain(
+      reviews.map((r) => {
+        const user = r.user as { name?: string } | null;
+        return {
+          rating: r.rating,
+          title: r.title,
+          body: r.body,
+          user: { name: r.authorName || user?.name || "Customer" },
+        };
+      })
+    ) || [];
 
   return (
     <div className="fade-in-soft">
       {plainEssentials.length > 0 && (
-        <section className="container-gb border-t border-[var(--line)] py-10 sm:py-12">
-          <h2 className="text-xl font-semibold text-[var(--fg)] sm:text-2xl">
+        <section
+          className="container-gb border-t py-10 sm:py-12"
+          style={{ borderColor: "var(--pdp-border)" }}
+        >
+          <h2
+            className="text-xl font-semibold sm:text-2xl"
+            style={{ color: "var(--pdp-fg)" }}
+          >
             Essentials
           </h2>
-          <p className="mt-1 text-sm text-[var(--fg-muted)]">
+          <p className="mt-1 text-sm" style={{ color: "var(--pdp-muted)" }}>
             Pair it with the gear most shoppers add next
           </p>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
             {plainEssentials.map((p) => (
-              <ProductCard key={p._id} product={p} />
+              <ProductCard key={p._id} product={p} appearance="pdp" />
             ))}
           </div>
         </section>
       )}
 
-      <div className="container-gb space-y-6 border-t border-[var(--line)] py-10 sm:py-12">
-        <h2 className="text-lg font-semibold text-[var(--fg)] sm:text-xl">
+      <div
+        className="container-gb space-y-6 border-t py-10 sm:py-12"
+        style={{ borderColor: "var(--pdp-border)" }}
+      >
+        <h2
+          className="text-lg font-semibold sm:text-xl"
+          style={{ color: "var(--pdp-fg)" }}
+        >
           Reviews
         </h2>
         <div className="max-w-2xl space-y-3">
           {plainReviews.length === 0 && (
-            <p className="text-sm text-[var(--fg-muted)]">No reviews yet.</p>
+            <p className="text-sm" style={{ color: "var(--pdp-muted)" }}>
+              No reviews yet.
+            </p>
           )}
           {plainReviews.map((r, i) => (
-            <div key={i} className="border border-[var(--line)] p-4">
+            <div key={i} className="glass-panel p-4">
               <p className="text-sm text-[var(--accent)]">
                 ★ {r.rating} · {r.user?.name || "Customer"}
               </p>
-              {r.title && <p className="mt-1 font-medium">{r.title}</p>}
-              <p className="mt-1 text-sm text-[var(--fg-muted)]">{r.body}</p>
+              {r.title && (
+                <p
+                  className="mt-1 font-medium"
+                  style={{ color: "var(--pdp-fg)" }}
+                >
+                  {r.title}
+                </p>
+              )}
+              <p className="mt-1 text-sm" style={{ color: "var(--pdp-muted)" }}>
+                {r.body}
+              </p>
             </div>
           ))}
         </div>

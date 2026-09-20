@@ -1,4 +1,5 @@
-import { ShieldCheck } from "lucide-react";
+import { ScrollBasedVelocity } from "@/components/ui/scroll-based-velocity";
+import { AnnotatedPhrase } from "@/components/ui/annotate-phrase";
 
 export type WhyItem = { title: string; body: string };
 
@@ -9,31 +10,34 @@ export function WhyUsGrid({
   title: string;
   items: WhyItem[];
 }) {
-  const list = items.filter((i) => i.title?.trim()).slice(0, 5);
+  const list = items.filter((i) => i.title?.trim()).slice(0, 8);
   if (!list.length) return null;
 
+  const band = list.map((i) => i.title.trim()).join("   ·   ") + "   ·   ";
+
   return (
-    <section className="border-y border-[var(--line)] bg-white">
-      <div className="container-gb section-gb">
-        <div className="section-title-line mb-8 sm:mb-10">
-          <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
+    <section className="overflow-hidden border-y border-[var(--line)]">
+      <div className="container-gb section-gb pb-6 sm:pb-8">
+        <div className="section-title-line mb-0">
+          <h2 className="text-xl font-bold tracking-tight text-[var(--fg)] sm:text-2xl">
+            <AnnotatedPhrase
+              text={title}
+              phrase="Gaana Bajana"
+              variant="underline"
+              color="text-[var(--accent)]"
+              delay={0.35}
+              className="text-xl font-bold tracking-tight text-[var(--fg)] sm:text-2xl"
+            />
+          </h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {list.map((item) => (
-            <div
-              key={item.title}
-              className="border border-[var(--line)] bg-white p-4 text-center"
-            >
-              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1d4ed8]">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <p className="text-sm font-semibold text-[var(--fg)]">{item.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-[var(--fg-muted)]">
-                {item.body}
-              </p>
-            </div>
-          ))}
-        </div>
+      </div>
+
+      <div className="pb-10 pt-2 sm:pb-12">
+        <ScrollBasedVelocity
+          text={band}
+          default_velocity={0.85}
+          className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,4.5vw,3.25rem)] font-semibold tracking-[-0.03em] text-[var(--fg)]"
+        />
       </div>
     </section>
   );

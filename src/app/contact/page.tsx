@@ -35,7 +35,7 @@ export default async function ContactPage() {
         </p>
       )}
 
-      <div className="mt-8 max-w-xl space-y-4 border border-[var(--line)] bg-[var(--bg-elevated)] p-6">
+      <div className="glass-panel mt-8 max-w-xl space-y-4 p-6">
         <div>
           <p className="eyebrow">Business / trade name</p>
           <p className="mt-2 text-sm font-medium">{TRADE_NAME}</p>

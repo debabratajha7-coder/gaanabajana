@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { brandWordmark } from "@/lib/brand";
+import { AnnotatedPhrase } from "@/components/ui/annotate-phrase";
 
 type HeroStageProps = {
   image: string;
@@ -81,7 +82,7 @@ export function HeroStage({
   ) : null;
 
   return (
-    <section ref={ref} className="relative md:min-h-[88vh]">
+    <section ref={ref} data-hero-stage className="relative md:min-h-[88vh]">
       {/* Phone: fuller-bleed image with overlay copy */}
       <div className="relative overflow-hidden md:hidden">
         <div className="relative min-h-[78vh]">
@@ -106,11 +107,23 @@ export function HeroStage({
             </p>
 
             <h1 className="mt-4 max-w-sm text-[0.95rem] font-medium leading-snug text-white/95">
-              {headline}
+              <AnnotatedPhrase
+                text={headline}
+                phrase="your sound"
+                variant="wavy"
+                color="text-[#ff8a9a]"
+                delay={0.45}
+              />
             </h1>
 
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/75">
-              {subheadline}
+              <AnnotatedPhrase
+                text={subheadline}
+                phrase="curated"
+                variant="highlight"
+                color="text-[#ff8a9a]"
+                delay={0.55}
+              />
             </p>
 
             <div className="mt-5 flex w-full flex-col gap-2.5">
@@ -166,7 +179,13 @@ export function HeroStage({
               transition={{ duration: 0.65, delay: 0.1, ease }}
               className="mt-5 max-w-xl text-xl text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.45)] md:text-2xl"
             >
-              {headline}
+              <AnnotatedPhrase
+                text={headline}
+                phrase="your sound"
+                variant="wavy"
+                color="text-[#ff8a9a]"
+                delay={0.55}
+              />
             </motion.h1>
 
             <motion.p
@@ -175,7 +194,13 @@ export function HeroStage({
               transition={{ duration: 0.6, delay: 0.18, ease }}
               className="mt-3 max-w-md text-base leading-relaxed text-white/80 [text-shadow:0_1px_10px_rgba(0,0,0,0.4)]"
             >
-              {subheadline}
+              <AnnotatedPhrase
+                text={subheadline}
+                phrase="curated"
+                variant="highlight"
+                color="text-[#ff8a9a]"
+                delay={0.7}
+              />
             </motion.p>
 
             <motion.div
