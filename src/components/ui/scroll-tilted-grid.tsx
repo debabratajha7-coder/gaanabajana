@@ -156,17 +156,16 @@ function GalleryTile({
   };
 
   const media = isStage ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={image.src}
-      alt={image.alt}
-      className={cn(
-        "mx-auto h-full max-h-[190px] w-auto max-w-full object-contain sm:max-h-[280px] md:max-h-[340px]",
-        tiltOn && "[transform:scale(var(--tile-image-scale))]"
-      )}
-      loading={index < 4 ? "eager" : "lazy"}
-      draggable={false}
-    />
+    <div className="stage-tile-media relative mx-auto inline-flex max-h-[190px] max-w-full items-end justify-center sm:max-h-[280px] md:max-h-[340px]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={image.src}
+        alt={image.alt}
+        className="stage-tile-img mx-auto h-full max-h-[190px] w-auto max-w-full object-contain sm:max-h-[280px] md:max-h-[340px]"
+        loading={index < 4 ? "eager" : "lazy"}
+        draggable={false}
+      />
+    </div>
   ) : (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -247,7 +246,11 @@ function GalleryTile({
       style={variables}
     >
       {image.href ? (
-        <Link href={image.href} className="block" aria-label={image.alt}>
+        <Link
+          href={image.href}
+          className="group/stage block"
+          aria-label={image.alt}
+        >
           {body}
         </Link>
       ) : (
@@ -269,15 +272,15 @@ function StageStaticGrid({
         <Link
           key={`${image.href}-${image.src}`}
           href={image.href || "#"}
-          className="group flex flex-col items-center text-center"
+          className="group/stage flex flex-col items-center text-center"
           aria-label={image.alt}
         >
-          <div className="relative flex w-full items-end justify-center">
+          <div className="stage-tile-media relative flex w-full items-end justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={image.src}
               alt={image.alt}
-              className="max-h-[190px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.04] sm:max-h-[280px]"
+              className="stage-tile-img max-h-[190px] w-auto max-w-full object-contain sm:max-h-[280px]"
               loading="lazy"
             />
           </div>

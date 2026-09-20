@@ -628,7 +628,7 @@ a {
   font-size: 0.9rem;
 }
 
-/* Bestsellers stage — light type over silk aurora */
+/* Bestsellers stage — light type over dark band */
 .bestsellers-stage {
   --fg: #f6f0e6;
   --fg-muted: rgba(246, 240, 230, 0.62);
@@ -639,6 +639,36 @@ a {
   --glass-border: rgba(255, 236, 200, 0.18);
   --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
   color: var(--fg);
+}
+
+/* Stage product hover — zoom only */
+.stage-tile-media {
+  isolation: isolate;
+}
+
+.stage-tile-img {
+  --tile-image-scale: 1;
+  --stage-hover-zoom: 1;
+  transform-origin: center bottom;
+  transform: scale(calc(var(--tile-image-scale) * var(--stage-hover-zoom)));
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.group\/stage:hover .stage-tile-img,
+.group\/stage:focus-visible .stage-tile-img {
+  --stage-hover-zoom: 1.12;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-tile-img {
+    transition: none;
+  }
+
+  .group\/stage:hover .stage-tile-img,
+  .group\/stage:focus-visible .stage-tile-img {
+    --stage-hover-zoom: 1;
+  }
 }
 
 /* Dark footer island (Bajaao-style contrast) */
