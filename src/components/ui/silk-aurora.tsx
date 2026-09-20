@@ -150,6 +150,8 @@ export interface SilkAuroraProps extends React.HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
   /** hero = full-viewport; embed = fill parent (VisitStore band) */
   layout?: "hero" | "embed";
+  /** Soft dark scrims over the canvas. Set false for a clear aurora. */
+  overlays?: boolean;
   children?: React.ReactNode;
 }
 
@@ -171,6 +173,7 @@ export function SilkAurora({
   mouseInfluence = 1,
   interactive = true,
   layout = "hero",
+  overlays = true,
   className,
   children,
   style,
@@ -182,16 +185,6 @@ export function SilkAurora({
   const targetMouseRef = React.useRef({ x: 0.5, y: 0.5 });
   const [hasWebGLError, setHasWebGLError] = React.useState(false);
   const isEmbed = layout === "embed";
-  const [preferStatic, setPreferStatic] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!isEmbed) return;
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setPreferStatic(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, [isEmbed]);
 
   const settings = React.useMemo(
     () => ({
@@ -431,11 +424,14 @@ export function SilkAurora({
     }
   }, [hasWebGLError, settings]);
 
+  const embedWash =
+    "radial-gradient(ellipse 70% 55% at 78% 28%, rgba(255,226,169,0.22), transparent 55%), radial-gradient(ellipse 60% 50% at 12% 78%, rgba(197,141,93,0.28), transparent 58%), radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255,180,120,0.12), transparent 50%), linear-gradient(165deg, #0a0807 0%, #19130f 48%, #060505 100%)";
+
   const shellClass = cn(
-    "relative w-full overflow-hidden bg-[#060505] text-white",
+    "relative w-full overflow-hidden text-white",
     isEmbed
-      ? "h-full min-h-0"
-      : "flex min-h-screen items-center",
+      ? "h-full min-h-full w-full"
+      : "flex min-h-screen items-center bg-[#060505]",
     className,
   );
 
@@ -444,8 +440,8 @@ export function SilkAurora({
       className={shellClass}
       style={{
         containerType: "size",
-        background:
-          "radial-gradient(circle at 72% 34%, rgba(255,226,169,0.14), transparent 28%), radial-gradient(circle at 18% 74%, rgba(197,141,93,0.2), transparent 36%), linear-gradient(160deg, #060505 0%, #19130f 55%, #0a0807 100%)",
+        backgroundColor: "#060505",
+        backgroundImage: embedWash,
         ...style,
       }}
       {...props}
@@ -486,17 +482,17 @@ export function SilkAurora({
     return fallbackContent;
   }
 
-  // Prefer static wash when reduced motion + embed (no GL cost on phones)
-  if (isEmbed && preferStatic) {
-    return silentEmbedFallback;
-  }
-
   return (
     <WebGLErrorBoundary fallback={fallbackContent}>
       <div
         ref={containerRef}
         className={shellClass}
-        style={{ containerType: "size", ...style }}
+        style={{
+          containerType: "size",
+          backgroundColor: isEmbed ? "#060505" : undefined,
+          backgroundImage: isEmbed ? embedWash : undefined,
+          ...style,
+        }}
         {...props}
       >
         <canvas
@@ -505,9 +501,13 @@ export function SilkAurora({
           className="pointer-events-none absolute inset-0 h-full w-full"
           style={{ width: "100%", height: "100%", display: "block" }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_34%,rgba(255,255,255,0.12),transparent_24%),radial-gradient(circle_at_18%_74%,rgba(197,141,93,0.16),transparent_32%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.42),rgba(0,0,0,0.12)_42%,rgba(0,0,0,0.38))]" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+        {overlays ? (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_34%,rgba(255,255,255,0.12),transparent_24%),radial-gradient(circle_at_18%_74%,rgba(197,141,93,0.16),transparent_32%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.42),rgba(0,0,0,0.12)_42%,rgba(0,0,0,0.38))]" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+          </>
+        ) : null}
 
         {(title || subtitle || description || children) && (
           <div className="relative z-10 mx-auto w-full max-w-[1240px] px-6 py-20 md:px-10 md:py-28">

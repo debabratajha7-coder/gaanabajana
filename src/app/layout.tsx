@@ -53,7 +53,7 @@ export default async function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0){document.documentElement.setAttribute("data-theme","light");return;}var t=localStorage.getItem("site-theme")||localStorage.getItem("pdp-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`,
+            __html: `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0){document.documentElement.setAttribute("data-theme","light");return;}var t=localStorage.getItem("site-theme")||localStorage.getItem("pdp-theme");if(t!=="dark"&&t!=="light")t="dark";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`,
           }}
         />
       </head>

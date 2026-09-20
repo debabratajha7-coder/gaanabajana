@@ -67,7 +67,7 @@ function applyHtmlTheme(mode: PdpThemeMode) {
 export function PdpThemeProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin") ?? false;
-  const [theme, setThemeState] = useState<PdpThemeMode>("light");
+  const [theme, setThemeState] = useState<PdpThemeMode>("dark");
 
   useEffect(() => {
     try {
@@ -81,7 +81,7 @@ export function PdpThemeProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-    if (!isAdmin) applyHtmlTheme("light");
+    if (!isAdmin) applyHtmlTheme("dark");
   }, [isAdmin]);
 
   useEffect(() => {

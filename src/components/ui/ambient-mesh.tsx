@@ -10,6 +10,8 @@ type AmbientMeshProps = {
   tone?: "dark" | "light";
   /** When true, product color blooms in; false keeps a quiet base */
   active?: boolean;
+  /** Skip drifting orbs + backdrop blur (phones / low power) */
+  lite?: boolean;
 };
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -87,8 +89,10 @@ export function AmbientMesh({
   className,
   tone = "dark",
   active = true,
+  lite = false,
 }: AmbientMeshProps) {
-  const reduce = useReducedMotion();
+  const reduceMotion = useReducedMotion();
+  const reduce = !!reduceMotion || lite;
   const reactId = useId();
   const isLight = tone === "light";
 
@@ -211,10 +215,14 @@ export function AmbientMesh({
 
       <div
         className="absolute inset-0"
-        style={{
-          backdropFilter: "blur(20px) saturate(1.15)",
-          WebkitBackdropFilter: "blur(20px) saturate(1.15)",
-        }}
+        style={
+          reduce
+            ? undefined
+            : {
+                backdropFilter: "blur(20px) saturate(1.15)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.15)",
+              }
+        }
       />
 
       <div

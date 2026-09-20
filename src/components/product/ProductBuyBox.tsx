@@ -12,6 +12,7 @@ import {
 import { useCart } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/ui/Toast";
 import {
+  ChevronDown,
   Heart,
   Minus,
   Plus,
@@ -124,6 +125,8 @@ function ProductBuyBoxInner({
   const [activeImage, setActiveImage] = useState(0);
   const [pincode, setPincode] = useState("");
   const [deliveryMsg, setDeliveryMsg] = useState<string | null>(null);
+  const [specsOpen, setSpecsOpen] = useState(false);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
 
   const variant = variants[variantIdx] || {
     name: "Standard",
@@ -142,6 +145,8 @@ function ProductBuyBoxInner({
         : [variant.image || "/placeholder-product.jpg"];
 
   const image = gallery[activeImage] || gallery[0];
+  /** First shot of the active colour — only this drives the ambient wash */
+  const colorHeroImage = gallery[0] || image;
   const emiMonthly = Math.max(1, Math.round(variant.price / 12));
   const cartVariantName = selected
     ? selected.name
@@ -155,6 +160,15 @@ function ProductBuyBoxInner({
   const [palette, setPalette] = useState(() =>
     buildAmbientPalette([], colors[0]?.swatch)
   );
+  const [liteMotion, setLiteMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px), (pointer: coarse)");
+    const sync = () => setLiteMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,9 +177,9 @@ function ProductBuyBoxInner({
 
     setPalette(buildAmbientPalette([], swatch));
 
-    if (!image) return;
+    if (!colorHeroImage) return;
 
-    extractImageColors(image, 4).then((extracted) => {
+    extractImageColors(colorHeroImage, 4).then((extracted) => {
       if (cancelled) return;
       setPalette(buildAmbientPalette(extracted, swatch));
     });
@@ -173,7 +187,9 @@ function ProductBuyBoxInner({
     return () => {
       cancelled = true;
     };
-  }, [image, selectedColor, colors]);
+  }, [colorHeroImage, selectedColor, colors]);
+
+  const quietMotion = reduce || liteMotion;
 
   function selectColor(index: number) {
     setSelectedColor((cur) => (cur === index ? null : index));
@@ -242,6 +258,7 @@ function ProductBuyBoxInner({
         <AmbientMesh
           colors={palette}
           tone={isDark ? "dark" : "light"}
+          lite={liteMotion}
           className="h-full min-h-full"
         />
       </div>
@@ -314,30 +331,35 @@ function ProductBuyBoxInner({
 
           <Reveal delay={0.08} className="order-1 min-w-0 lg:order-2">
             <div className="glass-panel-strong relative overflow-hidden">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={`${theme}-${image}`}
-                  initial={
-                    reduce ? false : { opacity: 0, scale: 0.97 }
-                  }
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={reduce ? undefined : { opacity: 0, scale: 1.01 }}
-                  transition={
-                    reduce
-                      ? { duration: 0 }
-                      : { duration: 0.38, ease: EASE }
-                  }
-                >
-                  <ThemedImg
-                    src={image}
-                    alt={product.title}
-                    fillHex={fillHex}
-                    fetchPriority="high"
-                    className="aspect-square w-full object-contain p-4 sm:p-8"
-                    style={{ backgroundColor: tokens.page }}
-                  />
-                </motion.div>
-              </AnimatePresence>
+              {quietMotion ? (
+                <ThemedImg
+                  src={image}
+                  alt={product.title}
+                  fillHex={fillHex}
+                  fetchPriority="high"
+                  className="aspect-square w-full object-contain p-4 sm:p-8"
+                  style={{ backgroundColor: tokens.page }}
+                />
+              ) : (
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={`${theme}-${image}`}
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.01 }}
+                    transition={{ duration: 0.38, ease: EASE }}
+                  >
+                    <ThemedImg
+                      src={image}
+                      alt={product.title}
+                      fillHex={fillHex}
+                      fetchPriority="high"
+                      className="aspect-square w-full object-contain p-4 sm:p-8"
+                      style={{ backgroundColor: tokens.page }}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              )}
             </div>
           </Reveal>
 
@@ -464,7 +486,7 @@ function ProductBuyBoxInner({
                             scale: active ? 1.12 : 1,
                           }}
                           whileHover={
-                            reduce
+                            quietMotion
                               ? undefined
                               : { scale: active ? 1.14 : 1.06 }
                           }
@@ -678,39 +700,72 @@ function ProductBuyBoxInner({
                 className="mt-5 border-t pt-4 sm:mt-6 sm:pt-5"
                 style={{ borderColor: "var(--pdp-border)" }}
               >
-                <h2
-                  className="text-sm font-semibold"
-                  style={{ color: "var(--pdp-fg)" }}
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-3 text-left"
+                  aria-expanded={specsOpen}
+                  onClick={() => setSpecsOpen((o) => !o)}
                 >
-                  Specs
-                </h2>
-                <dl
-                  className="mt-3 max-h-[18rem] overflow-y-auto border sm:max-h-[28rem]"
-                  style={{ borderColor: "var(--pdp-border)" }}
-                >
-                  {specs.map((s) => (
-                    <div
-                      key={`${s.label}-${s.value}`}
-                      className="grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-2 border-b px-2.5 py-2 text-sm last:border-b-0 sm:gap-3 sm:px-3"
-                      style={{ borderColor: "var(--pdp-border)" }}
+                  <h2
+                    className="text-sm font-semibold"
+                    style={{ color: "var(--pdp-fg)" }}
+                  >
+                    Specs
+                  </h2>
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 transition-transform duration-300 ${
+                      specsOpen ? "rotate-180" : ""
+                    }`}
+                    style={{ color: "var(--pdp-muted)" }}
+                    aria-hidden
+                  />
+                </button>
+                <AnimatePresence initial={false}>
+                  {specsOpen ? (
+                    <motion.div
+                      key="specs"
+                      initial={quietMotion ? false : { height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={
+                        quietMotion ? undefined : { height: 0, opacity: 0 }
+                      }
+                      transition={
+                        quietMotion
+                          ? { duration: 0 }
+                          : { duration: 0.28, ease: EASE }
+                      }
+                      className="overflow-hidden"
                     >
-                      <dt
-                        className="truncate"
-                        style={{ color: "var(--pdp-muted)" }}
-                        title={s.label}
+                      <dl
+                        className="mt-3 max-h-[18rem] overflow-y-auto border sm:max-h-[28rem]"
+                        style={{ borderColor: "var(--pdp-border)" }}
                       >
-                        {s.label}
-                      </dt>
-                      <dd
-                        className="truncate font-medium"
-                        style={{ color: "var(--pdp-fg)" }}
-                        title={s.value}
-                      >
-                        {s.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+                        {specs.map((s) => (
+                          <div
+                            key={`${s.label}-${s.value}`}
+                            className="grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-2 border-b px-2.5 py-2 text-sm last:border-b-0 sm:gap-3 sm:px-3"
+                            style={{ borderColor: "var(--pdp-border)" }}
+                          >
+                            <dt
+                              className="truncate"
+                              style={{ color: "var(--pdp-muted)" }}
+                              title={s.label}
+                            >
+                              {s.label}
+                            </dt>
+                            <dd
+                              className="truncate font-medium"
+                              style={{ color: "var(--pdp-fg)" }}
+                              title={s.value}
+                            >
+                              {s.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </div>
             )}
           </Reveal>
@@ -718,20 +773,66 @@ function ProductBuyBoxInner({
 
         {(product.shortDescription || product.description) && (
           <div
-            className="container-gb space-y-6 border-t py-10 sm:py-12"
+            className="container-gb border-t py-8 sm:py-10"
             style={{ borderColor: "var(--pdp-border)" }}
           >
-            {product.shortDescription && (
-              <p className="glass-panel max-w-3xl p-4 text-base leading-relaxed text-[var(--pdp-muted)] sm:p-5">
-                {product.shortDescription}
-              </p>
-            )}
-            {product.description && (
-              <div
-                className="prose-gb glass-panel max-w-3xl p-4 sm:p-5 [&_h1]:text-[var(--pdp-fg)] [&_h2]:text-[var(--pdp-fg)] [&_h3]:text-[var(--pdp-fg)] [&_li]:text-[var(--pdp-muted)] [&_p]:text-[var(--pdp-muted)] [&_strong]:text-[var(--pdp-fg)]"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            )}
+            <div className="glass-panel max-w-3xl overflow-hidden">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left sm:px-5 sm:py-4"
+                aria-expanded={descriptionOpen}
+                onClick={() => setDescriptionOpen((o) => !o)}
+              >
+                <h2
+                  className="text-sm font-semibold sm:text-base"
+                  style={{ color: "var(--pdp-fg)" }}
+                >
+                  Description
+                </h2>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 transition-transform duration-300 ${
+                    descriptionOpen ? "rotate-180" : ""
+                  }`}
+                  style={{ color: "var(--pdp-muted)" }}
+                  aria-hidden
+                />
+              </button>
+              <AnimatePresence initial={false}>
+                {descriptionOpen ? (
+                  <motion.div
+                    key="description"
+                    initial={quietMotion ? false : { height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={quietMotion ? undefined : { height: 0, opacity: 0 }}
+                    transition={
+                      quietMotion
+                        ? { duration: 0 }
+                        : { duration: 0.28, ease: EASE }
+                    }
+                    className="overflow-hidden"
+                  >
+                    <div
+                      className="space-y-4 border-t px-4 pb-4 pt-3 sm:px-5 sm:pb-5"
+                      style={{ borderColor: "var(--pdp-border)" }}
+                    >
+                      {product.shortDescription && (
+                        <p className="text-base leading-relaxed text-[var(--pdp-muted)]">
+                          {product.shortDescription}
+                        </p>
+                      )}
+                      {product.description && (
+                        <div
+                          className="prose-gb [&_h1]:text-[var(--pdp-fg)] [&_h2]:text-[var(--pdp-fg)] [&_h3]:text-[var(--pdp-fg)] [&_li]:text-[var(--pdp-muted)] [&_p]:text-[var(--pdp-muted)] [&_strong]:text-[var(--pdp-fg)]"
+                          dangerouslySetInnerHTML={{
+                            __html: product.description,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
           </div>
         )}
 

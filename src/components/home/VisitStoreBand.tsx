@@ -36,20 +36,26 @@ export function VisitStoreBand({
 
   return (
     <section
-      className="relative isolate overflow-hidden border-t border-[var(--line)] bg-[#060505] text-[var(--footer-fg)]"
+      className="relative isolate overflow-hidden border-t border-[var(--line)] text-[var(--footer-fg)]"
+      style={{
+        backgroundColor: "#060505",
+        backgroundImage:
+          "radial-gradient(ellipse 70% 55% at 78% 28%, rgba(255,226,169,0.22), transparent 55%), radial-gradient(ellipse 60% 50% at 12% 78%, rgba(197,141,93,0.28), transparent 58%), radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255,180,120,0.12), transparent 50%), linear-gradient(165deg, #0a0807 0%, #19130f 48%, #060505 100%)",
+      }}
     >
       <SilkAurora
         aria-hidden
         layout="embed"
-        className="pointer-events-none absolute inset-0 h-full w-full"
+        overlays={false}
+        className="pointer-events-none absolute inset-0 h-full min-h-full w-full"
         baseColor="#060505"
         midColor="#19130f"
         sheenColor="#ffe2a9"
         accentColor="#c58d5d"
         speed={0.75}
         intensity={0.9}
-        grain={0.7}
-        vignette={1.05}
+        grain={0.55}
+        vignette={0.35}
         mouseInfluence={0.55}
         interactive={false}
       />
