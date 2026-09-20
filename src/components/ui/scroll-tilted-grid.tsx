@@ -208,20 +208,28 @@ function GalleryTile({
       }
     >
       {media}
-      {isStage && typeof image.priceValue === "number" ? (
-        <PriceCutTag price={image.priceValue} mrp={image.mrp ?? image.priceValue} />
-      ) : null}
     </div>
   );
 
+  const hasPrice = isStage && typeof image.priceValue === "number";
   const chip =
-    isStage && image.title ? (
-      <figcaption className="mt-2 flex justify-center px-0.5 sm:mt-3 sm:px-1">
-        <span className="glass-chip max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:!rounded-xl sm:px-3.5 sm:py-2">
-          <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
-            {image.title}
+    isStage && (image.title || hasPrice) ? (
+      <figcaption className="mt-2 flex flex-col items-center gap-1.5 px-0.5 sm:mt-3 sm:px-1">
+        {image.title ? (
+          <span className="glass-chip max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:!rounded-xl sm:px-3.5 sm:py-2">
+            <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
+              {image.title}
+            </span>
           </span>
-        </span>
+        ) : null}
+        {hasPrice ? (
+          <PriceCutTag
+            layout="inline"
+            price={image.priceValue!}
+            mrp={image.mrp ?? image.priceValue!}
+            className="justify-center text-[11px] sm:text-sm [&_span]:!text-[11px] sm:[&_span]:!text-sm"
+          />
+        ) : null}
       </figcaption>
     ) : null;
 
@@ -272,20 +280,26 @@ function StageStaticGrid({
               className="max-h-[190px] w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.04] sm:max-h-[280px]"
               loading="lazy"
             />
-            {typeof image.priceValue === "number" ? (
-              <PriceCutTag
-                price={image.priceValue}
-                mrp={image.mrp ?? image.priceValue}
-              />
-            ) : null}
           </div>
-          {image.title ? (
-            <span className="glass-chip mt-2 max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:mt-3 sm:!rounded-xl sm:px-3 sm:py-2">
-              <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
-                {image.title}
-              </span>
-            </span>
-          ) : null}
+          {(image.title || typeof image.priceValue === "number") && (
+            <div className="mt-2 flex flex-col items-center gap-1.5 sm:mt-3">
+              {image.title ? (
+                <span className="glass-chip max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:!rounded-xl sm:px-3 sm:py-2">
+                  <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
+                    {image.title}
+                  </span>
+                </span>
+              ) : null}
+              {typeof image.priceValue === "number" ? (
+                <PriceCutTag
+                  layout="inline"
+                  price={image.priceValue}
+                  mrp={image.mrp ?? image.priceValue}
+                  className="justify-center text-[11px] sm:text-sm"
+                />
+              ) : null}
+            </div>
+          )}
         </Link>
       ))}
     </div>

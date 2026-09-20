@@ -6,10 +6,23 @@ import {
   useReducedMotion,
   useSpring,
 } from "motion/react";
-import { useEffect, useRef, type CSSProperties, type ReactNode, type PointerEvent } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type PointerEvent,
+} from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+const LG_MQ = "(min-width: 1024px)";
 
 type GalleryThumbsProps = {
   gallery: string[];
@@ -26,6 +39,7 @@ export function GalleryThumbs({
 }: GalleryThumbsProps) {
   const reduce = useReducedMotion() ?? false;
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const [vertical, setVertical] = useState(false);
   const scrollTarget = useMotionValue(0);
   const smoothScroll = useSpring(scrollTarget, {
     stiffness: 140,
@@ -34,29 +48,48 @@ export function GalleryThumbs({
   });
 
   useEffect(() => {
-    if (reduce) return;
+    const mq = window.matchMedia(LG_MQ);
+    const sync = () => setVertical(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (reduce || !vertical) return;
     return smoothScroll.on("change", (v) => {
       const el = scrollerRef.current;
       if (el) el.scrollTop = v;
     });
-  }, [smoothScroll, reduce]);
+  }, [smoothScroll, reduce, vertical]);
 
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
     const btn = el.querySelector<HTMLElement>(`[data-thumb="${activeImage}"]`);
     if (!btn) return;
-    const top =
-      btn.offsetTop - el.clientHeight / 2 + btn.offsetHeight / 2;
-    if (reduce) {
-      el.scrollTop = Math.max(0, top);
+
+    if (vertical) {
+      const top =
+        btn.offsetTop - el.clientHeight / 2 + btn.offsetHeight / 2;
+      const clamped = Math.max(
+        0,
+        Math.min(el.scrollHeight - el.clientHeight, top)
+      );
+      if (reduce) el.scrollTop = clamped;
+      else scrollTarget.set(clamped);
     } else {
-      scrollTarget.set(Math.max(0, Math.min(el.scrollHeight - el.clientHeight, top)));
+      const left =
+        btn.offsetLeft - el.clientWidth / 2 + btn.offsetWidth / 2;
+      el.scrollTo({
+        left: Math.max(0, Math.min(el.scrollWidth - el.clientWidth, left)),
+        behavior: reduce ? "auto" : "smooth",
+      });
     }
-  }, [activeImage, reduce, scrollTarget]);
+  }, [activeImage, reduce, scrollTarget, vertical]);
 
   function onPointerMove(e: PointerEvent<HTMLDivElement>) {
-    if (reduce) return;
+    if (reduce || !vertical) return;
     const el = scrollerRef.current;
     if (!el) return;
     const max = el.scrollHeight - el.clientHeight;
@@ -69,40 +102,47 @@ export function GalleryThumbs({
   function scrollBy(dir: -1 | 1) {
     const el = scrollerRef.current;
     if (!el) return;
-    const delta = dir * 88;
-    const next = Math.max(
-      0,
-      Math.min(el.scrollHeight - el.clientHeight, el.scrollTop + delta)
-    );
-    if (reduce) el.scrollTop = next;
-    else scrollTarget.set(next);
+    if (vertical) {
+      const delta = dir * 88;
+      const next = Math.max(
+        0,
+        Math.min(el.scrollHeight - el.clientHeight, el.scrollTop + delta)
+      );
+      if (reduce) el.scrollTop = next;
+      else scrollTarget.set(next);
+    } else {
+      el.scrollBy({ left: dir * 88, behavior: reduce ? "auto" : "smooth" });
+    }
   }
 
   const showChevrons = gallery.length > 4;
 
+  const chevronBtn =
+    "hidden h-8 w-8 shrink-0 items-center justify-center border transition lg:flex";
+  const chevronStyle = {
+    borderColor: "var(--pdp-border)",
+    color: "var(--pdp-muted)",
+  } as CSSProperties;
+
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex w-full flex-row items-center gap-2 lg:w-auto lg:flex-col">
       {showChevrons && (
         <button
           type="button"
           aria-label="Previous images"
           onClick={() => scrollBy(-1)}
-          className="flex h-8 w-8 items-center justify-center border transition"
-          style={
-            {
-              borderColor: "var(--pdp-border)",
-              color: "var(--pdp-muted)",
-            } as CSSProperties
-          }
+          className={chevronBtn}
+          style={chevronStyle}
         >
-          <ChevronUp className="h-4 w-4" />
+          <ChevronUp className="hidden h-4 w-4 lg:block" />
+          <ChevronLeft className="h-4 w-4 lg:hidden" />
         </button>
       )}
 
       <div
         ref={scrollerRef}
         onPointerMove={onPointerMove}
-        className="flex max-h-[min(52vh,28rem)] flex-col gap-2 overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex w-full flex-row gap-2 overflow-x-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:max-h-[min(52vh,28rem)] lg:w-auto lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto"
       >
         {gallery.map((img, idx) => {
           const active = activeImage === idx;
@@ -112,11 +152,10 @@ export function GalleryThumbs({
               type="button"
               data-thumb={idx}
               onClick={() => onSelect(idx)}
-              initial={reduce ? false : { opacity: 0, scale: 0.88, y: 10 }}
+              initial={reduce ? false : { opacity: 0, scale: 0.88 }}
               animate={{
                 opacity: active ? 1 : 0.62,
                 scale: active ? 1.06 : 1,
-                y: 0,
               }}
               transition={
                 reduce
@@ -156,15 +195,11 @@ export function GalleryThumbs({
           type="button"
           aria-label="Next images"
           onClick={() => scrollBy(1)}
-          className="flex h-8 w-8 items-center justify-center border transition"
-          style={
-            {
-              borderColor: "var(--pdp-border)",
-              color: "var(--pdp-muted)",
-            } as CSSProperties
-          }
+          className={chevronBtn}
+          style={chevronStyle}
         >
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="hidden h-4 w-4 lg:block" />
+          <ChevronRight className="h-4 w-4 lg:hidden" />
         </button>
       )}
     </div>

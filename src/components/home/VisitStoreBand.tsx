@@ -35,10 +35,13 @@ export function VisitStoreBand({
   const phoneInfo = phone ? firstPhone(phone) : null;
 
   return (
-    <section className="relative isolate overflow-hidden border-t border-[var(--line)] text-[var(--footer-fg)]">
+    <section
+      className="relative isolate overflow-hidden border-t border-[var(--line)] bg-[#060505] text-[var(--footer-fg)]"
+    >
       <SilkAurora
         aria-hidden
-        className="pointer-events-none absolute inset-0 !min-h-full h-full w-full min-h-0"
+        layout="embed"
+        className="pointer-events-none absolute inset-0 h-full w-full"
         baseColor="#060505"
         midColor="#19130f"
         sheenColor="#ffe2a9"

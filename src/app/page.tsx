@@ -241,13 +241,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="relative isolate overflow-hidden border-t border-[var(--line)] bg-[var(--bestsellers-band)]">
-        {/* Soft stage wash — keeps the band from reading as a flat slab */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120%_80%_at_50%_0%,color-mix(in_oklab,var(--accent)_8%,transparent)_0%,transparent_55%)]"
-        />
-        <div className="container-gb section-gb relative">
+      <section className="bestsellers-stage relative isolate overflow-hidden border-t border-[var(--line)] bg-black text-[var(--footer-fg)]">
+        <div className="container-gb section-gb relative z-10">
           <Reveal>
             <SectionHeader
               title={settings.homeBestsellersTitle || "Best Sellers"}
@@ -298,7 +293,7 @@ export default async function HomePage() {
         address={settings.address}
         phone={settings.phone}
         hours={settings.storeHours}
-        image={settings.heroImage}
+        image="/home/visit-store.jpg"
       />
 
       {posts.length > 0 && (

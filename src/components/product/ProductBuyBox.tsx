@@ -250,29 +250,58 @@ function ProductBuyBoxInner({
         <div className="container-gb pt-4 sm:pt-6">
           <nav
             aria-label="Breadcrumb"
-            className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-[var(--fg-muted)] sm:text-sm"
+            className="flex min-w-0 items-center gap-1.5 overflow-hidden text-xs text-[var(--fg-muted)] sm:text-sm"
           >
-            <Link href="/" className="hover:text-[var(--fg)]">
+            <Link href="/" className="shrink-0 hover:text-[var(--fg)]">
               Home
             </Link>
-            {trail.map((c) => (
-              <span key={c.slug} className="contents">
-                <span aria-hidden>/</span>
-                <Link
-                  href={`/collections/${c.slug}`}
-                  className="hover:text-[var(--fg)]"
+            {trail.length > 2 ? (
+              <>
+                <span aria-hidden className="shrink-0 sm:hidden">
+                  /
+                </span>
+                <span className="shrink-0 sm:hidden" aria-hidden>
+                  …
+                </span>
+              </>
+            ) : null}
+            {trail.map((c, i) => {
+              const isLast = i === trail.length - 1;
+              const showOnMobile = isLast || trail.length <= 2;
+              return (
+                <span
+                  key={c.slug}
+                  className={`min-w-0 items-center gap-1.5 ${
+                    showOnMobile ? "inline-flex" : "hidden sm:inline-flex"
+                  }`}
                 >
-                  {c.name}
-                </Link>
-              </span>
-            ))}
-            <span aria-hidden>/</span>
-            <span className="line-clamp-1 text-[var(--fg)]">{product.title}</span>
+                  <span aria-hidden className="shrink-0">
+                    /
+                  </span>
+                  <Link
+                    href={`/collections/${c.slug}`}
+                    className="min-w-0 max-w-[32vw] truncate hover:text-[var(--fg)] sm:max-w-[12rem]"
+                    title={c.name}
+                  >
+                    {c.name}
+                  </Link>
+                </span>
+              );
+            })}
+            <span aria-hidden className="shrink-0">
+              /
+            </span>
+            <span
+              className="min-w-0 flex-1 truncate font-medium text-[var(--fg)]"
+              title={product.title}
+            >
+              {product.title}
+            </span>
           </nav>
         </div>
 
-        <div className="container-gb grid grid-cols-[64px_minmax(0,1fr)] gap-3 py-5 sm:gap-4 sm:py-8 lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(300px,400px)] lg:items-start lg:gap-6 xl:grid-cols-[80px_minmax(0,1.15fr)_minmax(340px,420px)]">
-          <Reveal delay={0.04} className="min-h-0">
+        <div className="container-gb grid grid-cols-1 gap-3 py-4 sm:gap-4 sm:py-8 lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(300px,400px)] lg:items-start lg:gap-6 xl:grid-cols-[80px_minmax(0,1.15fr)_minmax(340px,420px)]">
+          <Reveal delay={0.04} className="order-2 min-h-0 lg:order-1">
             <GalleryThumbs
               gallery={gallery}
               activeImage={activeImage}
@@ -283,7 +312,7 @@ function ProductBuyBoxInner({
             />
           </Reveal>
 
-          <Reveal delay={0.08} className="min-w-0">
+          <Reveal delay={0.08} className="order-1 min-w-0 lg:order-2">
             <div className="glass-panel-strong relative overflow-hidden">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -312,18 +341,26 @@ function ProductBuyBoxInner({
             </div>
           </Reveal>
 
-          <Reveal delay={0.12} className="glass-panel-strong col-span-2 min-w-0 p-4 pb-28 sm:p-5 lg:col-span-1 lg:pb-5">
+          <Reveal delay={0.12} className="glass-panel-strong order-3 min-w-0 p-3.5 pb-28 sm:p-5 lg:col-span-1 lg:order-3 lg:pb-5">
             {product.brand?.name && (
               <Link
                 href={`/brands/${product.brand.slug}`}
-                className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]"
+                className="inline-block max-w-full truncate text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]"
+                title={product.brand.name}
               >
                 {product.brand.name}
               </Link>
             )}
             <h1
-              className="mt-1.5 text-xl font-semibold leading-snug sm:text-2xl"
+              className="mt-1.5 line-clamp-3 text-lg font-semibold leading-snug sm:line-clamp-none sm:text-2xl"
               style={{ color: "var(--pdp-fg)" }}
+              title={
+                selected || variant.name !== "Standard"
+                  ? `${product.title}${selected ? ` - ${selected.name}` : ""}${
+                      variant.name !== "Standard" ? ` / ${variant.name}` : ""
+                    }`
+                  : product.title
+              }
             >
               {product.title}
               {selected ? ` - ${selected.name}` : ""}
@@ -335,7 +372,7 @@ function ProductBuyBoxInner({
               <span className="opacity-80">({product.ratingCount || 0})</span>
             </p>
 
-            <div className="mt-4">
+            <div className="mt-3.5 sm:mt-4">
               <PriceCutTag
                 layout="inline"
                 price={variant.price}
@@ -344,7 +381,7 @@ function ProductBuyBoxInner({
             </div>
 
             <div
-              className="mt-4 border px-3.5 py-3 text-sm"
+              className="mt-3.5 border px-3 py-2.5 text-sm sm:mt-4 sm:px-3.5 sm:py-3"
               style={{
                 borderColor:
                   "color-mix(in oklab, var(--accent) 35%, transparent)",
@@ -360,7 +397,11 @@ function ProductBuyBoxInner({
               </p>
             </div>
 
-            <p className="mt-4 text-xs" style={{ color: "var(--pdp-muted)" }}>
+            <p
+              className="mt-3 truncate text-xs sm:mt-4"
+              style={{ color: "var(--pdp-muted)" }}
+              title={variant.sku}
+            >
               SKU:{" "}
               <span className="font-medium" style={{ color: "var(--pdp-fg)" }}>
                 {variant.sku}
@@ -368,77 +409,166 @@ function ProductBuyBoxInner({
             </p>
 
             {colors.length > 0 && (
-              <div className="mt-5">
-                <p className="mb-2 text-sm" style={{ color: "var(--pdp-fg)" }}>
-                  Color:{" "}
-                  <span className="font-medium">
+              <div className="mt-4 sm:mt-5">
+                <p
+                  className="mb-2 flex min-w-0 items-baseline gap-1.5 text-sm"
+                  style={{ color: "var(--pdp-fg)" }}
+                >
+                  <span className="shrink-0">Color:</span>
+                  <span className="min-w-0 truncate font-medium" title={selected?.name || "Select"}>
                     {selected?.name || "Select"}
                   </span>
                 </p>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {colors.map((c, i) => {
-                    const active = selectedColor === i;
-                    return (
-                      <motion.button
-                        key={`${c.name}-${i}`}
-                        type="button"
-                        title={c.name}
-                        aria-label={c.name}
-                        aria-pressed={active}
-                        onClick={() => selectColor(i)}
-                        initial={false}
-                        animate={{
-                          scale: active ? 1.12 : 1,
-                        }}
-                        whileHover={reduce ? undefined : { scale: active ? 1.14 : 1.06 }}
-                        transition={{ duration: 0.28, ease: EASE }}
-                        className={`h-9 w-9 rounded-full border-2 transition ${
-                          active
-                            ? "border-[var(--pdp-fg)] shadow-[0_4px_14px_color-mix(in_oklab,var(--pdp-fg)_22%,transparent)]"
-                            : "border-transparent ring-1 ring-[color-mix(in_oklab,var(--pdp-fg)_25%,transparent)]"
-                        }`}
-                        style={{ backgroundColor: c.swatch || "#888" }}
-                      />
-                    );
-                  })}
-                </div>
+                {colors.some((c) => c.name.length > 22) || colors.length > 6 ? (
+                  <select
+                    className="input w-full text-sm"
+                    value={selectedColor ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "") {
+                        setSelectedColor(null);
+                        setActiveImage(0);
+                      } else {
+                        selectColor(Number(v));
+                      }
+                    }}
+                    style={{
+                      borderColor: "var(--pdp-border)",
+                      backgroundColor:
+                        "color-mix(in oklab, var(--pdp-fg) 4%, transparent)",
+                      color: "var(--pdp-fg)",
+                    }}
+                    aria-label="Choose color"
+                  >
+                    <option value="">Select color</option>
+                    {colors.map((c, i) => (
+                      <option key={`${c.name}-${i}`} value={i}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {colors.map((c, i) => {
+                      const active = selectedColor === i;
+                      return (
+                        <motion.button
+                          key={`${c.name}-${i}`}
+                          type="button"
+                          title={c.name}
+                          aria-label={c.name}
+                          aria-pressed={active}
+                          onClick={() => selectColor(i)}
+                          initial={false}
+                          animate={{
+                            scale: active ? 1.12 : 1,
+                          }}
+                          whileHover={
+                            reduce
+                              ? undefined
+                              : { scale: active ? 1.14 : 1.06 }
+                          }
+                          transition={{ duration: 0.28, ease: EASE }}
+                          className={`h-9 w-9 rounded-full border-2 transition ${
+                            active
+                              ? "border-[var(--pdp-fg)] shadow-[0_4px_14px_color-mix(in_oklab,var(--pdp-fg)_22%,transparent)]"
+                              : "border-transparent ring-1 ring-[color-mix(in_oklab,var(--pdp-fg)_25%,transparent)]"
+                          }`}
+                          style={{ backgroundColor: c.swatch || "#888" }}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
             {variants.length > 1 && (
-              <div className="mt-5">
-                <p className="mb-2 text-sm" style={{ color: "var(--pdp-fg)" }}>
-                  Option: <span className="font-medium">{variant.name}</span>
+              <div className="mt-4 sm:mt-5">
+                <p
+                  className="mb-2 flex min-w-0 items-baseline gap-1.5 text-sm"
+                  style={{ color: "var(--pdp-fg)" }}
+                >
+                  <span className="shrink-0">Option:</span>
+                  <span className="min-w-0 truncate font-medium" title={variant.name}>
+                    {variant.name}
+                  </span>
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {variants.map((v, i) => (
-                    <button
-                      key={v.sku}
-                      type="button"
-                      onClick={() => setVariantIdx(i)}
-                      className="min-h-10 border px-3.5 py-1.5 text-sm transition"
+                {/* Native select on phone / when labels are long; pill row on desktop when short */}
+                <div className="sm:hidden">
+                  <select
+                    className="input w-full text-sm"
+                    value={variantIdx}
+                    onChange={(e) => setVariantIdx(Number(e.target.value))}
+                    style={{
+                      borderColor: "var(--pdp-border)",
+                      backgroundColor:
+                        "color-mix(in oklab, var(--pdp-fg) 4%, transparent)",
+                      color: "var(--pdp-fg)",
+                    }}
+                    aria-label="Choose option"
+                  >
+                    {variants.map((v, i) => (
+                      <option key={v.sku} value={i}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="hidden sm:block">
+                  {variants.some((v) => v.name.length > 24) ||
+                  variants.length > 5 ? (
+                    <select
+                      className="input w-full text-sm"
+                      value={variantIdx}
+                      onChange={(e) => setVariantIdx(Number(e.target.value))}
                       style={{
-                        borderColor:
-                          i === variantIdx
-                            ? "var(--pdp-fg)"
-                            : "var(--pdp-border)",
+                        borderColor: "var(--pdp-border)",
                         backgroundColor:
-                          i === variantIdx
-                            ? "color-mix(in oklab, var(--pdp-fg) 8%, transparent)"
-                            : "transparent",
+                          "color-mix(in oklab, var(--pdp-fg) 4%, transparent)",
                         color: "var(--pdp-fg)",
-                        fontWeight: i === variantIdx ? 600 : 400,
                       }}
+                      aria-label="Choose option"
                     >
-                      {v.name}
-                    </button>
-                  ))}
+                      {variants.map((v, i) => (
+                        <option key={v.sku} value={i}>
+                          {v.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {variants.map((v, i) => (
+                        <button
+                          key={v.sku}
+                          type="button"
+                          onClick={() => setVariantIdx(i)}
+                          className="min-h-10 max-w-full truncate border px-3.5 py-1.5 text-sm transition"
+                          title={v.name}
+                          style={{
+                            borderColor:
+                              i === variantIdx
+                                ? "var(--pdp-fg)"
+                                : "var(--pdp-border)",
+                            backgroundColor:
+                              i === variantIdx
+                                ? "color-mix(in oklab, var(--pdp-fg) 8%, transparent)"
+                                : "transparent",
+                            color: "var(--pdp-fg)",
+                            fontWeight: i === variantIdx ? 600 : 400,
+                          }}
+                        >
+                          {v.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             <div
-              className="mt-6 space-y-3 border-t pt-5"
+              className="mt-5 space-y-3 border-t pt-4 sm:mt-6 sm:pt-5"
               style={{ borderColor: "var(--pdp-border)" }}
             >
               <p
@@ -452,7 +582,8 @@ function ProductBuyBoxInner({
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
-                  placeholder="Enter pincode for delivery estimate"
+                  placeholder="Enter pincode"
+                  aria-label="Enter pincode for delivery estimate"
                   value={pincode}
                   onChange={(e) => {
                     setPincode(e.target.value.replace(/\D/g, "").slice(0, 6));
@@ -468,7 +599,7 @@ function ProductBuyBoxInner({
                 />
                 <button
                   type="button"
-                  className="btn btn-ghost shrink-0 bg-transparent px-4 text-xs font-semibold uppercase tracking-wide"
+                  className="btn btn-ghost shrink-0 bg-transparent px-3.5 text-xs font-semibold uppercase tracking-wide sm:px-4"
                   style={{
                     borderColor: "var(--pdp-border)",
                     color: "var(--pdp-fg)",
@@ -480,7 +611,7 @@ function ProductBuyBoxInner({
               </div>
               {deliveryMsg && (
                 <p
-                  className={`flex items-center gap-2 text-sm ${
+                  className={`flex items-start gap-2 text-sm leading-snug ${
                     deliveryMsg.startsWith("Enter")
                       ? "text-red-400"
                       : isDark
@@ -489,9 +620,9 @@ function ProductBuyBoxInner({
                   }`}
                 >
                   {!deliveryMsg.startsWith("Enter") && (
-                    <Truck className="h-4 w-4 shrink-0" />
+                    <Truck className="mt-0.5 h-4 w-4 shrink-0" />
                   )}
-                  {deliveryMsg}
+                  <span className="min-w-0">{deliveryMsg}</span>
                 </p>
               )}
               {!deliveryMsg && (
@@ -544,7 +675,7 @@ function ProductBuyBoxInner({
 
             {!!specs.length && (
               <div
-                className="mt-6 border-t pt-5"
+                className="mt-5 border-t pt-4 sm:mt-6 sm:pt-5"
                 style={{ borderColor: "var(--pdp-border)" }}
               >
                 <h2
@@ -554,19 +685,26 @@ function ProductBuyBoxInner({
                   Specs
                 </h2>
                 <dl
-                  className="mt-3 max-h-[28rem] overflow-y-auto border"
+                  className="mt-3 max-h-[18rem] overflow-y-auto border sm:max-h-[28rem]"
                   style={{ borderColor: "var(--pdp-border)" }}
                 >
                   {specs.map((s) => (
                     <div
                       key={`${s.label}-${s.value}`}
-                      className="grid grid-cols-2 gap-3 border-b px-3 py-2 text-sm last:border-b-0"
+                      className="grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-2 border-b px-2.5 py-2 text-sm last:border-b-0 sm:gap-3 sm:px-3"
                       style={{ borderColor: "var(--pdp-border)" }}
                     >
-                      <dt style={{ color: "var(--pdp-muted)" }}>{s.label}</dt>
+                      <dt
+                        className="truncate"
+                        style={{ color: "var(--pdp-muted)" }}
+                        title={s.label}
+                      >
+                        {s.label}
+                      </dt>
                       <dd
-                        className="font-medium"
+                        className="truncate font-medium"
                         style={{ color: "var(--pdp-fg)" }}
+                        title={s.value}
                       >
                         {s.value}
                       </dd>
@@ -600,40 +738,41 @@ function ProductBuyBoxInner({
         {children}
       </div>
 
-      <div className="glass-bar fixed inset-x-0 bottom-[calc(4.5rem+var(--safe-bottom))] z-40 px-3 py-2.5 lg:bottom-0 lg:px-6">
-        <div className="mx-auto flex max-w-6xl items-center gap-3">
-          <div className="hidden min-w-0 items-center gap-3 sm:flex">
+      <div className="glass-bar fixed inset-x-0 bottom-[calc(4.5rem+var(--safe-bottom))] z-40 px-3 py-2 lg:bottom-0 lg:px-6 lg:py-2.5">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
             <ThemedImg
               src={image}
               alt=""
               fillHex={fillHex}
-              className="h-11 w-11 shrink-0 border object-contain"
+              className="h-9 w-9 shrink-0 border object-contain sm:h-11 sm:w-11"
               style={{
                 borderColor: "var(--pdp-border)",
                 backgroundColor: "var(--pdp-panel)",
               }}
             />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <p
-                className="truncate text-sm font-medium"
+                className="truncate text-[11px] font-medium leading-tight sm:text-sm"
                 style={{ color: "var(--pdp-fg)" }}
+                title={product.title}
               >
                 {product.title}
               </p>
-              <p className="text-sm font-semibold text-[var(--price)]">
+              <p className="text-sm font-semibold tabular-nums text-[var(--price)]">
                 {formatINR(variant.price)}
               </p>
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <div
-              className="hidden items-center border sm:flex"
+              className="flex items-center border"
               style={{ borderColor: "var(--pdp-border)" }}
             >
               <button
                 type="button"
-                className="px-2.5 py-2 text-sm"
+                className="px-2 py-2 text-sm"
                 style={{ color: "var(--pdp-muted)" }}
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
                 aria-label="Decrease quantity"
@@ -641,14 +780,14 @@ function ProductBuyBoxInner({
                 <Minus className="h-3.5 w-3.5" />
               </button>
               <span
-                className="min-w-[1.5rem] text-center text-sm font-medium"
+                className="min-w-[1.25rem] text-center text-sm font-medium"
                 style={{ color: "var(--pdp-fg)" }}
               >
                 {qty}
               </span>
               <button
                 type="button"
-                className="px-2.5 py-2 text-sm"
+                className="px-2 py-2 text-sm"
                 style={{ color: "var(--pdp-muted)" }}
                 onClick={() =>
                   setQty((q) => Math.min(variant.stock || 99, q + 1))
@@ -660,7 +799,7 @@ function ProductBuyBoxInner({
             </div>
             <button
               type="button"
-              className="btn btn-ghost shrink-0 bg-transparent px-3 lg:hidden"
+              className="btn btn-ghost h-10 min-h-0 shrink-0 bg-transparent px-2.5 lg:!hidden"
               style={{
                 borderColor: "var(--pdp-border)",
                 color: "var(--pdp-fg)",
@@ -672,14 +811,15 @@ function ProductBuyBoxInner({
             </button>
             <button
               type="button"
-              className="btn btn-primary shrink-0 whitespace-nowrap px-4 sm:px-6"
+              className="btn btn-primary h-10 min-h-0 shrink-0 whitespace-nowrap px-3 text-sm sm:px-5"
               onClick={addToCart}
             >
-              Add to cart
+              Add
+              <span className="hidden sm:inline"> to cart</span>
             </button>
             <button
               type="button"
-              className="btn btn-ghost hidden shrink-0 whitespace-nowrap border-2 bg-transparent px-4 sm:inline-flex"
+              className="btn btn-ghost !hidden h-10 min-h-0 shrink-0 whitespace-nowrap border-2 bg-transparent px-4 sm:!inline-flex"
               style={{
                 borderColor: "var(--pdp-fg)",
                 color: "var(--pdp-fg)",

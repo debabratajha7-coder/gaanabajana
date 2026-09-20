@@ -148,6 +148,8 @@ export interface SilkAuroraProps extends React.HTMLAttributes<HTMLDivElement> {
   vignette?: number;
   mouseInfluence?: number;
   interactive?: boolean;
+  /** hero = full-viewport; embed = fill parent (VisitStore band) */
+  layout?: "hero" | "embed";
   children?: React.ReactNode;
 }
 
@@ -168,6 +170,7 @@ export function SilkAurora({
   vignette = 1,
   mouseInfluence = 1,
   interactive = true,
+  layout = "hero",
   className,
   children,
   style,
@@ -178,6 +181,17 @@ export function SilkAurora({
   const mouseRef = React.useRef({ x: 0.5, y: 0.5 });
   const targetMouseRef = React.useRef({ x: 0.5, y: 0.5 });
   const [hasWebGLError, setHasWebGLError] = React.useState(false);
+  const isEmbed = layout === "embed";
+  const [preferStatic, setPreferStatic] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isEmbed) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setPreferStatic(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [isEmbed]);
 
   const settings = React.useMemo(
     () => ({
@@ -346,6 +360,10 @@ export function SilkAurora({
       const resize = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const { width, height } = container.getBoundingClientRect();
+        if (width < 2 || height < 2) {
+          requestAnimationFrame(resize);
+          return;
+        }
         canvas.width = Math.max(1, Math.floor(width * dpr));
         canvas.height = Math.max(1, Math.floor(height * dpr));
         gl.viewport(0, 0, canvas.width, canvas.height);
@@ -413,12 +431,32 @@ export function SilkAurora({
     }
   }, [hasWebGLError, settings]);
 
-  const fallbackContent = (
+  const shellClass = cn(
+    "relative w-full overflow-hidden bg-[#060505] text-white",
+    isEmbed
+      ? "h-full min-h-0"
+      : "flex min-h-screen items-center",
+    className,
+  );
+
+  const silentEmbedFallback = (
     <div
-      className={cn(
-        "relative flex min-h-screen w-full items-center overflow-hidden bg-[#050507] text-white",
-        className,
-      )}
+      className={shellClass}
+      style={{
+        containerType: "size",
+        background:
+          "radial-gradient(circle at 72% 34%, rgba(255,226,169,0.14), transparent 28%), radial-gradient(circle at 18% 74%, rgba(197,141,93,0.2), transparent 36%), linear-gradient(160deg, #060505 0%, #19130f 55%, #0a0807 100%)",
+        ...style,
+      }}
+      {...props}
+    />
+  );
+
+  const fallbackContent = isEmbed ? (
+    silentEmbedFallback
+  ) : (
+    <div
+      className={shellClass}
       style={{ containerType: "size", ...style }}
       {...props}
     >
@@ -448,14 +486,16 @@ export function SilkAurora({
     return fallbackContent;
   }
 
+  // Prefer static wash when reduced motion + embed (no GL cost on phones)
+  if (isEmbed && preferStatic) {
+    return silentEmbedFallback;
+  }
+
   return (
     <WebGLErrorBoundary fallback={fallbackContent}>
       <div
         ref={containerRef}
-        className={cn(
-          "relative flex min-h-screen w-full items-center overflow-hidden bg-[#050507] text-white",
-          className,
-        )}
+        className={shellClass}
         style={{ containerType: "size", ...style }}
         {...props}
       >

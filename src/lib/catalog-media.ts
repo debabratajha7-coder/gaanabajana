@@ -7,7 +7,7 @@ export const CATEGORY_IMAGES: Record<string, string> = {
   "keyboards-pianos":
     "https://images.unsplash.com/photo-1552422535-c45813c61732?auto=format&fit=crop&w=1200&q=80",
   "studio-recording":
-    "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1200&q=80",
+    "/home/home-studio.jpg",
   "drums-percussion":
     "https://images.unsplash.com/photo-1571327073757-71d13c24de30?auto=format&fit=crop&w=1200&q=80",
   "software-plugins":

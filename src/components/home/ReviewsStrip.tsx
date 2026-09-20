@@ -106,7 +106,7 @@ export function ReviewsStrip({
               spread={items.length <= 3 ? 108 : 96}
               lift={34}
               href={reviewsUrl || undefined}
-              className="min-h-[340px] overflow-visible p-1 sm:min-h-[360px] sm:p-2"
+              className="min-h-[380px] overflow-visible p-1 sm:min-h-[360px] sm:p-2"
             />
           </div>
         </Reveal>

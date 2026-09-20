@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { themedProductImage } from "@/lib/product-image";
 import type { ProductCardData } from "@/components/product/ProductCard";
 import { usePdpThemeOptional } from "@/components/product/PdpTheme";
@@ -12,11 +13,11 @@ type Tab = { id: string; label: string; href: string };
 const MAX_PER_TAB = 6;
 
 function readBestsellersFill() {
-  if (typeof document === "undefined") return "E3D9CB";
+  if (typeof document === "undefined") return "000000";
   const raw = getComputedStyle(document.documentElement)
     .getPropertyValue("--bestsellers-band-fill")
     .trim();
-  return raw || "E3D9CB";
+  return raw || "000000";
 }
 
 export function BestsellerTabs({
@@ -29,7 +30,9 @@ export function BestsellerTabs({
   const first = tabs[0]?.id || "all";
   const [active, setActive] = useState(first);
   const theme = usePdpThemeOptional();
-  const [bandFill, setBandFill] = useState("E3D9CB");
+  const [bandFill, setBandFill] = useState("000000");
+  const listRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
     const sync = () => setBandFill(readBestsellersFill());
@@ -44,9 +47,9 @@ export function BestsellerTabs({
 
   const fillHex =
     theme?.theme === "dark"
-      ? "1C1712"
+      ? "000000"
       : theme?.theme === "light"
-        ? "E3D9CB"
+        ? "000000"
         : bandFill;
 
   const items = useMemo(() => {
@@ -55,6 +58,19 @@ export function BestsellerTabs({
   }, [productsByTab, active, first]);
 
   const activeTab = tabs.find((t) => t.id === active) || tabs[0];
+
+  useEffect(() => {
+    const root = listRef.current;
+    if (!root) return;
+    const btn = root.querySelector<HTMLElement>(`[data-tab="${active}"]`);
+    if (!btn) return;
+    setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth });
+    btn.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }, [active, tabs]);
 
   const images = useMemo(
     () =>
@@ -76,34 +92,52 @@ export function BestsellerTabs({
 
   return (
     <div>
-      <div className="mb-5 flex items-center gap-2 sm:mb-8 sm:gap-3">
-        <div className="min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max items-center gap-1.5 px-0.5 sm:gap-2">
-            {tabs.map((t) => {
-              const on = active === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setActive(t.id)}
-                  className={`glass-chip shrink-0 whitespace-nowrap !rounded-full px-3 py-1.5 text-[12px] font-semibold transition sm:px-3.5 sm:py-2 sm:text-[13px] ${
-                    on
-                      ? "!border-[color-mix(in_oklab,var(--accent)_45%,var(--line))] !bg-[color-mix(in_oklab,var(--accent)_12%,var(--glass))] text-[var(--accent)]"
-                      : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
+      <div className="mb-6 flex items-end gap-4 sm:mb-8">
+        <div className="min-w-0 flex-1">
+          <div
+            ref={listRef}
+            className="relative overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div
+              role="tablist"
+              aria-label="Bestsellers categories"
+              className="relative flex w-max items-stretch gap-0 border-b border-[color-mix(in_oklab,var(--fg)_14%,transparent)]"
+            >
+              {tabs.map((t) => {
+                const on = active === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    data-tab={t.id}
+                    onClick={() => setActive(t.id)}
+                    className={`relative shrink-0 px-3.5 pb-2.5 pt-1 text-[13px] font-semibold tracking-[-0.01em] transition-colors sm:px-4 sm:text-[14px] ${
+                      on
+                        ? "text-[var(--fg)]"
+                        : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-[var(--accent)] transition-[left,width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                style={{ left: indicator.left, width: indicator.width }}
+              />
+            </div>
           </div>
         </div>
         {activeTab && (
           <Link
             href={activeTab.href}
-            className="glass-chip shrink-0 whitespace-nowrap !rounded-full px-2.5 py-1.5 text-[12px] font-medium text-[var(--fg-muted)] underline-offset-2 hover:text-[var(--accent)] hover:underline sm:px-3 sm:py-2 sm:text-[13px]"
+            className="mb-2 inline-flex shrink-0 items-center gap-1 text-[12px] font-semibold tracking-wide text-[var(--fg-muted)] transition hover:text-[var(--accent)] sm:text-[13px]"
           >
             View all
+            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
           </Link>
         )}
       </div>

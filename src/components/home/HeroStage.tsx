@@ -83,21 +83,23 @@ export function HeroStage({
 
   return (
     <section ref={ref} data-hero-stage className="relative md:min-h-[88vh]">
-      {/* Phone: fuller-bleed image with overlay copy */}
-      <div className="relative overflow-hidden md:hidden">
-        <div className="relative min-h-[78vh]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={image}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
+      {/* Phone: image fits (shrinks) without crop; copy sits on the gradient foot */}
+      <div className="relative overflow-hidden bg-black md:hidden">
+        <div className="relative flex min-h-[78vh] flex-col">
+          <div className="relative flex min-h-[44vh] flex-1 items-center justify-center px-3 pt-20">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image}
+              alt=""
+              className="max-h-[min(52vh,28rem)] w-full object-contain object-center"
+            />
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/75 to-transparent" />
           <motion.div
             initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease }}
-            className="relative flex min-h-[78vh] flex-col justify-end px-5 pb-10 pt-24"
+            className="relative z-[1] flex flex-col justify-end px-5 pb-10 pt-4"
           >
             <p
               className="display text-[clamp(2.15rem,10vw,3.1rem)] leading-[0.9] tracking-[-0.04em] text-white [text-shadow:0_2px_20px_rgba(0,0,0,0.5)]"

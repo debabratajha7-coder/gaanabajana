@@ -124,7 +124,7 @@ const IMAGES = [
   "https://images.unsplash.com/photo-1510915361894-db8b50135cf0?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1556449895-a33c06b37117?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1519892306165-0729e2e0d1a8?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80",
+  "/home/home-studio.jpg",
   "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=800&q=80",
 ];

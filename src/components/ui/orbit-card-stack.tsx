@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type FocusEvent,
   type MouseEvent,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -211,28 +212,48 @@ export function OrbitCardStack({
   const restingIndex = inRange(defaultActiveIndex, cards.length);
   const [activeIndex, setActiveIndex] = useState(restingIndex);
   const [open, setOpen] = useState(false);
+  const [narrow, setNarrow] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const midpoint = (cards.length - 1) / 2;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  const spreadPx = narrow
+    ? Math.min(spread, Math.max(44, Math.round(window.innerWidth * 0.12)))
+    : spread;
+  const openScale = narrow ? 0.9 : 0.985;
+  const closedScale = narrow ? 0.94 : 0.97;
+  const liftPx = narrow ? Math.min(lift, 22) : lift;
 
   const layouts = useMemo(
     () =>
       cards.map((_, index) => {
         const orbit = index - midpoint;
         const stack = index - restingIndex;
+        const yMul = narrow ? 0.55 : 1;
+        const rotMul = narrow ? 0.55 : 1;
         return {
           open: {
-            x: orbit * spread,
-            y: Math.abs(orbit) * 30 + Math.max(0, Math.abs(orbit) - 1) * 10,
-            rotation: orbit * 8.5,
+            x: orbit * spreadPx,
+            y:
+              (Math.abs(orbit) * 30 + Math.max(0, Math.abs(orbit) - 1) * 10) *
+              yMul,
+            rotation: orbit * 8.5 * rotMul,
           },
           closed: {
-            x: stack * 10,
-            y: Math.abs(stack) * 5,
-            rotation: stack * 2.8,
+            x: stack * (narrow ? 6 : 10),
+            y: Math.abs(stack) * (narrow ? 3 : 5),
+            rotation: stack * 2.8 * rotMul,
           },
         };
       }),
-    [cards, midpoint, restingIndex, spread]
+    [cards, midpoint, restingIndex, spreadPx, narrow]
   );
 
   const activate = (index: number) => {
@@ -258,7 +279,7 @@ export function OrbitCardStack({
   return (
     <div
       className={cn(
-        "relative flex min-h-full w-full items-center justify-center overflow-hidden p-8",
+        "relative flex min-h-full w-full items-center justify-center overflow-visible px-2 py-4 sm:overflow-hidden sm:p-8",
         className
       )}
     >
@@ -266,7 +287,7 @@ export function OrbitCardStack({
         ref={stageRef}
         className={cn(
           "relative w-full max-w-[980px]",
-          isReview ? "h-[320px] sm:h-[340px]" : "h-[470px]"
+          isReview ? "h-[360px] sm:h-[340px]" : "h-[470px]"
         )}
         onMouseLeave={close}
         onBlur={leaveFocus}
@@ -279,8 +300,10 @@ export function OrbitCardStack({
           const style: CSSProperties = {
             zIndex: active ? 80 : 50 - Math.abs(index - activeIndex),
             transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${
-              position.y - (open && active ? lift : 0)
-            }px)) rotate(${position.rotation}deg) scale(${open ? 0.985 : 0.97})`,
+              position.y - (open && active ? liftPx : 0)
+            }px)) rotate(${position.rotation}deg) scale(${
+              open ? openScale : closedScale
+            })`,
             transitionDuration: reduceMotion ? "0ms" : "380ms",
             transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
           };
@@ -294,7 +317,7 @@ export function OrbitCardStack({
               className={cn(
                 "absolute left-1/2 top-1/2 origin-bottom cursor-pointer outline-none transition-[transform]",
                 isReview
-                  ? "w-[min(72vw,16.5rem)] rounded-[var(--radius-glass)] border border-[var(--line-strong)] bg-[var(--bg-elevated)] p-3 text-[var(--fg)] shadow-[0_18px_40px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.08)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+                  ? "w-[min(68vw,15rem)] rounded-[var(--radius-glass)] border border-[var(--line-strong)] bg-[var(--bg-elevated)] p-3 text-[var(--fg)] shadow-[0_18px_40px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.08)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] sm:w-[min(72vw,16.5rem)]"
                   : "w-[min(78vw,21rem)] rounded-[1.9rem] border border-black/10 bg-[#e9e6df] p-4 text-[#141414] focus-visible:ring-2 focus-visible:ring-zinc-950/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
                 cardClassName
               )}
