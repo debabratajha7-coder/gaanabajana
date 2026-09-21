@@ -7,6 +7,7 @@ import { PdpThemeProvider } from "@/components/product/PdpTheme";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { getLayoutData } from "@/lib/layout-data";
 
 const display = Syne({
@@ -46,7 +47,6 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${display.variable} ${body.variable} ${brand.variable} h-full`}
     >
@@ -61,6 +61,7 @@ export default async function RootLayout({
         <CartProvider>
           <ToastProvider>
             <PdpThemeProvider>
+              <ScrollToTop />
               <Header categories={categories} settings={settings} />
               <main className="flex-1">{children}</main>
               <Footer settings={settings} />

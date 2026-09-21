@@ -34,18 +34,19 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
 
 export function ProductPageSkeleton() {
   return (
-    <div className="fade-in-soft">
+    <div className="fade-in-soft min-h-[100dvh]">
       <div className="container-gb pt-4 sm:pt-6">
         <Skeleton className="h-4 w-64 max-w-full" />
       </div>
-      <div className="container-gb grid gap-6 py-5 sm:gap-8 sm:py-8 lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(300px,400px)] lg:items-start">
-        <div className="hidden flex-col gap-2 lg:flex">
+      <div className="container-gb grid grid-cols-1 gap-3 py-4 sm:gap-4 sm:py-8 lg:grid-cols-[72px_minmax(0,1.1fr)_minmax(300px,400px)] lg:items-start lg:gap-6">
+        {/* Match PDP mobile order: gallery first */}
+        <Skeleton className="order-1 aspect-square w-full lg:order-2" />
+        <div className="order-2 hidden flex-col gap-2 lg:order-1 lg:flex">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-[68px] w-[68px]" />
           ))}
         </div>
-        <Skeleton className="aspect-square w-full" />
-        <div className="space-y-4">
+        <div className="order-3 space-y-4 lg:col-span-1">
           <Skeleton className="h-3 w-20" />
           <Skeleton className="h-8 w-full" />
           <Skeleton className="h-4 w-28" />

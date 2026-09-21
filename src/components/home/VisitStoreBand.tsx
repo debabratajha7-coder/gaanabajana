@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
 import { Reveal } from "@/components/ui/Reveal";
 import { SilkAurora } from "@/components/ui/silk-aurora";
@@ -30,10 +31,20 @@ export function VisitStoreBand({
   hours?: string;
   image?: string;
 }) {
+  /** CSS wash only on phones / coarse pointers — skip WebGL + kinetic for lighter load */
+  const [lite, setLite] = useState(true);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px), (pointer: coarse)");
+    const sync = () => setLite(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   if (!address && !phone) return null;
 
   const phoneInfo = phone ? firstPhone(phone) : null;
-
   return (
     <section
       className="relative isolate overflow-hidden border-t border-[var(--line)] text-[var(--footer-fg)]"
@@ -43,22 +54,24 @@ export function VisitStoreBand({
           "radial-gradient(ellipse 70% 55% at 78% 28%, rgba(255,226,169,0.22), transparent 55%), radial-gradient(ellipse 60% 50% at 12% 78%, rgba(197,141,93,0.28), transparent 58%), radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255,180,120,0.12), transparent 50%), linear-gradient(165deg, #0a0807 0%, #19130f 48%, #060505 100%)",
       }}
     >
-      <SilkAurora
-        aria-hidden
-        layout="embed"
-        overlays={false}
-        className="pointer-events-none absolute inset-0 h-full min-h-full w-full"
-        baseColor="#060505"
-        midColor="#19130f"
-        sheenColor="#ffe2a9"
-        accentColor="#c58d5d"
-        speed={0.75}
-        intensity={0.9}
-        grain={0.55}
-        vignette={0.35}
-        mouseInfluence={0.55}
-        interactive={false}
-      />
+      {!lite ? (
+        <SilkAurora
+          aria-hidden
+          layout="embed"
+          overlays={false}
+          className="pointer-events-none absolute inset-0 h-full min-h-full w-full"
+          baseColor="#060505"
+          midColor="#19130f"
+          sheenColor="#ffe2a9"
+          accentColor="#c58d5d"
+          speed={0.75}
+          intensity={0.9}
+          grain={0.55}
+          vignette={0.35}
+          mouseInfluence={0.55}
+          interactive={false}
+        />
+      ) : null}
       <div className="relative z-10 container-gb section-gb">
         <div className="grid items-stretch gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10">
           <div className="flex flex-col">
@@ -67,24 +80,33 @@ export function VisitStoreBand({
                 Visit our store
               </p>
               <h2 className="display mt-3 max-w-xl text-3xl text-white sm:text-4xl">
-                <KineticTextReveal
-                  text="Come play it. Feel it."
-                  playOnView
-                  splitBy="words"
-                  direction="up"
-                  distance={24}
-                  stagger={0.05}
-                  className="display text-3xl text-white sm:text-4xl"
-                />{" "}
-                <AnnotatedText
-                  variant="circle"
-                  color="text-[#ffe2a9]"
-                  delay={0.55}
-                  duration={0.85}
-                  className="display text-3xl text-white sm:text-4xl"
-                >
-                  Make it yours.
-                </AnnotatedText>
+                {lite ? (
+                  <>
+                    Come play it. Feel it.{" "}
+                    <span className="text-[#ffe2a9]">Make it yours.</span>
+                  </>
+                ) : (
+                  <>
+                    <KineticTextReveal
+                      text="Come play it. Feel it."
+                      playOnView
+                      splitBy="words"
+                      direction="up"
+                      distance={24}
+                      stagger={0.05}
+                      className="display text-3xl text-white sm:text-4xl"
+                    />{" "}
+                    <AnnotatedText
+                      variant="circle"
+                      color="text-[#ffe2a9]"
+                      delay={0.55}
+                      duration={0.85}
+                      className="display text-3xl text-white sm:text-4xl"
+                    >
+                      Make it yours.
+                    </AnnotatedText>
+                  </>
+                )}
               </h2>
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/65 sm:text-base">
                 Visit {storeName} in Siliguri and explore instruments and gear in
@@ -154,7 +176,7 @@ export function VisitStoreBand({
                 ) : null}
                 <Link
                   href="/contact"
-                  className="btn border border-white/25 bg-transparent text-white hover:border-white hover:bg-white/10"
+                  className="btn border border-white/25 bg-transparent text-white hover:bg-white/10 hover:border-white"
                 >
                   Contact
                 </Link>
@@ -170,6 +192,8 @@ export function VisitStoreBand({
                   src={image}
                   alt={`${storeName} store`}
                   className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             </Reveal>

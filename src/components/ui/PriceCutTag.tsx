@@ -71,7 +71,6 @@ export function PriceCutTag({
   const aria = hasDiscount ? `${saleLabel}, was ${mrpLabel}` : saleLabel;
 
   const showSale = !hasDiscount || phase === "sale";
-  const showSlash = hasDiscount && !reduce && (phase === "slash" || phase === "sale");
   const showMrp = hasDiscount && (phase === "mrp" || phase === "slash" || phase === "sale");
   const isInline = layout === "inline";
 
@@ -106,16 +105,6 @@ export function PriceCutTag({
             >
               {mrpLabel}
             </span>
-            <span
-              className="pointer-events-none absolute left-[-6%] right-[-6%] top-1/2 h-[1.5px] bg-[var(--accent)] sm:h-[2px]"
-              style={{
-                transformOrigin: "left center",
-                transform: showSlash
-                  ? "rotate(-14deg) scaleX(1)"
-                  : "rotate(-14deg) scaleX(0)",
-                transition: "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-            />
           </span>
         ) : null}
 

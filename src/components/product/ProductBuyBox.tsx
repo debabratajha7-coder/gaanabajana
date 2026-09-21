@@ -127,6 +127,8 @@ function ProductBuyBoxInner({
   const [deliveryMsg, setDeliveryMsg] = useState<string | null>(null);
   const [specsOpen, setSpecsOpen] = useState(false);
   const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [wished, setWished] = useState(false);
+  const [wishBusy, setWishBusy] = useState(false);
 
   const variant = variants[variantIdx] || {
     name: "Standard",
@@ -161,6 +163,21 @@ function ProductBuyBoxInner({
     buildAmbientPalette([], colors[0]?.swatch)
   );
   const [liteMotion, setLiteMotion] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.user?.wishlist) return;
+        const ids: string[] = data.user.wishlist;
+        setWished(ids.includes(product._id));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [product._id]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px), (pointer: coarse)");
@@ -222,11 +239,15 @@ function ProductBuyBoxInner({
   }
 
   async function toggleWishlist() {
+    if (wishBusy) return;
+    setWishBusy(true);
+    const next = !wished;
     const res = await fetch("/api/account/wishlist", {
-      method: "POST",
+      method: next ? "POST" : "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId: product._id }),
     });
+    setWishBusy(false);
     if (res.status === 401) {
       window.location.href = "/login";
       return;
@@ -235,7 +256,8 @@ function ProductBuyBoxInner({
       toast("Could not update wishlist", "error");
       return;
     }
-    toast("Saved to wishlist");
+    setWished(next);
+    toast(next ? "Saved to wishlist" : "Removed from wishlist");
   }
 
   function checkPincode() {
@@ -688,11 +710,18 @@ function ProductBuyBoxInner({
             </div>
             <button
               type="button"
-              className="mt-3 hidden items-center gap-2 text-sm lg:inline-flex"
-              style={{ color: "var(--pdp-muted)" }}
+              className="mt-3 hidden items-center gap-2 text-sm transition lg:inline-flex"
+              style={{
+                color: wished ? "var(--accent)" : "var(--pdp-muted)",
+              }}
               onClick={toggleWishlist}
+              disabled={wishBusy}
+              aria-pressed={wished}
             >
-              <Heart className="h-4 w-4" /> Save to wishlist
+              <Heart
+                className={`h-4 w-4 ${wished ? "fill-[var(--accent)] text-[var(--accent)]" : ""}`}
+              />
+              {wished ? "Saved to wishlist" : "Save to wishlist"}
             </button>
 
             {!!specs.length && (
@@ -902,13 +931,17 @@ function ProductBuyBoxInner({
               type="button"
               className="btn btn-ghost h-10 min-h-0 shrink-0 bg-transparent px-2.5 lg:!hidden"
               style={{
-                borderColor: "var(--pdp-border)",
-                color: "var(--pdp-fg)",
+                borderColor: wished ? "var(--accent)" : "var(--pdp-border)",
+                color: wished ? "var(--accent)" : "var(--pdp-fg)",
               }}
               onClick={toggleWishlist}
-              aria-label="Wishlist"
+              disabled={wishBusy}
+              aria-label={wished ? "Remove from wishlist" : "Save to wishlist"}
+              aria-pressed={wished}
             >
-              <Heart className="h-4 w-4" />
+              <Heart
+                className={`h-4 w-4 ${wished ? "fill-[var(--accent)] text-[var(--accent)]" : ""}`}
+              />
             </button>
             <button
               type="button"
