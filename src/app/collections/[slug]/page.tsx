@@ -74,16 +74,10 @@ export default async function CollectionPage({
 
   if (!category) {
     return (
-      <div className="container-gb py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Collection not found
-        </h1>
-        <p className="mt-3 text-[var(--fg-muted)]">
-          No category named “{slug}”.
-        </p>
-        <Link href="/" className="btn btn-primary mt-6">
-          Home
-        </Link>
+      <div className="container-gb py-10 sm:py-12">
+        <p className="eyebrow">Collection</p>
+        <h1 className="display mt-2 text-3xl sm:text-4xl">Coming soon</h1>
+        <ComingSoonEmpty categoryName={slug.replace(/-/g, " ")} />
       </div>
     );
   }

@@ -42,7 +42,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { categories, settings } = await getLayoutData();
+  const { categories, settings, shopLinks } = await getLayoutData();
 
   return (
     <html
@@ -64,7 +64,7 @@ export default async function RootLayout({
               <ScrollToTop />
               <Header categories={categories} settings={settings} />
               <main className="flex-1">{children}</main>
-              <Footer settings={settings} />
+              <Footer settings={settings} shopLinks={shopLinks} />
               <MobileBottomNav />
             </PdpThemeProvider>
           </ToastProvider>

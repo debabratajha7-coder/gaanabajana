@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { STORE_NAME, TRADE_NAME } from "@/lib/brand";
+import { FooterShopLinks } from "@/components/layout/FooterShopLinks";
+import { DEFAULT_SHOP_LINKS, type ShopLink } from "@/lib/shop-links";
 
 type Settings = {
   storeName?: string;
@@ -51,7 +53,13 @@ function WhatsAppIcon({ className }: { className?: string }) {
 const socialLinkClass =
   "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color-mix(in_oklab,var(--footer-muted)_35%,transparent)] text-[var(--footer-muted)] transition hover:border-[var(--footer-fg)] hover:text-[var(--footer-fg)]";
 
-export function Footer({ settings }: { settings?: Settings }) {
+export function Footer({
+  settings,
+  shopLinks = DEFAULT_SHOP_LINKS,
+}: {
+  settings?: Settings;
+  shopLinks?: ShopLink[];
+}) {
   const phones = (settings?.phone || "")
     .split(/[,|·•]/)
     .map((p) => p.trim())
@@ -108,26 +116,7 @@ export function Footer({ settings }: { settings?: Settings }) {
 
         <div>
           <p className="eyebrow mb-4">Shop</p>
-          <div className="grid gap-2.5 text-sm">
-            <Link href="/collections/guitars" className="hover:text-[var(--accent)]">
-              Guitars
-            </Link>
-            <Link
-              href="/collections/keyboards-pianos"
-              className="hover:text-[var(--accent)]"
-            >
-              Keyboards
-            </Link>
-            <Link
-              href="/collections/drums-percussion"
-              className="hover:text-[var(--accent)]"
-            >
-              Drums
-            </Link>
-            <Link href="/deals" className="hover:text-[var(--accent)]">
-              Deals
-            </Link>
-          </div>
+          <FooterShopLinks links={shopLinks} />
         </div>
 
         <div>

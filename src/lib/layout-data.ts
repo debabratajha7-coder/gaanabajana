@@ -1,14 +1,76 @@
 import { connectDB } from "@/lib/db";
 import { Category } from "@/models/Category";
+import { Product } from "@/models/Product";
 import { getSiteSettings } from "@/models/SiteSettings";
 import { filterPublicCategories } from "@/lib/public-catalog";
+import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
+import { DEFAULT_SHOP_LINKS, type ShopLink } from "@/lib/shop-links";
+
+async function buildShopLinks(): Promise<ShopLink[]> {
+  const defs = [
+    {
+      label: "Guitars",
+      name: "Guitars",
+      href: "/collections/guitars",
+      slug: "guitars",
+    },
+    {
+      label: "Keyboards",
+      name: "Keyboards",
+      href: "/collections/keyboards-and-pianos",
+      slug: "keyboards-and-pianos",
+    },
+    {
+      label: "Drums",
+      name: "Drums",
+      href: "/collections/drums-and-percussion",
+      slug: "drums-and-percussion",
+    },
+  ] as const;
+
+  const links: ShopLink[] = [];
+  for (const d of defs) {
+    const cat = await Category.findOne({ slug: d.slug, isActive: true })
+      .select("_id name slug parent")
+      .lean();
+    let empty = true;
+    if (cat) {
+      const ids = await resolveCatalogCategoryIds(cat);
+      const count = await Product.countDocuments({
+        isActive: true,
+        categories: { $in: ids },
+      });
+      empty = count === 0;
+    }
+    links.push({
+      label: d.label,
+      name: cat?.name || d.name,
+      href: d.href,
+      empty,
+    });
+  }
+
+  const dealCount = await Product.countDocuments({
+    isActive: true,
+    onSale: true,
+  });
+  links.push({
+    label: "Deals",
+    name: "Deals",
+    href: "/deals",
+    empty: dealCount === 0,
+  });
+
+  return links;
+}
 
 export async function getLayoutData() {
   try {
     await connectDB();
-    const [categories, settings] = await Promise.all([
+    const [categories, settings, shopLinks] = await Promise.all([
       Category.find({ isActive: true }).sort({ sortOrder: 1 }).lean(),
       getSiteSettings(),
+      buildShopLinks(),
     ]);
     const publicCats = filterPublicCategories(
       categories.map((c) => ({
@@ -25,6 +87,7 @@ export async function getLayoutData() {
 
     return {
       categories: categoriesForNav,
+      shopLinks,
       settings: {
         storeName: settings.storeName,
         tagline: settings.tagline,
@@ -49,6 +112,7 @@ export async function getLayoutData() {
   } catch {
     return {
       categories: [],
+      shopLinks: DEFAULT_SHOP_LINKS,
       settings: {
         storeName: "Gaana Bajana",
         tagline: "Musical instruments & audio gear for every stage",
