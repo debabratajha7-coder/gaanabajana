@@ -63,7 +63,7 @@ const STATUS_COPY: Record<string, { title: string; blurb?: string }> = {
 
 function humanizeStatus(status: string) {
   if (status.startsWith("shipping:")) {
-    const label = status.slice("shipping:");
+    const label = status.slice("shipping:".length);
     return {
       title: label.replace(/_/g, " "),
       blurb: "Courier update",
