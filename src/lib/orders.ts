@@ -1,5 +1,9 @@
 import { connectDB } from "@/lib/db";
-import { createShiprocketOrder, isShiprocketConfigured } from "@/lib/shiprocket";
+import {
+  createShiprocketOrder,
+  hasShiprocketOrderId,
+  isShiprocketConfigured,
+} from "@/lib/shiprocket";
 import { sendOrderEmail } from "@/lib/email";
 import { Order } from "@/models/Order";
 import { getSiteSettings } from "@/models/SiteSettings";
@@ -35,7 +39,15 @@ export async function pushOrderToShiprocket(orderNumber: string) {
   await connectDB();
   const order = await Order.findOne({ orderNumber });
   if (!order) throw new Error("Order not found");
-  if (order.shiprocketOrderId) return order;
+
+  // Clear bogus ids from earlier bugs so retry can run
+  if (!hasShiprocketOrderId(order.shiprocketOrderId)) {
+    order.shiprocketOrderId = undefined;
+    order.shiprocketShipmentId = undefined;
+  }
+
+  if (hasShiprocketOrderId(order.shiprocketOrderId)) return order;
+
   if (!isShiprocketConfigured()) {
     order.timeline.push({
       status: "shiprocket_skipped",
@@ -65,7 +77,9 @@ export async function pushOrderToShiprocket(orderNumber: string) {
       orderId: order.orderNumber,
       orderDate: format(new Date(), "yyyy-MM-dd HH:mm"),
       pickupLocation:
-        process.env.SHIPROCKET_PICKUP_LOCATION || settings.pickupLocationName || "Primary",
+        process.env.SHIPROCKET_PICKUP_LOCATION ||
+        settings.pickupLocationName ||
+        "Primary",
       billing: {
         firstName: firstName || "Customer",
         lastName: rest.join(" ") || "",
@@ -100,14 +114,15 @@ export async function pushOrderToShiprocket(orderNumber: string) {
       weight,
     });
 
-    order.shiprocketOrderId = String(result.order_id);
-    order.shiprocketShipmentId = String(result.shipment_id);
+    order.shiprocketOrderId = result.order_id;
+    order.shiprocketShipmentId = result.shipment_id;
     if (result.awb_code) order.awb = result.awb_code;
+    if (result.courier_name) order.courierName = result.courier_name;
     order.status = "processing";
     order.timeline.push({
       status: "shiprocket_created",
       at: new Date(),
-      note: `Shiprocket order ${result.order_id}`,
+      note: `Shiprocket order ${result.order_id} · shipment ${result.shipment_id}`,
     });
     await order.save();
   } catch (err) {
