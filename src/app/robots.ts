@@ -1,10 +1,7 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_APP_URL || "https://gaanabajana.com"
-)
-  .trim()
-  .replace(/\/$/, "");
+const SITE_URL = getSiteUrl();
 
 export default function robots(): MetadataRoute.Robots {
   return {

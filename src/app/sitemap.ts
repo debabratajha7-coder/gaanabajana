@@ -4,14 +4,12 @@ import { Product } from "@/models/Product";
 import { Category } from "@/models/Category";
 import { Brand } from "@/models/Brand";
 import { BlogPost } from "@/models/BlogPost";
+import { getSiteUrl } from "@/lib/site-url";
 
-export const dynamic = "force-dynamic";
+/** Cache for an hour so Google gets a fast, stable response. */
+export const revalidate = 3600;
 
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_APP_URL || "https://gaanabajana.com"
-)
-  .trim()
-  .replace(/\/$/, "");
+const SITE_URL = getSiteUrl();
 
 const POLICY_SLUGS = [
   "shipping",
