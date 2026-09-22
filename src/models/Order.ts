@@ -52,6 +52,9 @@ export interface IOrder {
   shiprocketShipmentId?: string;
   awb?: string;
   trackingUrl?: string;
+  /** Last courier status label from Shiprocket webhook (dedupe emails) */
+  lastTrackingStatus?: string;
+  courierName?: string;
   note?: string;
   timeline: { status: string; at: Date; note?: string }[];
 }
@@ -123,6 +126,8 @@ const OrderSchema = new Schema<IOrder>(
     shiprocketShipmentId: String,
     awb: String,
     trackingUrl: String,
+    lastTrackingStatus: String,
+    courierName: String,
     note: String,
     timeline: [
       {

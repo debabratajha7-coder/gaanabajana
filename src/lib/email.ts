@@ -38,6 +38,76 @@ export async function sendOrderEmail(input: {
   return res.json();
 }
 
+/** Tracking / courier status change notification */
+export async function sendShippingUpdateEmail(input: {
+  to: string;
+  orderNumber: string;
+  statusLabel: string;
+  awb?: string;
+  trackingUrl?: string;
+  courierName?: string;
+  activity?: string;
+  location?: string;
+}) {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM || "Gaanabajana <onboarding@resend.dev>";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://gaanabajana.com";
+  if (!key) {
+    console.log("[shipping email skipped]", {
+      to: input.to,
+      orderNumber: input.orderNumber,
+      status: input.statusLabel,
+    });
+    return { skipped: true };
+  }
+
+  const trackHref = `${appUrl}/track-order`;
+  const details = [
+    input.courierName ? `<li>Courier: <strong>${input.courierName}</strong></li>` : "",
+    input.awb ? `<li>AWB: <strong>${input.awb}</strong></li>` : "",
+    input.activity ? `<li>${input.activity}</li>` : "",
+    input.location ? `<li>Location: ${input.location}</li>` : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [input.to],
+      subject: `Order ${input.orderNumber} update — ${input.statusLabel}`,
+      html: `
+        <div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;padding:28px;background:#0a0a0a;color:#f5f5f5;border:1px solid #222;">
+          <p style="letter-spacing:0.2em;text-transform:uppercase;font-size:11px;color:#888;margin:0 0 18px;">Gaanabajana</p>
+          <h1 style="font-size:24px;margin:0 0 12px;font-weight:700;">Shipment update</h1>
+          <p style="color:#aaa;line-height:1.5;margin:0 0 16px;">
+            Order <strong style="color:#fff;">${input.orderNumber}</strong> is now
+            <strong style="color:#fff;">${input.statusLabel}</strong>.
+          </p>
+          ${details ? `<ul style="color:#ccc;line-height:1.6;padding-left:18px;margin:0 0 18px;">${details}</ul>` : ""}
+          ${
+            input.trackingUrl
+              ? `<p style="margin:0 0 12px;"><a href="${input.trackingUrl}" style="color:#c8102e;">Open courier tracking</a></p>`
+              : ""
+          }
+          <p style="margin:0;"><a href="${trackHref}" style="color:#c8102e;">Track on Gaanabajana</a></p>
+        </div>`,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Resend shipping update error", text);
+    return { error: text };
+  }
+  return res.json();
+}
+
 export async function sendEmailOtp(to: string, code: string) {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || "Gaanabajana <onboarding@resend.dev>";

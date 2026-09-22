@@ -24,6 +24,8 @@ export async function GET(req: Request) {
       paymentStatus: order.paymentStatus,
       awb: order.awb,
       trackingUrl: order.trackingUrl,
+      courierName: order.courierName,
+      lastTrackingStatus: order.lastTrackingStatus,
       shiprocketShipmentId: order.shiprocketShipmentId,
       timeline: order.timeline,
       total: order.total,

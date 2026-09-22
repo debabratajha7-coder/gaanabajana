@@ -193,7 +193,10 @@ export default function AdminDashboardPage() {
           <p className="mt-2 text-sm text-[var(--fg-muted)]">
             After an order is paid, the app creates a Shiprocket shipment when
             email/password env vars are set. Pickup location name must match
-            Shiprocket (also editable under Website → Shipping).
+            Shiprocket (also editable under Website → Shipping). For live
+            tracking emails, set webhook URL to{" "}
+            <code className="text-xs">/api/webhooks/fulfillment</code> with{" "}
+            <code className="text-xs">SHIPROCKET_WEBHOOK_TOKEN</code>.
           </p>
         </div>
       </section>

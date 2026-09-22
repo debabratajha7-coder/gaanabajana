@@ -70,16 +70,25 @@ async function getAccessToken(forceRefresh = false): Promise<string> {
     cache: "no-store",
   });
 
-  const data = (await res.json()) as {
+  const data = (await res.json().catch(() => ({}))) as {
     access_token?: string;
     token_type?: string;
     expires_at?: number;
     issued_at?: number;
     message?: string;
+    code?: string | number;
+    success?: boolean;
   };
 
   if (!res.ok || !data.access_token) {
-    throw new Error(data.message || "PhonePe OAuth token failed");
+    const detail =
+      data.message ||
+      (data.code != null ? `code ${data.code}` : null) ||
+      `HTTP ${res.status}`;
+    const env = isProduction() ? "production" : "sandbox";
+    throw new Error(
+      `PhonePe OAuth token failed (${detail}). Check PHONEPE_CLIENT_ID / SECRET / CLIENT_VERSION match Developer Settings for ${env} (PHONEPE_ENV=${env}).`
+    );
   }
 
   tokenCache = {

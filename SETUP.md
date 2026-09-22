@@ -135,6 +135,17 @@ Fill these when the site is live and you have a public domain.
 5. After a **paid** PhonePe order, the app creates a Shiprocket adhoc order
 6. Admin → Orders → **Push Shiprocket** to retry if needed
 
+#### Tracking webhooks + email updates
+
+1. Invent a long random token → `SHIPROCKET_WEBHOOK_TOKEN` in `.env.local` / Vercel
+2. Shiprocket → Settings → API → **Webhooks**:
+   - URL: `https://YOUR_DOMAIN/api/webhooks/fulfillment`  
+     (do **not** put “shiprocket”, “sr”, or “kr” in the path — Shiprocket rejects those)
+   - Auth type: Authorization (or x-api-key) → paste the **same** token
+   - Enable → Save → Test Webhook
+3. On each **new** courier status, the order timeline updates and the customer gets an email via Resend
+4. Customers track at `/track-order` (order number + checkout phone)
+
 ---
 
 ## Admin checklist after seed
