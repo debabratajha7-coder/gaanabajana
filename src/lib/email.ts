@@ -38,6 +38,54 @@ export async function sendOrderEmail(input: {
   return res.json();
 }
 
+export async function sendCancellationEmail(input: {
+  to: string;
+  orderNumber: string;
+  total: number;
+  prepaid?: boolean;
+}) {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM || "Gaanabajana <onboarding@resend.dev>";
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "https://www.gaanabajana.com";
+  if (!key) {
+    console.log("[cancel email skipped]", {
+      to: input.to,
+      orderNumber: input.orderNumber,
+    });
+    return { skipped: true };
+  }
+
+  const refundLine = input.prepaid
+    ? "<p>If you paid online, your refund will be processed within <strong>5–7 business days</strong>.</p>"
+    : "<p>No payment was collected for this cash-on-delivery order.</p>";
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [input.to],
+      subject: `Gaanabajana order ${input.orderNumber} — cancelled`,
+      html: `<p>Your order <strong>${input.orderNumber}</strong> has been cancelled.</p>
+        <p>Total: ₹${input.total}</p>
+        ${refundLine}
+        <p>Need help? <a href="${appUrl}/contact">Contact us</a> or reply to this email.</p>
+        <p><a href="${appUrl}/account/orders/${input.orderNumber}">View order</a></p>`,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Resend cancel email error", text);
+    return { error: text };
+  }
+  return res.json();
+}
+
 /** Tracking / courier status change notification */
 export async function sendShippingUpdateEmail(input: {
   to: string;

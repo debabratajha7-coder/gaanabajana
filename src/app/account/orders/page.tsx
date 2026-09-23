@@ -26,6 +26,25 @@ function formatWhen(iso: string) {
   }
 }
 
+function statusLabel(status: string) {
+  const s = status.toLowerCase();
+  if (s === "cancelled") return "Cancelled";
+  if (s === "delivered") return "Delivered";
+  if (s === "pending_payment") return "Awaiting payment";
+  if (s === "shipped" || s === "processing" || s === "confirmed") return "Live";
+  return status.replace(/_/g, " ");
+}
+
+function statusBadgeClass(status: string) {
+  const s = status.toLowerCase();
+  if (s === "cancelled") return "bg-red-500/15 text-red-400";
+  if (s === "delivered") return "bg-emerald-500/15 text-emerald-400";
+  if (s === "pending_payment") return "bg-white/10 text-[var(--fg-muted)]";
+  if (s === "shipped" || s === "processing" || s === "confirmed")
+    return "bg-[var(--accent)]/15 text-[var(--accent)]";
+  return "bg-white/10 text-[var(--fg-muted)]";
+}
+
 export default function AccountOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -42,7 +61,7 @@ export default function AccountOrdersPage() {
       <div className="container-gb max-w-2xl py-8 sm:py-12">
         <h1 className="display text-3xl sm:text-4xl">My orders</h1>
         <p className="mt-2 text-sm text-[var(--fg-muted)]">
-          Payment, packing, and courier updates in one place.
+          Live orders, deliveries, and cancellations in one place.
         </p>
 
         <div className="mt-8 space-y-3">
@@ -60,28 +79,40 @@ export default function AccountOrdersPage() {
               </Link>
             </div>
           )}
-          {orders.map((o) => (
-            <Link
-              key={o.orderNumber}
-              href={`/account/orders/${o.orderNumber}`}
-              className="glass-panel flex items-center gap-3 p-4 transition hover:border-[var(--accent)] sm:p-5"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-mono text-sm font-semibold tracking-tight text-[var(--fg)]">
-                  {o.orderNumber}
+          {orders.map((o) => {
+            const cancelled = o.status === "cancelled";
+            return (
+              <Link
+                key={o.orderNumber}
+                href={`/account/orders/${o.orderNumber}`}
+                className={`glass-panel flex items-center gap-3 p-4 transition hover:border-[var(--accent)] sm:p-5 ${
+                  cancelled ? "opacity-70" : ""
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate font-mono text-sm font-semibold tracking-tight text-[var(--fg)]">
+                      {o.orderNumber}
+                    </p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusBadgeClass(o.status)}`}
+                    >
+                      {statusLabel(o.status)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs capitalize text-[var(--fg-muted)]">
+                    {o.paymentStatus}
+                    {o.createdAt ? ` · ${formatWhen(o.createdAt)}` : ""}
+                    {!cancelled && o.awb ? ` · AWB ${o.awb}` : ""}
+                  </p>
+                </div>
+                <p className="shrink-0 text-sm font-semibold text-[var(--price)]">
+                  {formatINR(o.total)}
                 </p>
-                <p className="mt-1 text-xs capitalize text-[var(--fg-muted)]">
-                  {o.status.replace(/_/g, " ")} · {o.paymentStatus}
-                  {o.createdAt ? ` · ${formatWhen(o.createdAt)}` : ""}
-                  {o.awb ? ` · AWB ${o.awb}` : ""}
-                </p>
-              </div>
-              <p className="shrink-0 text-sm font-semibold text-[var(--price)]">
-                {formatINR(o.total)}
-              </p>
-              <ChevronRight className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
-            </Link>
-          ))}
+                <ChevronRight className="h-4 w-4 shrink-0 text-[var(--fg-muted)]" />
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

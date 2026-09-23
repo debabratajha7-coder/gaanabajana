@@ -51,6 +51,24 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
     return errorCopy[err] || "Sign-in failed. Try again.";
   }, [searchParams]);
 
+  function postLoginPath() {
+    const next = searchParams.get("next");
+    if (
+      next &&
+      next.startsWith("/") &&
+      !next.startsWith("//") &&
+      !next.startsWith("/api")
+    ) {
+      return next;
+    }
+    return "/account";
+  }
+
+  function goAfterLogin() {
+    router.push(postLoginPath());
+    router.refresh();
+  }
+
   function resetToPassword() {
     setStep("password");
     setPendingToken("");
@@ -97,7 +115,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         return;
       }
 
-      router.push(data.user?.role === "admin" ? "/admin" : "/account");
+      router.push(postLoginPath());
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -143,8 +161,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid code");
-      router.push("/admin");
-      router.refresh();
+      goAfterLogin();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
     } finally {
@@ -165,8 +182,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid code");
       setEmailModalOpen(false);
-      router.push(data.user?.role === "admin" ? "/admin" : "/account");
-      router.refresh();
+      goAfterLogin();
     } catch (err) {
       setEmailError(err instanceof Error ? err.message : "Verification failed");
     } finally {

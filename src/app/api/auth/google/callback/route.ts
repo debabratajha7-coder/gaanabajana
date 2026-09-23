@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
 
     const token = await createSessionToken(sessionFromUser(user));
 
-    const dest = user.role === "admin" ? "/admin" : "/account";
+    const dest = "/account";
     const res = NextResponse.redirect(appUrl(dest));
     clearOAuthStateCookie(res);
     res.cookies.set(COOKIE_NAME, token, {

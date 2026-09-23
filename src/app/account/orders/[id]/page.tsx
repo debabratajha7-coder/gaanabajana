@@ -19,6 +19,7 @@ type Order = {
   orderNumber: string;
   status: string;
   paymentStatus: string;
+  paymentMethod?: string;
   total: number;
   subtotal?: number;
   shippingFee?: number;
@@ -37,6 +38,18 @@ type Order = {
   };
   createdAt?: string;
 };
+
+type ContactInfo = {
+  phone?: string;
+  email?: string;
+  whatsapp?: string;
+};
+
+const CANCELLABLE = new Set([
+  "pending_payment",
+  "confirmed",
+  "processing",
+]);
 
 const STATUS_COPY: Record<string, { title: string; blurb?: string }> = {
   created: { title: "Order placed", blurb: "We received your order" },
@@ -156,8 +169,12 @@ export default function AccountOrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [contact, setContact] = useState<ContactInfo>({});
 
-  useEffect(() => {
+  function loadOrder() {
     if (!params.id) return;
     fetch(`/api/orders/${params.id}`)
       .then(async (r) => {
@@ -166,12 +183,38 @@ export default function AccountOrderDetailPage() {
         setOrder(d.order);
       })
       .catch((e) => setError(e.message || "Could not load order"));
+  }
+
+  useEffect(() => {
+    loadOrder();
   }, [params.id]);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.settings) {
+          setContact({
+            phone: d.settings.phone,
+            email: d.settings.email,
+            whatsapp: d.settings.whatsapp,
+          });
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   const timeline = useMemo(
     () => prepareTimeline(order?.timeline || []),
     [order?.timeline]
   );
+
+  const canCancel = order ? CANCELLABLE.has(order.status) : false;
+  const isCancelled = order?.status === "cancelled";
+  const phones = (contact.phone || "")
+    .split(/[,|/]/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   async function copyOrderId() {
     if (!order) return;
@@ -181,6 +224,27 @@ export default function AccountOrderDetailPage() {
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
       /* ignore */
+    }
+  }
+
+  async function cancelOrder() {
+    if (!order) return;
+    setCancelError("");
+    setCancelBusy(true);
+    try {
+      const res = await fetch(`/api/orders/${order.orderNumber}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not cancel");
+      setOrder(data.order);
+      setConfirmCancel(false);
+    } catch (e) {
+      setCancelError(e instanceof Error ? e.message : "Could not cancel");
+    } finally {
+      setCancelBusy(false);
     }
   }
 
@@ -253,19 +317,31 @@ export default function AccountOrderDetailPage() {
             <span
               className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${statusBadgeClass(order.status)}`}
             >
-              {order.status.replace(/_/g, " ")}
+              {isCancelled
+                ? "Cancelled"
+                : order.status === "pending_payment"
+                  ? "Awaiting payment"
+                  : order.status === "delivered"
+                    ? "Delivered"
+                    : ["confirmed", "processing", "shipped"].includes(
+                          order.status
+                        )
+                      ? `Live · ${order.status.replace(/_/g, " ")}`
+                      : order.status.replace(/_/g, " ")}
             </span>
             <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold capitalize text-[var(--fg-muted)]">
+              {order.paymentMethod === "cod" ? "COD" : "Prepaid"} ·{" "}
               {order.paymentStatus}
             </span>
-            {order.lastTrackingStatus ? (
+            {!isCancelled && order.lastTrackingStatus ? (
               <span className="rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-[11px] font-semibold text-[var(--accent)]">
                 {order.lastTrackingStatus}
               </span>
             ) : null}
           </div>
 
-          {(order.awb || order.trackingUrl || order.courierName) && (
+          {!isCancelled &&
+          (order.awb || order.trackingUrl || order.courierName) ? (
             <div className="mt-4 flex items-start gap-3 rounded-[calc(var(--radius-glass)-4px)] border border-[var(--line)] bg-[var(--bg)]/40 p-3">
               <Truck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
               <div className="min-w-0 text-sm">
@@ -293,8 +369,113 @@ export default function AccountOrderDetailPage() {
                 ) : null}
               </div>
             </div>
-          )}
+          ) : null}
         </section>
+
+        {isCancelled ? (
+          <section className="mt-4 rounded-[var(--radius-glass)] border border-red-500/30 bg-red-500/10 p-4 sm:p-5">
+            <h2 className="text-sm font-semibold text-red-300">
+              Order cancelled
+            </h2>
+            <p className="mt-2 text-sm text-[var(--fg-muted)]">
+              This order is no longer active
+              {order.paymentMethod !== "cod" && order.paymentStatus === "paid"
+                ? ". If you paid online, your refund will be processed within 5–7 business days."
+                : order.paymentMethod === "cod"
+                  ? ". No cash was collected for this COD order."
+                  : "."}
+            </p>
+            <div className="mt-4 space-y-2 border-t border-[var(--line)] pt-4 text-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+                Need help?
+              </p>
+              {phones.map((p) => (
+                <a
+                  key={p}
+                  href={`tel:${p.replace(/\s+/g, "")}`}
+                  className="block text-[var(--accent)] hover:underline"
+                >
+                  {p}
+                </a>
+              ))}
+              {contact.email ? (
+                <a
+                  href={`mailto:${contact.email}`}
+                  className="block text-[var(--accent)] hover:underline"
+                >
+                  {contact.email}
+                </a>
+              ) : null}
+              {contact.whatsapp ? (
+                <p className="text-[var(--fg-muted)]">
+                  WhatsApp: {contact.whatsapp}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Link href="/contact" className="btn btn-ghost text-xs">
+                  Contact us
+                </Link>
+                <Link
+                  href="/policies/returns"
+                  className="btn btn-ghost text-xs"
+                >
+                  Refund policy
+                </Link>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {canCancel ? (
+          <section className="glass-panel mt-4 p-4 sm:p-5">
+            <h2 className="text-sm font-semibold tracking-wide text-[var(--fg)]">
+              Cancel order
+            </h2>
+            <p className="mt-1 text-xs text-[var(--fg-muted)]">
+              You can cancel before the order ships. Once it’s with the courier,
+              contact us instead.
+            </p>
+            {!confirmCancel ? (
+              <button
+                type="button"
+                className="btn btn-ghost mt-3 text-sm text-red-400"
+                onClick={() => setConfirmCancel(true)}
+              >
+                Cancel this order
+              </button>
+            ) : (
+              <div className="mt-3 space-y-3">
+                <p className="text-sm text-[var(--fg)]">
+                  Cancel order {order.orderNumber}? This can’t be undone.
+                </p>
+                {cancelError ? (
+                  <p className="text-sm text-[var(--danger)]">{cancelError}</p>
+                ) : null}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-primary text-sm"
+                    disabled={cancelBusy}
+                    onClick={cancelOrder}
+                  >
+                    {cancelBusy ? "Cancelling…" : "Yes, cancel order"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost text-sm"
+                    disabled={cancelBusy}
+                    onClick={() => {
+                      setConfirmCancel(false);
+                      setCancelError("");
+                    }}
+                  >
+                    Keep order
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        ) : null}
 
         {/* Items */}
         <section className="glass-panel mt-4 p-4 sm:p-5">
@@ -439,9 +620,15 @@ export default function AccountOrderDetailPage() {
         ) : null}
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <Link href="/track-order" className="btn btn-ghost text-sm">
-            Track another order
-          </Link>
+          {!isCancelled ? (
+            <Link href="/track-order" className="btn btn-ghost text-sm">
+              Track another order
+            </Link>
+          ) : (
+            <Link href="/contact" className="btn btn-ghost text-sm">
+              Contact support
+            </Link>
+          )}
           <Link href="/account/orders" className="btn btn-primary text-sm">
             All orders
           </Link>

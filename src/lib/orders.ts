@@ -204,3 +204,59 @@ export function generateOrderNumber() {
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `GB${now}${rand}`;
 }
+
+const CANCELLABLE = new Set([
+  "pending_payment",
+  "confirmed",
+  "processing",
+]);
+
+export function isOrderCancellable(status: string) {
+  return CANCELLABLE.has(status);
+}
+
+/** Customer-initiated cancel before the parcel ships. */
+export async function cancelCustomerOrder(
+  orderNumber: string,
+  reason?: string
+) {
+  await connectDB();
+  const order = await Order.findOne({ orderNumber });
+  if (!order) throw new Error("Order not found");
+  if (order.status === "cancelled") return order;
+  if (!isOrderCancellable(order.status)) {
+    throw new Error(
+      "This order can no longer be cancelled online. Contact us if you need help."
+    );
+  }
+
+  const isPrepaid =
+    order.paymentMethod !== "cod" && order.paymentStatus === "paid";
+  const noteParts = [
+    reason?.trim() || "Cancelled by customer",
+    isPrepaid ? "Refund will be processed in 5–7 business days" : "",
+    hasShiprocketOrderId(order.shiprocketOrderId)
+      ? "Shipping partner will be updated"
+      : "",
+  ].filter(Boolean);
+
+  order.status = "cancelled";
+  order.timeline.push({
+    status: "cancelled",
+    at: new Date(),
+    note: noteParts.join(" · "),
+  });
+  await order.save();
+
+  if (order.shippingAddress?.email) {
+    const { sendCancellationEmail } = await import("@/lib/email");
+    await sendCancellationEmail({
+      to: order.shippingAddress.email,
+      orderNumber: order.orderNumber,
+      total: order.total,
+      prepaid: isPrepaid,
+    }).catch((err) => console.error("Cancel email failed", err));
+  }
+
+  return order;
+}

@@ -112,10 +112,11 @@ export default async function HomePage() {
         });
         const docs = await Product.find({
           isActive: true,
+          featured: true,
           categories: { $in: ids },
         })
           .populate("brand", "name slug")
-          .sort({ featured: -1, ratingCount: -1, updatedAt: -1 })
+          .sort({ ratingCount: -1, updatedAt: -1 })
           .limit(6)
           .lean();
         productsByTab[String(cat._id)] = docs.map((p) =>

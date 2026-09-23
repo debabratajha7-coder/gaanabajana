@@ -674,10 +674,11 @@ export default function AdminProductsPage() {
               />
               <span>
                 <span className="block font-medium text-[var(--fg)]">
-                  Pin near top of Best Sellers
+                  Show on homepage Best Sellers
                 </span>
                 <span className="mt-0.5 block text-[var(--fg-muted)]">
-                  Helps this product show first in its category on the homepage.
+                  Only pinned products appear in Best Sellers for their
+                  category. Leave off to keep this product off that section.
                 </span>
               </span>
             </label>
