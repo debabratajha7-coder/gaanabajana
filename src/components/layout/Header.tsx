@@ -168,10 +168,11 @@ export function Header({
                   <Signature
                     text={wordmark}
                     color="currentColor"
-                    fontSize={18}
+                    fontSize={30}
                     duration={1.05}
                     compact
-                    className="h-7 w-auto max-w-full"
+                    fontUrl="/fonts/CormorantGaramond-Bold.ttf"
+                    className="h-9 w-auto max-w-full"
                   />
                 </Link>
                 <button
@@ -461,16 +462,17 @@ export function Header({
 
         <Link
           href="/"
-          className="flex min-w-0 max-w-[min(50vw,12.5rem)] shrink items-center text-[var(--fg)] sm:max-w-[13.5rem] md:shrink-0"
+          className="flex min-w-0 max-w-[min(72vw,16.5rem)] shrink items-center text-[var(--fg)] sm:max-w-[18rem] md:max-w-none md:shrink-0"
           aria-label={wordmark}
         >
           <Signature
             text={wordmark}
             color="currentColor"
-            fontSize={21}
+            fontSize={34}
             duration={1.05}
             compact
-            className="h-[1.85rem] w-auto max-w-full sm:h-8"
+            fontUrl="/fonts/CormorantGaramond-Bold.ttf"
+            className="h-9 w-auto max-w-full sm:h-10 md:h-11"
           />
         </Link>
 

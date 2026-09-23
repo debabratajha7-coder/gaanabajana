@@ -163,6 +163,21 @@ function ProductBuyBoxInner({
     buildAmbientPalette([], colors[0]?.swatch)
   );
   const [liteMotion, setLiteMotion] = useState(false);
+  const [emiEnabled, setEmiEnabled] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d?.settings) return;
+        setEmiEnabled(d.settings.emiEnabled === true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -424,22 +439,27 @@ function ProductBuyBoxInner({
               />
             </div>
 
-            <div
-              className="mt-3.5 border px-3 py-2.5 text-sm sm:mt-4 sm:px-3.5 sm:py-3"
-              style={{
-                borderColor:
-                  "color-mix(in oklab, var(--accent) 35%, transparent)",
-                backgroundColor:
-                  "color-mix(in oklab, var(--accent) 12%, var(--pdp-panel))",
-              }}
-            >
-              <p className="font-medium" style={{ color: "var(--pdp-fg)" }}>
-                {formatINR(emiMonthly)}/month · EMI options available
-              </p>
-              <p className="mt-0.5 text-xs" style={{ color: "var(--pdp-muted)" }}>
-                Approx. 12× EMI · confirm plans at checkout
-              </p>
-            </div>
+            {emiEnabled ? (
+              <div
+                className="mt-3.5 border px-3 py-2.5 text-sm sm:mt-4 sm:px-3.5 sm:py-3"
+                style={{
+                  borderColor:
+                    "color-mix(in oklab, var(--accent) 35%, transparent)",
+                  backgroundColor:
+                    "color-mix(in oklab, var(--accent) 12%, var(--pdp-panel))",
+                }}
+              >
+                <p className="font-medium" style={{ color: "var(--pdp-fg)" }}>
+                  {formatINR(emiMonthly)}/month · EMI options available
+                </p>
+                <p
+                  className="mt-0.5 text-xs"
+                  style={{ color: "var(--pdp-muted)" }}
+                >
+                  Approx. 12× EMI · confirm plans at checkout
+                </p>
+              </div>
+            ) : null}
 
             <p
               className="mt-3 truncate text-xs sm:mt-4"

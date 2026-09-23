@@ -53,14 +53,17 @@ export function Signature({
   const reduceMotion = useReducedMotion() ?? false;
   const [paths, setPaths] = useState<string[]>([]);
   const [width, setWidth] = useState<number>(300);
-  const height = fontSize * (compact ? 2.15 : 3);
-  const horizontalPadding = fontSize * (compact ? 0.06 : 0.1);
-  const topMargin = fontSize * (compact ? 1.35 : 1.5);
+  const height = fontSize * (compact ? 1.38 : 3);
+  const horizontalPadding = fontSize * (compact ? 0.08 : 0.1);
+  /** Serif wordmarks need less flourish padding than Lastoria script. */
+  const topMargin = fontSize * (compact ? 1.05 : 1.5);
   const baseline = topMargin;
   const strokeWidth = compact
-    ? Math.max(1.15, fontSize * 0.055)
+    ? Math.max(0.75, fontSize * 0.028)
     : 2;
-  const maskStroke = fontSize * (compact ? 0.16 : 0.22);
+  const maskStroke = fontSize * (compact ? 0.11 : 0.22);
+  /** Slight tracking so Cormorant reads as a logo, not body text */
+  const tracking = compact ? 1.04 : 1;
   const letterStagger = compact ? 0.12 : 0.2;
   const uid = useId().replace(/:/g, "");
   const maskId = `signature-reveal-${uid}`;
@@ -74,8 +77,8 @@ export function Signature({
         const fontPaths = fontUrl
           ? [fontUrl]
           : [
+              "/fonts/CormorantGaramond-Bold.ttf",
               "/LastoriaBoldRegular.otf",
-              "https://www.componentry.fun/LastoriaBoldRegular.otf",
             ];
 
         let font = null;
@@ -101,7 +104,7 @@ export function Signature({
           newPaths.push(path.toPathData(3));
 
           const advanceWidth = glyph.advanceWidth ?? font.unitsPerEm;
-          x += advanceWidth * (fontSize / font.unitsPerEm);
+          x += advanceWidth * (fontSize / font.unitsPerEm) * tracking;
         }
 
         if (cancelled) return;
@@ -119,7 +122,7 @@ export function Signature({
     return () => {
       cancelled = true;
     };
-  }, [text, fontSize, baseline, horizontalPadding, fontUrl]);
+  }, [text, fontSize, baseline, horizontalPadding, fontUrl, tracking]);
 
   const variants = {
     hidden: { pathLength: 0, opacity: 0 },

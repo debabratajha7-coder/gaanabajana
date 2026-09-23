@@ -159,6 +159,7 @@ export default function AdminSitePage() {
           codEnabled: !(
             settings.codEnabled === false || settings.codEnabled === "false"
           ),
+          emiEnabled: settings.emiEnabled === true || settings.emiEnabled === "true",
           pickupLocationName: settings.pickupLocationName,
           social: {
             facebook: String(settings.facebook ?? ""),
@@ -534,6 +535,20 @@ export default function AdminSitePage() {
             />
             Enable cash on delivery at checkout
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={
+                settings.emiEnabled === true || settings.emiEnabled === "true"
+              }
+              onChange={(e) => set("emiEnabled", e.target.checked)}
+            />
+            Show EMI estimate on product pages
+          </label>
+          <p className="-mt-2 text-xs text-[var(--fg-muted)]">
+            When on, product pages show an approximate ₹/month EMI hint under
+            the price. Leave off until EMI partners are live at checkout.
+          </p>
           <Field
             id="instagram"
             label="Instagram URL"

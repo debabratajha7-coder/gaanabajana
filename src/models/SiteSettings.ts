@@ -25,6 +25,8 @@ export interface ISiteSettings {
   codFee: number;
   /** When false, checkout only offers PhonePe prepaid. */
   codEnabled: boolean;
+  /** Show approximate EMI hint on product pages. */
+  emiEnabled: boolean;
   heroHeadline: string;
   heroSubheadline: string;
   heroCtaLabel: string;
@@ -105,6 +107,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     shippingFee: { type: Number, default: 99 },
     codFee: { type: Number, default: 49 },
     codEnabled: { type: Boolean, default: true },
+    emiEnabled: { type: Boolean, default: false },
     heroHeadline: {
       type: String,
       default: "Find the instrument that finds your sound",
