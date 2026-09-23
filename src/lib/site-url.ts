@@ -8,11 +8,17 @@ export function getSiteUrl() {
 
   try {
     const u = new URL(raw);
-    // Prefer www — apex redirects there and GSC was submitted on www.
-    if (u.hostname === "gaanabajana.com") {
-      u.hostname = "www.gaanabajana.com";
+    const host = u.hostname.toLowerCase();
+    const isLocal =
+      host === "localhost" || host === "127.0.0.1" || host.endsWith(".local");
+
+    if (!isLocal) {
+      if (host === "gaanabajana.com") {
+        u.hostname = "www.gaanabajana.com";
+      }
+      u.protocol = "https:";
     }
-    if (u.protocol !== "https:") u.protocol = "https:";
+
     return u.origin;
   } catch {
     return "https://www.gaanabajana.com";

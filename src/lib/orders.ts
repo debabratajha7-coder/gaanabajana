@@ -35,6 +35,61 @@ export async function markOrderPaid(orderNumber: string, paymentId?: string) {
   return Order.findOne({ orderNumber });
 }
 
+/** Confirm a COD order (no gateway) — ready to pack / push to Shiprocket. */
+export async function confirmCodOrder(orderNumber: string) {
+  await connectDB();
+  const order = await Order.findOne({ orderNumber });
+  if (!order) throw new Error("Order not found");
+  if (order.paymentMethod !== "cod") {
+    throw new Error("Not a COD order");
+  }
+  if (order.status === "cancelled") {
+    throw new Error("Order cancelled");
+  }
+
+  const newlyConfirmed = order.status === "pending_payment";
+  if (newlyConfirmed) {
+    order.status = "confirmed";
+    order.timeline.push({
+      status: "confirmed",
+      at: new Date(),
+      note: "Cash on delivery — pay when the parcel arrives",
+    });
+    await order.save();
+  }
+
+  await pushOrderToShiprocket(order.orderNumber);
+
+  if (newlyConfirmed && order.shippingAddress?.email) {
+    await sendOrderEmail({
+      to: order.shippingAddress.email,
+      orderNumber: order.orderNumber,
+      total: order.total,
+      status: "confirmed (COD)",
+    });
+  }
+
+  return Order.findOne({ orderNumber });
+}
+
+/** When courier marks delivered, treat COD cash as collected. */
+export async function markCodCollected(orderNumber: string) {
+  await connectDB();
+  const order = await Order.findOne({ orderNumber });
+  if (!order) return null;
+  if (order.paymentMethod !== "cod") return order;
+  if (order.paymentStatus === "paid") return order;
+
+  order.paymentStatus = "paid";
+  order.timeline.push({
+    status: "cod_collected",
+    at: new Date(),
+    note: "Cash collected on delivery",
+  });
+  await order.save();
+  return order;
+}
+
 export async function pushOrderToShiprocket(orderNumber: string) {
   await connectDB();
   const order = await Order.findOne({ orderNumber });
@@ -71,6 +126,9 @@ export async function pushOrderToShiprocket(orderNumber: string) {
   const length = Math.max(...order.items.map(() => 40), 10);
   const breadth = 20;
   const height = Math.min(40, 10 + order.items.length * 5);
+  const isCod = order.paymentMethod === "cod";
+  // For COD, Shiprocket treats sub_total as the cash-to-collect amount.
+  const shiprocketSubTotal = isCod ? order.total : order.subtotal;
 
   try {
     const result = await createShiprocketOrder({
@@ -106,8 +164,8 @@ export async function pushOrderToShiprocket(orderNumber: string) {
           selling_price: i.price,
         })
       ),
-      paymentMethod: "Prepaid",
-      subTotal: order.subtotal,
+      paymentMethod: isCod ? "COD" : "Prepaid",
+      subTotal: shiprocketSubTotal,
       length,
       breadth,
       height,
@@ -122,7 +180,9 @@ export async function pushOrderToShiprocket(orderNumber: string) {
     order.timeline.push({
       status: "shiprocket_created",
       at: new Date(),
-      note: `Shiprocket order ${result.order_id} · shipment ${result.shipment_id}`,
+      note: `Shiprocket order ${result.order_id} · shipment ${result.shipment_id}${
+        isCod ? " · COD" : ""
+      }`,
     });
     await order.save();
   } catch (err) {

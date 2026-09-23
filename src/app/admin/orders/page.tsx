@@ -29,9 +29,11 @@ type Order = {
   orderNumber: string;
   status: string;
   paymentStatus: string;
+  paymentMethod?: string;
   total: number;
   subtotal?: number;
   shippingFee?: number;
+  codFee?: number;
   shiprocketOrderId?: string;
   shiprocketShipmentId?: string;
   awb?: string;
@@ -158,8 +160,13 @@ export default function AdminOrdersPage() {
                     {o.orderNumber}
                   </p>
                   <p className="mt-1 text-sm capitalize">
-                    {o.status.replace(/_/g, " ")} · {o.paymentStatus} ·{" "}
-                    {formatINR(o.total)}
+                    {o.status.replace(/_/g, " ")} ·{" "}
+                    {o.paymentMethod === "cod" ? "COD" : "Prepaid"} ·{" "}
+                    {o.paymentStatus}
+                    {o.paymentMethod === "cod" && o.paymentStatus === "pending"
+                      ? " (collect on delivery)"
+                      : ""}{" "}
+                    · {formatINR(o.total)}
                   </p>
                   <p className="mt-1 text-xs text-[var(--fg-muted)]">
                     Shiprocket: {shiprocketLabel(o)} · AWB: {o.awb || "—"}

@@ -16,11 +16,13 @@ function redactOrder(order: Record<string, unknown>) {
   return {
     orderNumber: order.orderNumber,
     paymentStatus: order.paymentStatus,
+    paymentMethod: order.paymentMethod,
     status: order.status,
     fulfillmentStatus: order.fulfillmentStatus,
     total: order.total,
     subtotal: order.subtotal,
     shippingFee: order.shippingFee,
+    codFee: order.codFee,
     currency: order.currency,
     items: order.items,
     shiprocketOrderId: order.shiprocketOrderId,
@@ -76,6 +78,7 @@ export async function GET(
 
   if (
     order.paymentStatus !== "paid" &&
+    order.paymentMethod !== "cod" &&
     isPhonePeConfigured() &&
     (order.phonepeMerchantOrderId || order.orderNumber)
   ) {

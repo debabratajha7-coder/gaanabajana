@@ -5,7 +5,7 @@ import { ImageDropzone } from "@/components/admin/ImageDropzone";
 import Link from "next/link";
 import { filterPublicCategories } from "@/lib/public-catalog";
 
-type Settings = Record<string, string | number>;
+type Settings = Record<string, string | number | boolean>;
 type Page = { key: string; title: string; body: string };
 type Cat = { _id: string; name: string; slug: string; parent?: string | null; image?: string };
 type WhyItem = { title: string; body: string };
@@ -118,7 +118,7 @@ export default function AdminSitePage() {
     [categories]
   );
 
-  function set(key: string, value: string | number) {
+  function set(key: string, value: string | number | boolean) {
     setSettings((s) => ({ ...s, [key]: value }));
   }
 
@@ -155,6 +155,10 @@ export default function AdminSitePage() {
           homeStats: stats.filter((s) => s.value.trim() && s.label.trim()),
           freeShippingThreshold: Number(settings.freeShippingThreshold || 1000),
           shippingFee: Number(settings.shippingFee || 99),
+          codFee: Number(settings.codFee ?? 49),
+          codEnabled: !(
+            settings.codEnabled === false || settings.codEnabled === "false"
+          ),
           pickupLocationName: settings.pickupLocationName,
           social: {
             facebook: String(settings.facebook ?? ""),
@@ -512,7 +516,24 @@ export default function AdminSitePage() {
               value={String(settings.shippingFee ?? 99)}
               onChange={(v) => set("shippingFee", v)}
             />
+            <Field
+              id="codFee"
+              label="COD fee (₹)"
+              value={String(settings.codFee ?? 49)}
+              onChange={(v) => set("codFee", v)}
+              hint="Extra charge when customer chooses cash on delivery"
+            />
           </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={!(
+                settings.codEnabled === false || settings.codEnabled === "false"
+              )}
+              onChange={(e) => set("codEnabled", e.target.checked)}
+            />
+            Enable cash on delivery at checkout
+          </label>
           <Field
             id="instagram"
             label="Instagram URL"

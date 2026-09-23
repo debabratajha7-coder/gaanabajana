@@ -33,10 +33,12 @@ export interface IOrder {
   billingAddress: OrderAddress;
   subtotal: number;
   shippingFee: number;
+  /** Extra fee for cash-on-delivery (₹0 for prepaid). */
+  codFee: number;
   discount: number;
   total: number;
   currency: string;
-  paymentMethod: "prepaid";
+  paymentMethod: "prepaid" | "cod";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   status:
     | "pending_payment"
@@ -98,10 +100,15 @@ const OrderSchema = new Schema<IOrder>(
     billingAddress: AddressSchema,
     subtotal: Number,
     shippingFee: Number,
+    codFee: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     total: Number,
     currency: { type: String, default: "INR" },
-    paymentMethod: { type: String, default: "prepaid" },
+    paymentMethod: {
+      type: String,
+      enum: ["prepaid", "cod"],
+      default: "prepaid",
+    },
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "failed", "refunded"],

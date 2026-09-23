@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/models/Order";
+import { markCodCollected } from "@/lib/orders";
 import { sendShippingUpdateEmail } from "@/lib/email";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import {
@@ -138,6 +139,15 @@ export async function POST(req: NextRequest) {
   }
 
   await order.save();
+
+  // COD cash is considered collected once courier marks delivered
+  if (mapped === "delivered" && order.paymentMethod === "cod") {
+    try {
+      await markCodCollected(order.orderNumber);
+    } catch (err) {
+      console.error("COD collect mark failed", err);
+    }
+  }
 
   if (statusChanged && order.shippingAddress?.email) {
     try {

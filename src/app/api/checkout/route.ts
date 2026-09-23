@@ -6,7 +6,18 @@ import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
 import { getSiteSettings } from "@/models/SiteSettings";
 import { createPhonePePayment, isPhonePeConfigured } from "@/lib/phonepe";
-import { generateOrderNumber } from "@/lib/orders";
+import {
+  confirmCodOrder,
+  generateOrderNumber,
+} from "@/lib/orders";
+import {
+  consumeOtpChallenge,
+  normalizeIndianPhone,
+  shouldExposeDevOtp,
+} from "@/lib/otp";
+import { isTwilioConfigured } from "@/lib/twilio";
+import { getSiteUrl } from "@/lib/site-url";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const itemSchema = z.object({
   productId: z.string(),
@@ -28,11 +39,31 @@ const schema = z.object({
     country: z.string().default("India"),
   }),
   note: z.string().optional(),
+  paymentMethod: z.enum(["prepaid", "cod"]).default("prepaid"),
+  /** Required for COD when Twilio SMS is configured. */
+  otpChallengeToken: z.string().optional(),
+  otpCode: z.string().optional(),
 });
 
 export async function POST(req: Request) {
   try {
-    if (!isPhonePeConfigured()) {
+    const limited = rateLimit(`checkout:${clientIp(req)}`, 10, 15 * 60_000);
+    if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
+    const body = schema.parse(await req.json());
+    await connectDB();
+    const session = await getSession();
+    const settings = await getSiteSettings();
+
+    const paymentMethod = body.paymentMethod;
+    if (paymentMethod === "cod" && settings.codEnabled === false) {
+      return NextResponse.json(
+        { error: "Cash on delivery is not available right now" },
+        { status: 400 }
+      );
+    }
+
+    if (paymentMethod === "prepaid" && !isPhonePeConfigured()) {
       return NextResponse.json(
         {
           error:
@@ -42,10 +73,33 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = schema.parse(await req.json());
-    await connectDB();
-    const session = await getSession();
-    const settings = await getSiteSettings();
+    // COD phone OTP when Twilio is live (cuts fake / spam orders)
+    if (paymentMethod === "cod" && isTwilioConfigured()) {
+      if (!body.otpChallengeToken || !body.otpCode) {
+        return NextResponse.json(
+          { error: "Verify your phone with the OTP before placing a COD order" },
+          { status: 400 }
+        );
+      }
+      const phone = normalizeIndianPhone(body.shippingAddress.phone);
+      const verified = await consumeOtpChallenge<{ phone?: string }>(
+        body.otpChallengeToken,
+        body.otpCode,
+        "cod_checkout"
+      );
+      if (!verified.ok) {
+        return NextResponse.json({ error: verified.error }, { status: 400 });
+      }
+      if (
+        verified.payload.phone &&
+        normalizeIndianPhone(String(verified.payload.phone)) !== phone
+      ) {
+        return NextResponse.json(
+          { error: "OTP phone does not match the shipping phone" },
+          { status: 400 }
+        );
+      }
+    }
 
     const orderItems = [];
     let subtotal = 0;
@@ -82,7 +136,9 @@ export async function POST(req: Request) {
 
     const shippingFee =
       subtotal >= settings.freeShippingThreshold ? 0 : settings.shippingFee;
-    const total = subtotal + shippingFee;
+    const codFee =
+      paymentMethod === "cod" ? Number(settings.codFee || 0) : 0;
+    const total = subtotal + shippingFee + codFee;
     const orderNumber = generateOrderNumber();
 
     const order = await Order.create({
@@ -93,16 +149,29 @@ export async function POST(req: Request) {
       billingAddress: body.shippingAddress,
       subtotal,
       shippingFee,
+      codFee,
       discount: 0,
       total,
       note: body.note,
+      paymentMethod,
       paymentStatus: "pending",
       status: "pending_payment",
-      phonepeMerchantOrderId: orderNumber,
+      phonepeMerchantOrderId:
+        paymentMethod === "prepaid" ? orderNumber : undefined,
       timeline: [{ status: "created", at: new Date() }],
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    if (paymentMethod === "cod") {
+      await confirmCodOrder(orderNumber);
+      return NextResponse.json({
+        orderNumber,
+        paymentMethod: "cod",
+        redirectUrl: `${getSiteUrl()}/checkout/success?order_id=${orderNumber}&method=cod`,
+        total,
+      });
+    }
+
+    const appUrl = getSiteUrl();
     const pay = await createPhonePePayment({
       merchantOrderId: orderNumber,
       amountInr: total,
@@ -115,6 +184,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       orderNumber,
+      paymentMethod: "prepaid",
       redirectUrl: pay.redirectUrl,
       total,
     });
@@ -124,7 +194,12 @@ export async function POST(req: Request) {
     }
     console.error(error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Checkout failed" },
+      {
+        error: error instanceof Error ? error.message : "Checkout failed",
+        ...(shouldExposeDevOtp() && error instanceof Error
+          ? { detail: error.message }
+          : {}),
+      },
       { status: 500 }
     );
   }

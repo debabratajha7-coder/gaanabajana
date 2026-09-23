@@ -21,6 +21,10 @@ export interface ISiteSettings {
   googleReviewsUrl?: string;
   freeShippingThreshold: number;
   shippingFee: number;
+  /** Extra charge when customer chooses cash on delivery. */
+  codFee: number;
+  /** When false, checkout only offers PhonePe prepaid. */
+  codEnabled: boolean;
   heroHeadline: string;
   heroSubheadline: string;
   heroCtaLabel: string;
@@ -99,6 +103,8 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     googleReviewsUrl: { type: String, default: DEFAULT_GOOGLE_REVIEWS_URL },
     freeShippingThreshold: { type: Number, default: 1000 },
     shippingFee: { type: Number, default: 99 },
+    codFee: { type: Number, default: 49 },
+    codEnabled: { type: Boolean, default: true },
     heroHeadline: {
       type: String,
       default: "Find the instrument that finds your sound",
