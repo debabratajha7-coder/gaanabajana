@@ -59,21 +59,29 @@ export default function ShopByCategoryAdminPage() {
 
   async function saveName(id: string, name: string) {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setError("Name can’t be empty.");
+      return;
+    }
     setSavingId(id);
     setMsg("");
     setError("");
     const res = await fetch("/api/admin/catalog", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "category", id, data: { name: trimmed } }),
+      body: JSON.stringify({
+        type: "category",
+        id,
+        data: { name: trimmed, updateSlug: true },
+      }),
     });
     setSavingId(null);
     if (!res.ok) {
-      setError("Could not save name");
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Could not save name");
       return;
     }
-    setMsg("Saved");
+    setMsg(`Renamed to “${trimmed}”.`);
     load();
   }
 
@@ -448,8 +456,11 @@ export default function ShopByCategoryAdminPage() {
                   Subtypes under {c.name}
                 </h3>
                 <p className="mt-1 text-xs text-[var(--fg-muted)]">
-                  Examples for Guitars: Acoustic, Electric, Bass, Electro
-                  Acoustic, Classical. These show in Products → Subtype.
+                  Fix typos by editing the name and clicking{" "}
+                  <strong className="font-medium text-[var(--fg)]">
+                    Save rename
+                  </strong>
+                  . Examples: Acoustic, Electric, Bass, Electro Acoustic.
                 </p>
 
                 {kids.length > 0 ? (
@@ -460,16 +471,39 @@ export default function ShopByCategoryAdminPage() {
                         className="flex flex-wrap items-center gap-2 px-3 py-2.5"
                       >
                         <input
+                          id={`subtype-name-${k._id}`}
                           className="input min-w-0 flex-1"
                           defaultValue={k.name}
                           key={`${k._id}-${k.name}`}
                           aria-label={`Rename ${k.name}`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const el = e.currentTarget;
+                              if (el.value.trim() !== k.name) {
+                                void saveName(k._id, el.value);
+                              }
+                            }
+                          }}
                           onBlur={(e) => {
                             if (e.target.value.trim() !== k.name) {
                               void saveName(k._id, e.target.value);
                             }
                           }}
                         />
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm shrink-0"
+                          disabled={savingId === k._id}
+                          onClick={() => {
+                            const el = document.getElementById(
+                              `subtype-name-${k._id}`
+                            ) as HTMLInputElement | null;
+                            if (el) void saveName(k._id, el.value);
+                          }}
+                        >
+                          {savingId === k._id ? "Saving…" : "Save rename"}
+                        </button>
                         <button
                           type="button"
                           className="icon-btn h-9 w-9 text-[var(--danger)]"

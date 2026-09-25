@@ -128,6 +128,8 @@ export default function AdminProductsPage() {
   const [childId, setChildId] = useState("");
   const [newSubtype, setNewSubtype] = useState("");
   const [addingSubtype, setAddingSubtype] = useState(false);
+  const [renameSubtype, setRenameSubtype] = useState("");
+  const [renamingSubtype, setRenamingSubtype] = useState(false);
   const [brandId, setBrandId] = useState("");
   const [newBrand, setNewBrand] = useState("");
   const [title, setTitle] = useState("");
@@ -199,6 +201,15 @@ export default function AdminProductsPage() {
       });
   }, [categories, parentId]);
 
+  const selectedChild = useMemo(
+    () => children.find((c) => c._id === childId) || null,
+    [children, childId]
+  );
+
+  useEffect(() => {
+    setRenameSubtype(selectedChild?.name || "");
+  }, [selectedChild?._id, selectedChild?.name]);
+
   function resetForm() {
     setEditingId(null);
     setParentId("");
@@ -217,6 +228,8 @@ export default function AdminProductsPage() {
     setEssentialIds([]);
     setReviewDrafts([]);
     setExistingReviews([]);
+    setNewSubtype("");
+    setRenameSubtype("");
   }
 
   async function startEdit(id: string) {
@@ -339,6 +352,44 @@ export default function AdminProductsPage() {
       setError(err instanceof Error ? err.message : "Could not add subtype");
     } finally {
       setAddingSubtype(false);
+    }
+  }
+
+  async function renameSubtypeQuick() {
+    const name = renameSubtype.trim();
+    if (!childId) {
+      setError("Pick a subtype to rename.");
+      return;
+    }
+    if (!name) {
+      setError("Subtype name can’t be empty.");
+      return;
+    }
+    if (selectedChild && name === selectedChild.name) {
+      setMsg("Name unchanged.");
+      return;
+    }
+    setRenamingSubtype(true);
+    setError("");
+    setMsg("");
+    try {
+      const res = await fetch("/api/admin/catalog", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "category",
+          id: childId,
+          data: { name, updateSlug: true },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not rename subtype");
+      setMsg(`Renamed subtype to “${name}”.`);
+      loadCatalog();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not rename");
+    } finally {
+      setRenamingSubtype(false);
     }
   }
 
@@ -594,35 +645,73 @@ export default function AdminProductsPage() {
             )}
 
             {parentId && (
-              <div className="rounded border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-3">
-                <p className="text-xs font-medium text-[var(--fg)]">
-                  Missing a subtype?
-                </p>
-                <p className="mt-1 text-xs text-[var(--fg-muted)]">
-                  Add it here without leaving this page (e.g. Acoustic under
-                  Acoustic guitar).
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <input
-                    className="input min-w-[12rem] flex-1"
-                    placeholder="New subtype name…"
-                    value={newSubtype}
-                    onChange={(e) => setNewSubtype(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        void addSubtypeQuick();
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    disabled={addingSubtype || !newSubtype.trim()}
-                    onClick={() => void addSubtypeQuick()}
-                  >
-                    {addingSubtype ? "Adding…" : "Add subtype"}
-                  </button>
+              <div className="rounded border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-3 space-y-3">
+                {childId && selectedChild ? (
+                  <div>
+                    <p className="text-xs font-medium text-[var(--fg)]">
+                      Fix misspelled subtype
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--fg-muted)]">
+                      Rewrite the name for “{selectedChild.name}”, then save.
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <input
+                        className="input min-w-[12rem] flex-1"
+                        value={renameSubtype}
+                        onChange={(e) => setRenameSubtype(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void renameSubtypeQuick();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        disabled={
+                          renamingSubtype ||
+                          !renameSubtype.trim() ||
+                          renameSubtype.trim() === selectedChild.name
+                        }
+                        onClick={() => void renameSubtypeQuick()}
+                      >
+                        {renamingSubtype ? "Saving…" : "Save rename"}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div>
+                  <p className="text-xs font-medium text-[var(--fg)]">
+                    Missing a subtype?
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--fg-muted)]">
+                    Add it here without leaving this page (e.g. Acoustic under
+                    Acoustic guitar).
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <input
+                      className="input min-w-[12rem] flex-1"
+                      placeholder="New subtype name…"
+                      value={newSubtype}
+                      onChange={(e) => setNewSubtype(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void addSubtypeQuick();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      disabled={addingSubtype || !newSubtype.trim()}
+                      onClick={() => void addSubtypeQuick()}
+                    >
+                      {addingSubtype ? "Adding…" : "Add subtype"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

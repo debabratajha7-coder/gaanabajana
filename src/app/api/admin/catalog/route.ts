@@ -81,7 +81,36 @@ export async function PUT(req: Request) {
     const body = await req.json();
     await connectDB();
     if (body.type === "category") {
-      const category = await Category.findByIdAndUpdate(body.id, body.data, {
+      const data = z
+        .object({
+          name: z.string().min(1).optional(),
+          parent: z.string().nullable().optional(),
+          sortOrder: z.number().optional(),
+          description: z.string().optional(),
+          image: z.string().optional(),
+          isActive: z.boolean().optional(),
+          /** When renaming, also refresh the URL slug from the new name. */
+          updateSlug: z.boolean().optional(),
+        })
+        .parse(body.data ?? {});
+
+      const patch: Record<string, unknown> = { ...data };
+      delete patch.updateSlug;
+
+      if (data.name && data.updateSlug !== false) {
+        const id = String(body.id);
+        let slug = slugify(data.name);
+        const clash = await Category.findOne({
+          slug,
+          _id: { $ne: id },
+        }).lean();
+        if (clash) {
+          slug = `${slug}-${id.slice(-5)}`;
+        }
+        patch.slug = slug;
+      }
+
+      const category = await Category.findByIdAndUpdate(body.id, patch, {
         returnDocument: "after",
       });
       return NextResponse.json({ category });
