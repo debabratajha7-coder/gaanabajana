@@ -18,8 +18,59 @@ type ImageDropzoneProps = {
 type PendingCrop = {
   src: string;
   fileName: string;
-  queue: File[];
 };
+
+const CONCURRENCY = 3;
+const MAX_BATCH = 20;
+
+async function uploadOne(file: File, alt: string) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("alt", alt || file.name);
+  const res = await fetch("/api/admin/media", { method: "POST", body: fd });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Upload failed: ${file.name}`);
+  if (!data.media?.url) throw new Error(`No image returned for ${file.name}`);
+  return data.media.url as string;
+}
+
+/** Upload with concurrency; preserve input order for successes. */
+async function uploadPool(
+  files: File[],
+  alt: string,
+  limit: number,
+  onProgress?: (done: number, total: number) => void
+): Promise<{ urls: string[]; errors: string[] }> {
+  const results: (string | null)[] = Array(files.length).fill(null);
+  const errors: string[] = [];
+  let cursor = 0;
+  let done = 0;
+  const total = files.length;
+
+  async function run() {
+    while (cursor < files.length) {
+      const i = cursor++;
+      const file = files[i];
+      try {
+        results[i] = await uploadOne(file, alt);
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : "Upload failed");
+      } finally {
+        done += 1;
+        onProgress?.(done, total);
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, files.length) }, () => run())
+  );
+
+  return {
+    urls: results.filter((u): u is string => Boolean(u)),
+    errors,
+  };
+}
 
 export function ImageDropzone({
   values,
@@ -31,78 +82,116 @@ export function ImageDropzone({
   aspect = 1,
 }: ImageDropzoneProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
+
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const [pending, setPending] = useState<PendingCrop | null>(null);
-  const [collected, setCollected] = useState<string[]>([]);
 
-  function startQueue(files: FileList | File[]) {
-    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (!list.length) return;
-    const queue = multiple ? list : list.slice(0, 1);
-    const first = queue[0];
-    setError("");
-    setCollected([]);
-    setPending({
-      src: URL.createObjectURL(first),
-      fileName: first.name,
-      queue: queue.slice(1),
-    });
+  function clearInput() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  function closePending(src?: string) {
-    if (src) URL.revokeObjectURL(src);
-    setPending(null);
+  async function uploadBatch(files: File[]) {
+    const list = files.slice(0, MAX_BATCH);
+    if (!list.length) return;
+
+    setUploading(true);
+    setError("");
+    setProgress({ done: 0, total: list.length });
+
+    const { urls, errors } = await uploadPool(
+      list,
+      alt,
+      CONCURRENCY,
+      (done, total) => setProgress({ done, total })
+    );
+
+    if (urls.length) {
+      onChange(multiple ? [...valuesRef.current, ...urls] : urls.slice(0, 1));
+    }
+
+    if (errors.length) {
+      const extra =
+        files.length > MAX_BATCH
+          ? ` (max ${MAX_BATCH} at once; extra files skipped)`
+          : "";
+      setError(
+        urls.length
+          ? `Uploaded ${urls.length} of ${list.length}. Failed: ${errors.slice(0, 3).join("; ")}${extra}`
+          : `Upload failed: ${errors[0]}${extra}`
+      );
+    } else if (files.length > MAX_BATCH) {
+      setError(`Uploaded ${urls.length}. Max ${MAX_BATCH} images per batch.`);
+    } else {
+      setError("");
+    }
+
+    setUploading(false);
+    setProgress(null);
+    clearInput();
   }
 
-  async function uploadCropped(file: File, already: string[]) {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("alt", alt || file.name);
-    const res = await fetch("/api/admin/media", { method: "POST", body: fd });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Upload failed");
-    if (!data.media?.url) throw new Error("No image returned");
-    return [...already, data.media.url as string];
+  function startFromFiles(files: FileList | File[]) {
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (!list.length) {
+      setError("Choose image files (JPEG, PNG, WebP, GIF, or AVIF).");
+      return;
+    }
+
+    // Multi: upload all at once (no per-file crop gate)
+    if (multiple) {
+      void uploadBatch(list);
+      return;
+    }
+
+    // Single: keep crop → upload flow
+    const first = list[0];
+    setError("");
+    setPending({
+      src: URL.createObjectURL(first),
+      fileName: first.name,
+    });
+    clearInput();
+  }
+
+  function closePending() {
+    if (pending?.src) URL.revokeObjectURL(pending.src);
+    setPending(null);
   }
 
   async function onCropConfirm(file: File) {
     if (!pending) return;
-    const currentSrc = pending.src;
-    const rest = pending.queue;
     setUploading(true);
     setError("");
+    setProgress({ done: 0, total: 1 });
     try {
-      const nextCollected = await uploadCropped(file, collected);
-      URL.revokeObjectURL(currentSrc);
-
-      if (rest.length > 0) {
-        const next = rest[0];
-        setCollected(nextCollected);
-        setPending({
-          src: URL.createObjectURL(next),
-          fileName: next.name,
-          queue: rest.slice(1),
-        });
-      } else {
-        setPending(null);
-        setCollected([]);
-        onChange(multiple ? [...values, ...nextCollected] : nextCollected);
-      }
+      const url = await uploadOne(file, alt);
+      onChange([url]);
+      closePending();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
-      closePending(currentSrc);
-      setCollected([]);
+      closePending();
     } finally {
       setUploading(false);
+      setProgress(null);
     }
   }
 
   function removeAt(url: string) {
     onChange(values.filter((u) => u !== url));
   }
+
+  const progressLabel =
+    progress && progress.total > 1
+      ? `Uploading ${progress.done} of ${progress.total}…`
+      : "Uploading…";
 
   return (
     <div className={className}>
@@ -113,7 +202,7 @@ export function ImageDropzone({
         multiple={multiple}
         className="hidden"
         onChange={(e) => {
-          if (e.target.files?.length) startQueue(e.target.files);
+          if (e.target.files?.length) startFromFiles(e.target.files);
         }}
       />
       <button
@@ -144,20 +233,35 @@ export function ImageDropzone({
           e.preventDefault();
           e.stopPropagation();
           setDragging(false);
-          if (e.dataTransfer.files?.length) startQueue(e.dataTransfer.files);
+          if (e.dataTransfer.files?.length) startFromFiles(e.dataTransfer.files);
         }}
       >
         {uploading ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
-            <span className="text-[var(--fg-muted)]">Uploading framed photo…</span>
+            <span className="font-medium text-[var(--fg)]">{progressLabel}</span>
+            {progress && progress.total > 1 ? (
+              <div className="mt-1 h-1.5 w-40 overflow-hidden rounded-full bg-[var(--line)]">
+                <div
+                  className="h-full rounded-full bg-[var(--accent)] transition-all"
+                  style={{
+                    width: `${Math.round((progress.done / progress.total) * 100)}%`,
+                  }}
+                />
+              </div>
+            ) : null}
+            <span className="text-xs text-[var(--fg-muted)]">
+              Keep this tab open until uploads finish
+            </span>
           </>
         ) : (
           <>
             <Upload className="h-5 w-5 text-[var(--accent)]" />
             <span className="font-medium">{label}</span>
             <span className="text-xs text-[var(--fg-muted)]">
-              Preview → zoom & move → then upload
+              {multiple
+                ? `Select or drop up to ${MAX_BATCH} images — they upload together`
+                : "Preview → zoom & move → then upload"}
             </span>
           </>
         )}
@@ -189,6 +293,7 @@ export function ImageDropzone({
                 className="absolute right-1 top-1 rounded-full bg-black/75 p-1 text-white"
                 onClick={() => removeAt(url)}
                 aria-label="Remove image"
+                disabled={uploading}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -197,15 +302,12 @@ export function ImageDropzone({
         </div>
       )}
 
-      {pending && (
+      {pending && !multiple && (
         <ImageCropModal
           imageSrc={pending.src}
           fileName={pending.fileName}
           defaultAspect={aspect}
-          onCancel={() => {
-            closePending(pending.src);
-            setCollected([]);
-          }}
+          onCancel={closePending}
           onConfirm={(file) => void onCropConfirm(file)}
         />
       )}
