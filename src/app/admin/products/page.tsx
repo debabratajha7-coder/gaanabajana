@@ -12,6 +12,7 @@ type Cat = {
   name: string;
   slug: string;
   parent?: string | null | { _id?: string };
+  sortOrder?: number;
 };
 
 type Brand = { _id: string; name: string };
@@ -125,6 +126,8 @@ export default function AdminProductsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [parentId, setParentId] = useState("");
   const [childId, setChildId] = useState("");
+  const [newSubtype, setNewSubtype] = useState("");
+  const [addingSubtype, setAddingSubtype] = useState(false);
   const [brandId, setBrandId] = useState("");
   const [newBrand, setNewBrand] = useState("");
   const [title, setTitle] = useState("");
@@ -177,15 +180,23 @@ export default function AdminProductsPage() {
 
   const children = useMemo(() => {
     if (!parentId) return [];
-    return categories.filter((c) => {
-      const raw = c.parent as unknown;
-      if (raw == null || raw === "") return false;
-      const id =
-        typeof raw === "object" && raw !== null && "_id" in raw
-          ? String((raw as { _id: unknown })._id)
-          : String(raw);
-      return id === String(parentId);
-    });
+    return categories
+      .filter((c) => {
+        const raw = c.parent as unknown;
+        if (raw == null || raw === "") return false;
+        const id =
+          typeof raw === "object" && raw !== null && "_id" in raw
+            ? String((raw as { _id: unknown })._id)
+            : String(raw);
+        return id === String(parentId);
+      })
+      .slice()
+      .sort((a, b) => {
+        const sa = Number(a.sortOrder) || 0;
+        const sb = Number(b.sortOrder) || 0;
+        if (sa !== sb) return sa - sb;
+        return a.name.localeCompare(b.name);
+      });
   }, [categories, parentId]);
 
   function resetForm() {
@@ -288,6 +299,47 @@ export default function AdminProductsPage() {
     if (!res.ok) throw new Error(data.error || "Could not add brand");
     loadCatalog();
     return String(data.brand._id);
+  }
+
+  async function addSubtypeQuick() {
+    const name = newSubtype.trim();
+    if (!parentId) {
+      setError("Pick a main category first.");
+      return;
+    }
+    if (!name) {
+      setError("Type a subtype name (e.g. Acoustic).");
+      return;
+    }
+    setAddingSubtype(true);
+    setError("");
+    setMsg("");
+    try {
+      const maxOrder = children.reduce(
+        (m, c) => Math.max(m, Number(c.sortOrder) || 0),
+        -1
+      );
+      const res = await fetch("/api/admin/catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "category",
+          name,
+          parent: parentId,
+          sortOrder: maxOrder + 1,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not add subtype");
+      setNewSubtype("");
+      setChildId(String(data.category._id));
+      setMsg(`Added subtype “${name}”.`);
+      loadCatalog();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not add subtype");
+    } finally {
+      setAddingSubtype(false);
+    }
   }
 
   async function onSave(e: FormEvent) {
@@ -541,18 +593,50 @@ export default function AdminProductsPage() {
               </>
             )}
 
+            {parentId && (
+              <div className="rounded border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-3">
+                <p className="text-xs font-medium text-[var(--fg)]">
+                  Missing a subtype?
+                </p>
+                <p className="mt-1 text-xs text-[var(--fg-muted)]">
+                  Add it here without leaving this page (e.g. Acoustic under
+                  Acoustic guitar).
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <input
+                    className="input min-w-[12rem] flex-1"
+                    placeholder="New subtype name…"
+                    value={newSubtype}
+                    onChange={(e) => setNewSubtype(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void addSubtypeQuick();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    disabled={addingSubtype || !newSubtype.trim()}
+                    onClick={() => void addSubtypeQuick()}
+                  >
+                    {addingSubtype ? "Adding…" : "Add subtype"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {parentId && children.length === 0 && (
               <p className="rounded border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-2.5 text-sm text-[var(--fg-muted)]">
-                This main category has no subtypes yet. Add “Acoustic Guitars”,
-                “Bass”, etc. under it in{" "}
+                No subtypes yet — add one above, or manage the full tree in{" "}
                 <Link
                   href="/admin/shop-by-category"
                   className="font-medium text-[var(--fg)] underline"
                 >
                   Categories
                 </Link>
-                , then pick them here. You can still save under the main
-                category for now.
+                . You can still save under the main category for now.
               </p>
             )}
           </section>

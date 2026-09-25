@@ -5,13 +5,15 @@ import { authErrorResponse, requireAdminPermission } from "@/lib/auth";
 import { Category } from "@/models/Category";
 import { Brand } from "@/models/Brand";
 import { slugify } from "@/lib/utils";
+import { ensureCatalogCoreSubtypes } from "@/lib/ensure-catalog";
 
 export async function GET() {
   try {
     await requireAdminPermission("catalog");
     await connectDB();
+    await ensureCatalogCoreSubtypes();
     const [categories, brands] = await Promise.all([
-      Category.find().sort({ sortOrder: 1 }).lean(),
+      Category.find().sort({ sortOrder: 1, name: 1 }).lean(),
       Brand.find().sort({ name: 1 }).lean(),
     ]);
     return NextResponse.json({ categories, brands });
