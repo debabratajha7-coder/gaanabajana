@@ -42,8 +42,7 @@ const ReviewsStrip = dynamic(
 );
 const VisitStoreBand = dynamic(
   () =>
-    import("@/components/home/VisitStoreBand").then((m) => m.VisitStoreBand),
-  { ssr: false }
+    import("@/components/home/VisitStoreBand").then((m) => m.VisitStoreBand)
 );
 
 type LeanBrand = { name?: string; slug?: string } | null;
