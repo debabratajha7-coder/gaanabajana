@@ -136,7 +136,7 @@ export function BestsellerTabs({
             const raw = p.images?.[0] || "/placeholder-product.jpg";
             const src = themedProductImage(raw, fillHex, {
               width: 360,
-              bgRemoval: false,
+              bgRemoval: true,
             });
             return (
               <Link

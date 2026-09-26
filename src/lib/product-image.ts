@@ -1,7 +1,6 @@
 /**
- * Cloudinary helpers for fast delivery.
- * Prefer optimizedRemoteImage / themedProductImage({ bgRemoval: false }) on list pages —
- * AI background removal is slow and often huge (Lighthouse “Improve image delivery”).
+ * Cloudinary helpers. Use bgRemoval: true for cutout product/category art
+ * (homepage, PDP). Always pair with a tight width + q_auto:eco so LCP stays sane.
  */
 
 export function themedProductImage(
