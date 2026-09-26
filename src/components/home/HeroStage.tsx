@@ -77,11 +77,11 @@ export function HeroStage({
     <section
       ref={ref}
       data-hero-stage
-      className="relative grid bg-[#070707] text-white md:min-h-[88vh] md:grid-cols-[minmax(18rem,0.92fr)_minmax(0,1.2fr)]"
+      className="relative grid bg-[#070707] text-white md:h-[calc(100svh-16rem)] md:grid-cols-[minmax(16rem,0.78fr)_minmax(0,1.35fr)] md:overflow-hidden"
     >
       <motion.div
         style={{ y: copyY, opacity: copyOpacity }}
-        className="order-2 flex flex-col justify-between px-6 py-8 sm:px-8 md:order-1 md:px-10 md:py-12 lg:px-14 lg:py-16"
+        className="order-2 flex flex-col justify-between px-6 py-7 sm:px-8 md:order-1 md:px-9 md:py-9 lg:px-12 lg:py-10"
       >
         <div className="flex items-center justify-between gap-4">
           <p className="text-[11px] font-semibold tracking-[0.28em] text-white/45 uppercase">
@@ -144,7 +144,7 @@ export function HeroStage({
         </motion.div>
       </motion.div>
 
-      <div className="relative order-1 h-[46vh] min-h-[16rem] md:order-2 md:h-auto md:min-h-[88vh]">
+      <div className="relative order-1 h-[38vh] min-h-[13.5rem] md:order-2 md:h-auto md:min-h-0">
         <motion.div className="absolute inset-0" style={{ y: imageY }}>
           <Image
             src={mobileSrc}
