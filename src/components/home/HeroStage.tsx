@@ -52,200 +52,118 @@ export function HeroStage({
   const mobileSrc = optimizedRemoteImage(image, { width: 720 });
   const desktopSrc = optimizedRemoteImage(image, { width: 1280 });
 
-  const trustChip = ratingLabel ? (
-    ratingHref ? (
-      <a
-        href={ratingHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/85 underline-offset-2 hover:underline"
-      >
-        {ratingLabel}
-      </a>
-    ) : (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/85">
-        {ratingLabel}
-      </span>
-    )
-  ) : null;
+  const wordmark = brandWordmark(storeName);
+  const [firstLine, ...restLines] = wordmark.split(" ");
+  const secondLine = restLines.join(" ");
 
-  const trustChipMobile = ratingLabel ? (
+  const rating = ratingLabel ? (
     ratingHref ? (
       <a
         href={ratingHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/80 underline-offset-2 hover:underline"
+        className="text-xs font-medium tracking-[0.18em] text-white/70 uppercase hover:text-white"
       >
         {ratingLabel}
       </a>
     ) : (
-      <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-white/80">
+      <span className="text-xs font-medium tracking-[0.18em] text-white/70 uppercase">
         {ratingLabel}
       </span>
     )
   ) : null;
 
   return (
-    <section ref={ref} data-hero-stage className="relative md:min-h-[88vh]">
-      <div className="relative overflow-hidden bg-black md:hidden">
-        <div className="relative flex min-h-[78vh] flex-col">
-          <div className="relative flex min-h-[44vh] flex-1 items-center justify-center px-3 pt-20">
-            <div className="relative h-[min(52vh,28rem)] w-full">
-              <Image
-                src={mobileSrc}
-                alt=""
-                fill
-                priority
-                fetchPriority="high"
-                quality={70}
-                sizes="100vw"
-                className="object-contain object-center"
-              />
-            </div>
-          </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/75 to-transparent" />
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease }}
-            className="relative z-[1] flex flex-col justify-end px-5 pb-10 pt-4"
-          >
-            <p
-              className="display text-[clamp(2.15rem,10vw,3.1rem)] leading-[0.9] tracking-[-0.04em] text-white [text-shadow:0_2px_20px_rgba(0,0,0,0.5)]"
-              suppressHydrationWarning
-            >
-              {brandWordmark(storeName)}
-            </p>
-
-            <h1 className="mt-4 max-w-sm text-[0.95rem] font-medium leading-snug text-white/95">
-              <AnnotatedPhrase
-                text={headline}
-                phrase="your sound"
-                variant="wavy"
-                color="text-[#ff8a9a]"
-                delay={0.45}
-              />
-            </h1>
-
-            <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/75">
-              <AnnotatedPhrase
-                text={subheadline}
-                phrase="curated"
-                variant="highlight"
-                color="text-[#ff8a9a]"
-                delay={0.55}
-              />
-            </p>
-
-            <div className="mt-5 flex w-full flex-col gap-2.5">
-              <Link
-                href={ctaHref}
-                className="btn btn-primary group w-full justify-center rounded-full"
-              >
-                {ctaLabel}
-                <ArrowRight className="ml-1.5 h-4 w-4 transition group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href={visitHref}
-                className="btn w-full justify-center rounded-full border border-white/35 bg-transparent text-white hover:border-white hover:bg-white/10"
-              >
-                Visit store
-              </Link>
-            </div>
-            {trustChipMobile}
-          </motion.div>
+    <section
+      ref={ref}
+      data-hero-stage
+      className="relative grid bg-[#070707] text-white md:min-h-[88vh] md:grid-cols-[minmax(18rem,0.92fr)_minmax(0,1.2fr)]"
+    >
+      <motion.div
+        style={{ y: copyY, opacity: copyOpacity }}
+        className="order-2 flex flex-col justify-between px-6 py-8 sm:px-8 md:order-1 md:px-10 md:py-12 lg:px-14 lg:py-16"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-[11px] font-semibold tracking-[0.28em] text-white/45 uppercase">
+            Siliguri
+          </p>
+          {rating}
         </div>
-      </div>
 
-      <div className="relative hidden overflow-hidden md:block md:min-h-[88vh]">
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease }}
+          className="mt-8 md:mt-0"
+        >
+          <p className="display max-w-full text-[clamp(3.1rem,8vw,5.6rem)] leading-[0.84] tracking-[-0.055em]">
+            {firstLine}
+          </p>
+          {secondLine ? (
+            <p
+              className="display max-w-full text-[clamp(3.1rem,8vw,5.6rem)] leading-[0.84] tracking-[-0.055em] text-transparent"
+              style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.9)" }}
+            >
+              {secondLine}
+            </p>
+          ) : null}
+
+          <div className="mt-6 h-px w-16 bg-[#ff8a9a]" />
+
+          <h1 className="mt-5 max-w-md text-lg leading-snug text-white md:text-2xl">
+            <AnnotatedPhrase
+              text={headline}
+              phrase="your sound"
+              variant="wavy"
+              color="text-[#ff8a9a]"
+              delay={0.45}
+            />
+          </h1>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/65 md:text-base">
+            <AnnotatedPhrase
+              text={subheadline}
+              phrase="curated"
+              variant="highlight"
+              color="text-[#ff8a9a]"
+              delay={0.6}
+            />
+          </p>
+
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <Link href={ctaHref} className="btn btn-primary group rounded-full px-6">
+              {ctaLabel}
+              <ArrowRight className="ml-1.5 h-4 w-4 transition group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              href={visitHref}
+              className="btn rounded-full border border-white/25 bg-transparent px-6 text-white hover:border-white hover:bg-white/10"
+            >
+              Visit store
+            </Link>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      <div className="relative order-1 h-[46vh] min-h-[16rem] md:order-2 md:h-auto md:min-h-[88vh]">
         <motion.div className="absolute inset-0" style={{ y: imageY }}>
           <Image
-            src={desktopSrc}
+            src={mobileSrc}
             alt=""
             fill
             priority
             fetchPriority="high"
-            quality={70}
+            quality={75}
             sizes="100vw"
-            className="animate-hero-zoom object-cover object-center"
+            className="object-cover object-center md:hidden"
           />
-        </motion.div>
-        <div className="pointer-events-none absolute inset-0 bg-black/25" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
-        <motion.div
-          style={{ y: copyY, opacity: copyOpacity }}
-          className="relative flex min-h-[88vh] flex-col justify-end px-[max(0.75rem,calc((100vw-1120px)/2))] pb-16 pt-24"
-        >
-          <div className="w-full max-w-[min(100%,26rem)]">
-            <motion.p
-              initial={reduce ? false : { opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, ease }}
-              className="display text-[clamp(2.1rem,9vw,5.5rem)] leading-[0.92] tracking-[-0.045em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.55)]"
-              suppressHydrationWarning
-            >
-              {brandWordmark(storeName)}
-            </motion.p>
-
-            <motion.h1
-              initial={reduce ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.1, ease }}
-              className="mt-5 max-w-xl text-xl text-white/95 [text-shadow:0_1px_12px_rgba(0,0,0,0.45)] md:text-2xl"
-            >
-              <AnnotatedPhrase
-                text={headline}
-                phrase="your sound"
-                variant="wavy"
-                color="text-[#ff8a9a]"
-                delay={0.55}
-              />
-            </motion.h1>
-
-            <motion.p
-              initial={reduce ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.18, ease }}
-              className="mt-3 max-w-md text-base leading-relaxed text-white/80 [text-shadow:0_1px_10px_rgba(0,0,0,0.4)]"
-            >
-              <AnnotatedPhrase
-                text={subheadline}
-                phrase="curated"
-                variant="highlight"
-                color="text-[#ff8a9a]"
-                delay={0.7}
-              />
-            </motion.p>
-
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.26, ease }}
-              className="mt-8 flex flex-wrap items-center gap-3"
-            >
-              <Link href={ctaHref} className="btn btn-primary group">
-                {ctaLabel}
-                <ArrowRight className="ml-1.5 h-4 w-4 transition group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href={visitHref}
-                className="btn border border-white/30 bg-transparent text-white hover:border-white hover:bg-white/10"
-              >
-                Visit store
-              </Link>
-            </motion.div>
-            {trustChip && (
-              <motion.div
-                initial={reduce ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.36, ease }}
-                className="mt-4"
-              >
-                {trustChip}
-              </motion.div>
-            )}
-          </div>
+          <Image
+            src={desktopSrc}
+            alt=""
+            fill
+            quality={75}
+            sizes="58vw"
+            className="hidden object-cover object-center md:block"
+          />
         </motion.div>
       </div>
     </section>

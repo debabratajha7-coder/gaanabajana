@@ -11,7 +11,7 @@ import { PriceCutTag } from "@/components/ui/PriceCutTag";
 
 type Tab = { id: string; label: string; href: string };
 
-const MAX_PER_TAB = 6;
+const SPOTLIGHT = 4;
 
 function readBestsellersFill() {
   if (typeof document === "undefined") return "000000";
@@ -19,6 +19,65 @@ function readBestsellersFill() {
     .getPropertyValue("--bestsellers-band-fill")
     .trim();
   return raw || "000000";
+}
+
+function ProductTile({
+  product,
+  fillHex,
+  width,
+  eager,
+  compact,
+  delay,
+}: {
+  product: ProductCardData;
+  fillHex: string;
+  width: number;
+  eager?: boolean;
+  compact?: boolean;
+  delay: number;
+}) {
+  const raw = product.images?.[0] || "/placeholder-product.jpg";
+  const src = themedProductImage(raw, fillHex, {
+    width,
+    bgRemoval: true,
+    stage: true,
+  });
+
+  return (
+    <Link
+      href={`/products/${product.slug}`}
+      aria-label={product.title}
+      className={`bestseller-card group/stage flex h-full flex-col ${
+        compact ? "w-[11rem] shrink-0 snap-start sm:w-[13rem]" : ""
+      }`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="relative aspect-[4/5] w-full overflow-hidden">
+        <Image
+          src={src}
+          alt={product.title}
+          fill
+          quality={75}
+          sizes={compact ? "200px" : "(max-width: 640px) 46vw, 260px"}
+          loading={eager ? "eager" : "lazy"}
+          priority={Boolean(eager)}
+          className="bestseller-img object-contain object-center"
+        />
+      </div>
+      <div className="mt-4 h-px w-8 bg-[#ff8a9a] transition-[width] duration-300 group-hover/stage:w-14" />
+      <p className="mt-3 line-clamp-2 min-h-[2.5em] text-left text-[13px] font-medium leading-snug text-white/90 sm:text-sm">
+        {product.title}
+      </p>
+      <div className="mt-2">
+        <PriceCutTag
+          layout="compact"
+          price={product.price}
+          mrp={product.mrp ?? product.price}
+          className="justify-start"
+        />
+      </div>
+    </Link>
+  );
 }
 
 export function BestsellerTabs({
@@ -54,10 +113,12 @@ export function BestsellerTabs({
         : bandFill;
 
   const items = useMemo(() => {
-    const list = productsByTab[active] || productsByTab[first] || [];
-    return list.slice(0, MAX_PER_TAB);
+    return productsByTab[active] || productsByTab[first] || [];
   }, [productsByTab, active, first]);
 
+  const useRail = items.length > SPOTLIGHT + 2;
+  const spotlight = useRail ? items.slice(0, SPOTLIGHT) : items;
+  const more = useRail ? items.slice(SPOTLIGHT) : [];
   const activeTab = tabs.find((t) => t.id === active) || tabs[0];
 
   useEffect(() => {
@@ -128,52 +189,44 @@ export function BestsellerTabs({
       </div>
 
       {items.length ? (
-        <div
-          key={active}
-          className="mx-auto grid w-full max-w-[720px] grid-cols-2 gap-x-3 gap-y-7 px-1.5 sm:gap-x-8 sm:gap-y-10 sm:px-2"
-        >
-          {items.map((p, i) => {
-            const raw = p.images?.[0] || "/placeholder-product.jpg";
-            const src = themedProductImage(raw, fillHex, {
-              width: 360,
-              bgRemoval: true,
-            });
-            return (
-              <Link
+        <div key={active}>
+          <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:gap-x-8 lg:grid-cols-4">
+            {spotlight.map((p, i) => (
+              <ProductTile
                 key={p._id}
-                href={`/products/${p.slug}`}
-                className="group/stage flex flex-col items-center text-center"
-                aria-label={p.title}
-              >
-                <div className="relative flex h-[190px] w-full items-end justify-center sm:h-[280px]">
-                  <Image
-                    src={src}
-                    alt={p.title}
-                    width={360}
-                    height={360}
-                    className="max-h-full w-auto max-w-full object-contain transition duration-300 group-hover/stage:scale-[1.03]"
-                    sizes="(max-width: 640px) 45vw, 320px"
-                    quality={70}
-                    loading={i < 2 ? "eager" : "lazy"}
-                    priority={i < 2}
-                  />
+                product={p}
+                fillHex={fillHex}
+                width={320}
+                eager={i < 2}
+                delay={i * 70}
+              />
+            ))}
+          </div>
+
+          {more.length > 0 && (
+            <div className="mt-8">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+                  More in {activeTab?.label || "this category"}
+                </p>
+                <p className="text-[11px] text-[var(--fg-muted)]">Swipe</p>
+              </div>
+              <div className="bestseller-rail -mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+                <div className="flex w-max snap-x snap-mandatory gap-3">
+                  {more.map((p, i) => (
+                    <ProductTile
+                      key={p._id}
+                      product={p}
+                      fillHex={fillHex}
+                      width={220}
+                      compact
+                      delay={280 + i * 50}
+                    />
+                  ))}
                 </div>
-                <div className="mt-2 flex flex-col items-center gap-1.5 sm:mt-3">
-                  <span className="glass-chip max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:!rounded-xl sm:px-3 sm:py-2">
-                    <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
-                      {p.title}
-                    </span>
-                  </span>
-                  <PriceCutTag
-                    layout="inline"
-                    price={p.price}
-                    mrp={p.mrp ?? p.price}
-                    className="justify-center text-[11px] sm:text-sm"
-                  />
-                </div>
-              </Link>
-            );
-          })}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="glass-panel px-4 py-10 text-center">

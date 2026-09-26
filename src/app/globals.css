@@ -641,6 +641,55 @@ a {
   color: var(--fg);
 }
 
+/* Bestsellers shelf — CSS motion only (no scroll listeners) */
+@keyframes bestseller-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bestseller-card {
+  animation: bestseller-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bestseller-img {
+  transform-origin: center center;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bestseller-card:hover .bestseller-img,
+.bestseller-card:focus-visible .bestseller-img {
+  transform: scale(1.04);
+}
+
+.bestseller-rail {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 1.5rem,
+    #000 calc(100% - 2.5rem),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bestseller-card {
+    animation: none;
+  }
+
+  .bestseller-img,
+  .bestseller-card:hover .bestseller-img,
+  .bestseller-card:focus-visible .bestseller-img {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* Stage product hover — zoom only */
 .stage-tile-media {
   isolation: isolate;
