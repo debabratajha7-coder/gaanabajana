@@ -1,12 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { themedProductImage } from "@/lib/product-image";
 import type { ProductCardData } from "@/components/product/ProductCard";
 import { usePdpThemeOptional } from "@/components/product/PdpTheme";
-import { ScrollTiltedGrid } from "@/components/ui/scroll-tilted-grid";
+import { PriceCutTag } from "@/components/ui/PriceCutTag";
 
 type Tab = { id: string; label: string; href: string };
 
@@ -72,22 +73,6 @@ export function BestsellerTabs({
     });
   }, [active, tabs]);
 
-  const images = useMemo(
-    () =>
-      items.map((p) => {
-        const raw = p.images?.[0] || "/placeholder-product.jpg";
-        return {
-          src: themedProductImage(raw, fillHex, { width: 480 }),
-          alt: p.title,
-          href: `/products/${p.slug}`,
-          title: p.title,
-          priceValue: p.price,
-          mrp: p.mrp,
-        };
-      }),
-    [items, fillHex]
-  );
-
   if (!tabs.length) return null;
 
   return (
@@ -143,16 +128,53 @@ export function BestsellerTabs({
       </div>
 
       {items.length ? (
-        <ScrollTiltedGrid
-          key={`${active}-${fillHex}`}
-          images={images}
-          variant="stage"
-          smoothScroll={false}
-          sectionPadding="0.35rem"
-          rounded="var(--radius-glass, 1rem)"
-          maxTilt={32}
-          maxBlur={0}
-        />
+        <div
+          key={active}
+          className="mx-auto grid w-full max-w-[720px] grid-cols-2 gap-x-3 gap-y-7 px-1.5 sm:gap-x-8 sm:gap-y-10 sm:px-2"
+        >
+          {items.map((p, i) => {
+            const raw = p.images?.[0] || "/placeholder-product.jpg";
+            const src = themedProductImage(raw, fillHex, {
+              width: 360,
+              bgRemoval: false,
+            });
+            return (
+              <Link
+                key={p._id}
+                href={`/products/${p.slug}`}
+                className="group/stage flex flex-col items-center text-center"
+                aria-label={p.title}
+              >
+                <div className="relative flex h-[190px] w-full items-end justify-center sm:h-[280px]">
+                  <Image
+                    src={src}
+                    alt={p.title}
+                    width={360}
+                    height={360}
+                    className="max-h-full w-auto max-w-full object-contain transition duration-300 group-hover/stage:scale-[1.03]"
+                    sizes="(max-width: 640px) 45vw, 320px"
+                    quality={70}
+                    loading={i < 2 ? "eager" : "lazy"}
+                    priority={i < 2}
+                  />
+                </div>
+                <div className="mt-2 flex flex-col items-center gap-1.5 sm:mt-3">
+                  <span className="glass-chip max-w-full !rounded-lg px-2.5 py-1.5 text-left sm:!rounded-xl sm:px-3 sm:py-2">
+                    <span className="line-clamp-2 text-[10px] font-semibold leading-snug text-[var(--fg)] sm:line-clamp-1 sm:text-xs">
+                      {p.title}
+                    </span>
+                  </span>
+                  <PriceCutTag
+                    layout="inline"
+                    price={p.price}
+                    mrp={p.mrp ?? p.price}
+                    className="justify-center text-[11px] sm:text-sm"
+                  />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       ) : (
         <div className="glass-panel px-4 py-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">

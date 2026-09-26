@@ -48,8 +48,9 @@ export function HeroStage({
   );
 
   const ease = [0.22, 1, 0.36, 1] as const;
-  const mobileSrc = optimizedRemoteImage(image, { width: 900 });
-  const desktopSrc = optimizedRemoteImage(image, { width: 1600 });
+  /** Mobile LCP: keep under ~640px; desktop hero capped for weight. */
+  const mobileSrc = optimizedRemoteImage(image, { width: 720 });
+  const desktopSrc = optimizedRemoteImage(image, { width: 1280 });
 
   const trustChip = ratingLabel ? (
     ratingHref ? (
@@ -96,6 +97,8 @@ export function HeroStage({
                 alt=""
                 fill
                 priority
+                fetchPriority="high"
+                quality={70}
                 sizes="100vw"
                 className="object-contain object-center"
               />
@@ -162,6 +165,8 @@ export function HeroStage({
             alt=""
             fill
             priority
+            fetchPriority="high"
+            quality={70}
             sizes="100vw"
             className="animate-hero-zoom object-cover object-center"
           />

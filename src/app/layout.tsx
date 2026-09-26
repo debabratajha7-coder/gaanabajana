@@ -14,21 +14,21 @@ import { getSiteUrl } from "@/lib/site-url";
 const display = Syne({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["700"],
   display: "swap",
 });
 
 const body = Outfit({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "600"],
   display: "swap",
 });
 
 const brand = Cormorant_Garamond({
   variable: "--font-brand",
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["700"],
   display: "swap",
 });
 

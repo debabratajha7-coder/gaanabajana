@@ -234,10 +234,19 @@ export default async function HomePage() {
     address: settings.address,
   });
 
+  const heroPreload = optimizedRemoteImage(settings.heroImage, { width: 720 });
+
   return (
     <>
+      {/* Discover LCP image early (mobile PSI). */}
+      <link
+        rel="preload"
+        as="image"
+        href={heroPreload}
+        fetchPriority="high"
+      />
       <HeroStage
-        image={optimizedRemoteImage(settings.heroImage, { width: 1600 })}
+        image={settings.heroImage}
         storeName={settings.storeName || "Gaana Bajana"}
         headline={settings.heroHeadline}
         subheadline={settings.heroSubheadline}

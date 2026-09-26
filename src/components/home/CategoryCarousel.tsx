@@ -25,7 +25,10 @@ function CategoryImg({
   fillHex: string;
 }) {
   const [failed, setFailed] = useState(false);
-  const themed = themedProductImage(src, fillHex, { width: 320 });
+  const themed = themedProductImage(src, fillHex, {
+    width: 280,
+    bgRemoval: false,
+  });
   const finalSrc = failed ? src : themed;
 
   return (

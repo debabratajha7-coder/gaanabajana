@@ -80,7 +80,7 @@ function ThemedImg({
   style?: CSSProperties;
 }) {
   const [failed, setFailed] = useState(false);
-  const themed = themedProductImage(src, fillHex);
+  const themed = themedProductImage(src, fillHex, { bgRemoval: true });
   const finalSrc = failed ? src : themed;
 
   return (

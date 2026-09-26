@@ -37,7 +37,7 @@ export function ProductCard({
   const fillHex = pdp?.tokens.imgBg || "141414";
   const preview =
     isPdp && !imgFailed
-      ? themedProductImage(rawPreview, fillHex)
+      ? themedProductImage(rawPreview, fillHex, { width: 600, bgRemoval: true })
       : rawPreview;
 
   const visible = colors.slice(0, MAX_SWATCHES);
