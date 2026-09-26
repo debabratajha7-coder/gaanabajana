@@ -194,6 +194,9 @@ export function VisitStoreBand({
                   className="absolute inset-0 h-full w-full object-cover"
                   loading="lazy"
                   decoding="async"
+                  width={800}
+                  height={600}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               </div>
             </Reveal>

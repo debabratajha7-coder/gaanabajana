@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export type BrandTile = {
@@ -23,18 +24,33 @@ export function BrandLogoGrid({ brands }: { brands: BrandTile[] }) {
         <Link
           key={b._id}
           href={`/brands/${b.slug}`}
-          className="glass-panel flex aspect-[5/3] items-center justify-center px-4 transition hover:border-[var(--line-strong)] sm:px-6"
+          className="glass-panel relative flex aspect-[5/3] items-center justify-center px-4 transition hover:border-[var(--line-strong)] sm:px-6"
           title={b.name}
           aria-label={b.name}
         >
           {b.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={b.logo}
-              alt={b.name}
-              className="max-h-[70%] max-w-[85%] object-contain"
-              loading="lazy"
-            />
+            // Prefer next/image for local + known CDNs; fall back gracefully for odd URLs
+            b.logo.startsWith("/") ||
+            b.logo.includes("res.cloudinary.com") ||
+            b.logo.includes("images.unsplash.com") ? (
+              <Image
+                src={b.logo}
+                alt={b.name}
+                width={160}
+                height={80}
+                className="max-h-[70%] max-w-[85%] object-contain"
+                loading="lazy"
+                sizes="(max-width: 640px) 40vw, 20vw"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={b.logo}
+                alt={b.name}
+                className="max-h-[70%] max-w-[85%] object-contain"
+                loading="lazy"
+              />
+            )
           ) : (
             <span className="text-center text-sm font-semibold tracking-wide text-neutral-800">
               {b.name}

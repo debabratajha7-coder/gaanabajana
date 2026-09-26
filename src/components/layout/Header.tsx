@@ -22,7 +22,6 @@ import {
 import { useCart } from "@/components/providers/CartProvider";
 import { CartBadge } from "@/components/ui/CartBadge";
 import { PdpThemeToggle } from "@/components/product/PdpTheme";
-import { Signature } from "@/components/ui/signature";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { brandWordmark } from "@/lib/brand";
 
@@ -165,15 +164,9 @@ export function Header({
                   onClick={close}
                   aria-label={wordmark}
                 >
-                  <Signature
-                    text={wordmark}
-                    color="currentColor"
-                    fontSize={30}
-                    duration={1.05}
-                    compact
-                    fontUrl="/fonts/CormorantGaramond-Bold.ttf"
-                    className="h-9 w-auto max-w-full"
-                  />
+                  <span className="truncate font-[family-name:var(--font-brand)] text-[1.65rem] font-bold leading-none tracking-[-0.02em]">
+                    {wordmark}
+                  </span>
                 </Link>
                 <button
                   type="button"
@@ -465,15 +458,9 @@ export function Header({
           className="flex min-w-0 max-w-[min(72vw,16.5rem)] shrink items-center text-[var(--fg)] sm:max-w-[18rem] md:max-w-none md:shrink-0"
           aria-label={wordmark}
         >
-          <Signature
-            text={wordmark}
-            color="currentColor"
-            fontSize={34}
-            duration={1.05}
-            compact
-            fontUrl="/fonts/CormorantGaramond-Bold.ttf"
-            className="h-9 w-auto max-w-full sm:h-10 md:h-11"
-          />
+          <span className="truncate font-[family-name:var(--font-brand)] text-[1.75rem] font-bold leading-none tracking-[-0.02em] sm:text-[1.9rem] md:text-[2.05rem]">
+            {wordmark}
+          </span>
         </Link>
 
         <form onSubmit={goSearch} className="ml-auto hidden max-w-xl flex-1 md:flex">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { Category } from "@/models/Category";
@@ -12,19 +13,38 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroStage } from "@/components/home/HeroStage";
 import { BrandLogoGrid } from "@/components/home/BrandLogoGrid";
 import { CategoryCarousel } from "@/components/home/CategoryCarousel";
-import { BestsellerTabs } from "@/components/home/BestsellerTabs";
-import { WhyUsGrid } from "@/components/home/WhyUsGrid";
 import { StatsStrip } from "@/components/home/StatsStrip";
-import { ReviewsStrip } from "@/components/home/ReviewsStrip";
-import { VisitStoreBand } from "@/components/home/VisitStoreBand";
 import { filterPublicCategories } from "@/lib/public-catalog";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 import {
   DEFAULT_GOOGLE_REVIEWS_URL,
   resolveGoogleReviewsUrl,
 } from "@/lib/google-reviews";
+import { optimizedRemoteImage } from "@/lib/product-image";
 
-export const dynamic = "force-dynamic";
+/** Cache homepage HTML/data briefly — big TTFB win vs force-dynamic. */
+export const revalidate = 60;
+
+const BestsellerTabs = dynamic(
+  () =>
+    import("@/components/home/BestsellerTabs").then((m) => m.BestsellerTabs),
+  {
+    loading: () => (
+      <div className="min-h-[20rem] animate-pulse rounded-2xl bg-white/5" />
+    ),
+  }
+);
+const WhyUsGrid = dynamic(
+  () => import("@/components/home/WhyUsGrid").then((m) => m.WhyUsGrid)
+);
+const ReviewsStrip = dynamic(
+  () => import("@/components/home/ReviewsStrip").then((m) => m.ReviewsStrip)
+);
+const VisitStoreBand = dynamic(
+  () =>
+    import("@/components/home/VisitStoreBand").then((m) => m.VisitStoreBand),
+  { ssr: false }
+);
 
 type LeanBrand = { name?: string; slug?: string } | null;
 
@@ -133,7 +153,7 @@ export default async function HomePage() {
       heroCtaLabel: "Shop bestsellers",
       heroCtaHref: "/collections/guitars",
       heroImage:
-        "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=2000&q=80",
+        "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=75",
       storeName: "Gaana Bajana",
       homeCategoriesEyebrow: "Explore",
       homeCategoriesTitle: "Explore By Category",
@@ -218,7 +238,7 @@ export default async function HomePage() {
   return (
     <>
       <HeroStage
-        image={settings.heroImage}
+        image={optimizedRemoteImage(settings.heroImage, { width: 1600 })}
         storeName={settings.storeName || "Gaana Bajana"}
         headline={settings.heroHeadline}
         subheadline={settings.heroSubheadline}

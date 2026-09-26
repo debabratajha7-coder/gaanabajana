@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { brandWordmark } from "@/lib/brand";
 import { AnnotatedPhrase } from "@/components/ui/annotate-phrase";
+import { optimizedRemoteImage } from "@/lib/product-image";
 
 type HeroStageProps = {
   image: string;
@@ -46,6 +48,8 @@ export function HeroStage({
   );
 
   const ease = [0.22, 1, 0.36, 1] as const;
+  const mobileSrc = optimizedRemoteImage(image, { width: 900 });
+  const desktopSrc = optimizedRemoteImage(image, { width: 1600 });
 
   const trustChip = ratingLabel ? (
     ratingHref ? (
@@ -83,16 +87,19 @@ export function HeroStage({
 
   return (
     <section ref={ref} data-hero-stage className="relative md:min-h-[88vh]">
-      {/* Phone: image fits (shrinks) without crop; copy sits on the gradient foot */}
       <div className="relative overflow-hidden bg-black md:hidden">
         <div className="relative flex min-h-[78vh] flex-col">
           <div className="relative flex min-h-[44vh] flex-1 items-center justify-center px-3 pt-20">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image}
-              alt=""
-              className="max-h-[min(52vh,28rem)] w-full object-contain object-center"
-            />
+            <div className="relative h-[min(52vh,28rem)] w-full">
+              <Image
+                src={mobileSrc}
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="object-contain object-center"
+              />
+            </div>
           </div>
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/75 to-transparent" />
           <motion.div
@@ -148,14 +155,15 @@ export function HeroStage({
         </div>
       </div>
 
-      {/* Desktop: full-bleed cinematic cover with overlay copy */}
       <div className="relative hidden overflow-hidden md:block md:min-h-[88vh]">
         <motion.div className="absolute inset-0" style={{ y: imageY }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={image}
+          <Image
+            src={desktopSrc}
             alt=""
-            className="animate-hero-zoom absolute inset-0 h-full w-full object-cover object-center"
+            fill
+            priority
+            sizes="100vw"
+            className="animate-hero-zoom object-cover object-center"
           />
         </motion.div>
         <div className="pointer-events-none absolute inset-0 bg-black/25" />

@@ -77,7 +77,7 @@ export function BestsellerTabs({
       items.map((p) => {
         const raw = p.images?.[0] || "/placeholder-product.jpg";
         return {
-          src: themedProductImage(raw, fillHex),
+          src: themedProductImage(raw, fillHex, { width: 480 }),
           alt: p.title,
           href: `/products/${p.slug}`,
           title: p.title,
@@ -150,8 +150,8 @@ export function BestsellerTabs({
           smoothScroll={false}
           sectionPadding="0.35rem"
           rounded="var(--radius-glass, 1rem)"
-          maxTilt={48}
-          maxBlur={4}
+          maxTilt={32}
+          maxBlur={0}
         />
       ) : (
         <div className="glass-panel px-4 py-10 text-center">
