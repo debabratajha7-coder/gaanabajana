@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { getLayoutData } from "@/lib/layout-data";
+import { getSiteUrl } from "@/lib/site-url";
 
 const display = Syne({
   variable: "--font-display",
@@ -29,12 +30,21 @@ const brand = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Gaanabajana — Musical Instruments Online",
     template: "%s · Gaanabajana",
   },
   description:
     "Buy guitars, keyboards, drums, and studio gear online in India at Gaanabajana.",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
 };
 
 export default async function RootLayout({

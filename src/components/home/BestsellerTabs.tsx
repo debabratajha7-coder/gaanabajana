@@ -11,7 +11,6 @@ import { ScrollTiltedGrid } from "@/components/ui/scroll-tilted-grid";
 type Tab = { id: string; label: string; href: string };
 
 const MAX_PER_TAB = 6;
-const AUTO_TAB_MS = 4500;
 
 function readBestsellersFill() {
   if (typeof document === "undefined") return "000000";
@@ -30,8 +29,6 @@ export function BestsellerTabs({
 }) {
   const first = tabs[0]?.id || "all";
   const [active, setActive] = useState(first);
-  /** Manual tab click stops autoplay until the page is refreshed. */
-  const [userLocked, setUserLocked] = useState(false);
   const theme = usePdpThemeOptional();
   const [bandFill, setBandFill] = useState("000000");
   const listRef = useRef<HTMLDivElement>(null);
@@ -54,33 +51,6 @@ export function BestsellerTabs({
       : theme?.theme === "light"
         ? "000000"
         : bandFill;
-
-  const rotatableTabs = useMemo(() => {
-    const withProducts = tabs.filter(
-      (t) => (productsByTab[t.id] || []).length > 0
-    );
-    return withProducts.length ? withProducts : tabs;
-  }, [tabs, productsByTab]);
-
-  useEffect(() => {
-    if (userLocked || rotatableTabs.length < 2) return;
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-
-    const id = window.setInterval(() => {
-      setActive((current) => {
-        const i = rotatableTabs.findIndex((t) => t.id === current);
-        const next = rotatableTabs[(i + 1) % rotatableTabs.length];
-        return next?.id ?? current;
-      });
-    }, AUTO_TAB_MS);
-
-    return () => window.clearInterval(id);
-  }, [userLocked, rotatableTabs]);
 
   const items = useMemo(() => {
     const list = productsByTab[active] || productsByTab[first] || [];
@@ -142,10 +112,7 @@ export function BestsellerTabs({
                     role="tab"
                     aria-selected={on}
                     data-tab={t.id}
-                    onClick={() => {
-                      setUserLocked(true);
-                      setActive(t.id);
-                    }}
+                    onClick={() => setActive(t.id)}
                     className={`relative shrink-0 px-3.5 pb-2.5 pt-1 text-[13px] font-semibold tracking-[-0.01em] transition-colors sm:px-4 sm:text-[14px] ${
                       on
                         ? "text-[var(--fg)]"
