@@ -83,12 +83,7 @@ export function HeroStage({
         style={{ y: copyY, opacity: copyOpacity }}
         className="order-2 flex flex-col justify-between px-6 py-7 sm:px-8 md:order-1 md:px-9 md:py-9 lg:px-12 lg:py-10"
       >
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-[11px] font-semibold tracking-[0.28em] text-white/45 uppercase">
-            Siliguri
-          </p>
-          {rating}
-        </div>
+        <div className="flex items-center gap-4">{rating}</div>
 
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 16 }}
