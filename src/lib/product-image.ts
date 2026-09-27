@@ -62,6 +62,35 @@ export function themedProductImage(
   }
 }
 
+/**
+ * Fit the whole product inside a 4:5 card (no AI). Trims the photo's empty
+ * margin, scales it into the frame, and pads with the photo's own border colour
+ * so wide keyboards and tall guitars both show edge to edge without cropping.
+ */
+export function fittedProductImage(src: string, opts?: { width?: number }): string {
+  if (!src || src.startsWith("/")) return src;
+  const width = opts?.width ?? 600;
+  const height = Math.round(width * 1.25);
+  const fitW = Math.round(width * 0.9);
+  const fitH = Math.round(height * 0.8);
+
+  try {
+    const url = new URL(src, "https://res.cloudinary.com");
+    if (!url.hostname.includes("cloudinary.com")) return src;
+
+    const marker = "/upload/";
+    const idx = url.pathname.indexOf(marker);
+    if (idx === -1) return src;
+
+    const before = url.pathname.slice(0, idx + marker.length);
+    const after = stripLeadingTransforms(url.pathname.slice(idx + marker.length));
+    url.pathname = `${before}e_trim/c_fit,w_${fitW},h_${fitH}/c_lpad,w_${width},h_${height},b_auto:border/f_auto/q_auto:eco/${after}`;
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
+
 /** Lightweight Cloudinary / Unsplash resize (no AI). */
 export function optimizedRemoteImage(
   src: string,

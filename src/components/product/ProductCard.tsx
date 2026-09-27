@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type MouseEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { formatINR, discountPercent } from "@/lib/utils";
-import { themedProductImage } from "@/lib/product-image";
+import { fittedProductImage, themedProductImage } from "@/lib/product-image";
 import type { ProductCardData } from "@/lib/product-card";
 import { usePdpThemeOptional } from "@/components/product/PdpTheme";
 
@@ -35,10 +35,11 @@ export function ProductCard({
       : product.images?.[0] || "/placeholder-product.jpg";
 
   const fillHex = pdp?.tokens.imgBg || "141414";
-  const preview =
-    isPdp && !imgFailed
+  const preview = imgFailed
+    ? rawPreview
+    : isPdp
       ? themedProductImage(rawPreview, fillHex, { width: 600, bgRemoval: true })
-      : rawPreview;
+      : fittedProductImage(rawPreview, { width: 600 });
 
   const visible = colors.slice(0, MAX_SWATCHES);
   const extra = Math.max(0, colors.length - MAX_SWATCHES);
@@ -71,8 +72,8 @@ export function ProductCard({
             key={preview}
             src={preview}
             alt={product.title}
-            className={`h-full w-full transition duration-700 group-hover:scale-[1.03] ${
-              isPdp ? "object-contain p-3" : "object-cover"
+            className={`h-full w-full object-contain transition duration-700 group-hover:scale-[1.03] ${
+              isPdp ? "p-3" : ""
             }`}
             loading="lazy"
             onError={() => setImgFailed(true)}
