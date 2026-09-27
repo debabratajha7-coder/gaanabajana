@@ -41,15 +41,13 @@ export function themedProductImage(
 
     let transform: string;
     if (bgRemoval && stage) {
-      // Trim leftover canvas, then hang every subject from the same top line
-      // in a shared 4:5 frame. Wide keyboards share a width; a bundled adaptor
-      // hangs below instead of shoving the keyboard up.
+      // Trim leftover canvas, then center every subject in a shared 4:5 frame
+      // so wide keyboards and tall guitars sit on the same midline.
       const frameW = width;
       const frameH = Math.round(width * 1.25);
       const limitW = Math.round(frameW * 0.92);
       const limitH = Math.round(frameH * 0.86);
-      const drop = Math.max(8, Math.round(frameH * 0.06));
-      transform = `e_background_removal/e_trim/c_limit,w_${limitW},h_${limitH}/c_lpad,w_${frameW},h_${frameH},b_rgb:${cleanHex},g_north,y_${drop}/f_auto/q_auto:eco/`;
+      transform = `e_background_removal/e_trim/c_fit,w_${limitW},h_${limitH}/c_lpad,w_${frameW},h_${frameH},b_rgb:${cleanHex},g_center/f_auto/q_auto:eco/`;
     } else if (bgRemoval) {
       transform = `e_background_removal/b_rgb:${cleanHex}/f_auto/q_auto:eco/c_limit,w_${width}/`;
     } else {
