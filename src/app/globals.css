@@ -668,13 +668,7 @@ a {
 }
 
 .bestseller-rail {
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 1.5rem,
-    #000 calc(100% - 2.5rem),
-    transparent
-  );
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

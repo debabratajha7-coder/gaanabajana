@@ -14,6 +14,7 @@ import { HeroStage } from "@/components/home/HeroStage";
 import { BrandLogoGrid } from "@/components/home/BrandLogoGrid";
 import { CategoryCarousel } from "@/components/home/CategoryCarousel";
 import { StatsStrip } from "@/components/home/StatsStrip";
+import { TrustStrip } from "@/components/home/TrustStrip";
 import { filterPublicCategories } from "@/lib/public-catalog";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 import {
@@ -30,7 +31,7 @@ const BestsellerTabs = dynamic(
     import("@/components/home/BestsellerTabs").then((m) => m.BestsellerTabs),
   {
     loading: () => (
-      <div className="min-h-[20rem] animate-pulse rounded-2xl bg-white/5" />
+      <div className="min-h-[36rem] animate-pulse rounded-[1.75rem] bg-white/5" />
     ),
   }
 );
@@ -95,6 +96,7 @@ export default async function HomePage() {
     publishedAt?: Date;
   }[] = [];
   const productsByTab: Record<string, ProductCardData[]> = {};
+  const countsByTab: Record<string, number> = {};
 
   try {
     await connectDB();
@@ -129,17 +131,19 @@ export default async function HomePage() {
           name: cat.name,
           slug: cat.slug,
         });
-        const docs = await Product.find({
-          isActive: true,
-          categories: { $in: ids },
-        })
-          .populate("brand", "name slug")
-          .sort({ featured: -1, ratingCount: -1, updatedAt: -1 })
-          .limit(12)
-          .lean();
+        const filter = { isActive: true, categories: { $in: ids } };
+        const [docs, count] = await Promise.all([
+          Product.find(filter)
+            .populate("brand", "name slug")
+            .sort({ featured: -1, ratingCount: -1, updatedAt: -1 })
+            .limit(12)
+            .lean(),
+          Product.countDocuments(filter),
+        ]);
         productsByTab[String(cat._id)] = docs.map((p) =>
           toCard({ ...p, brand: p.brand as LeanBrand })
         );
+        countsByTab[String(cat._id)] = count;
       })
     );
 
@@ -186,6 +190,8 @@ export default async function HomePage() {
       storeHours: "Open daily until 9:00 PM",
       googleRatingLabel: "4.8+ ★ Google",
       googleReviewsUrl: DEFAULT_GOOGLE_REVIEWS_URL,
+      freeShippingThreshold: 1000,
+      codEnabled: true,
     };
   }
 
@@ -288,8 +294,16 @@ export default async function HomePage() {
             />
           </Reveal>
           <Reveal delay={0.05}>
-            <BestsellerTabs tabs={tabs} productsByTab={productsByTab} />
+            <BestsellerTabs
+              tabs={tabs}
+              productsByTab={productsByTab}
+              countsByTab={countsByTab}
+            />
           </Reveal>
+          <TrustStrip
+            freeShippingThreshold={settings.freeShippingThreshold ?? 1000}
+            codEnabled={settings.codEnabled !== false}
+          />
           {!featured.length && !Object.values(productsByTab).some((a) => a.length) && (
             <p className="mt-6 text-center text-[var(--fg-muted)]">
               Products will appear here once the catalog is connected.

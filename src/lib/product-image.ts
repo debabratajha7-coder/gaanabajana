@@ -1,10 +1,14 @@
 /**
  * Cloudinary helpers. Use bgRemoval: true for cutout product/category art
- * (homepage, PDP). Always pair with a tight width + q_auto:eco so LCP stays sane.
+ * (homepage, PDP). Always pair with a tight width so LCP stays sane.
  */
 
+/** AI upscale only when the source is too small for a retina tile. */
+const UPSCALE_SMALL = "if_iw_lt_700/e_upscale/if_end/";
+const SHARPEN = "e_sharpen:60/";
+
 const LEADING_TRANSFORM =
-  /^(?:e_background_removal(?::[^/]+)?|e_trim(?::\d+)?|b_rgb:[0-9A-Fa-f]{6}|f_auto|f_jpg|f_png|q_auto(?::[^/]+)?|c_limit,[^/]+|c_lpad,[^/]+|c_pad,[^/]+|c_fit,[^/]+|w_\d+)\//;
+  /^(?:if_[^/]+|e_upscale|e_sharpen(?::\d+)?|e_background_removal(?::[^/]+)?|e_trim(?::\d+)?|b_rgb:[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?|f_auto|f_jpg|f_png|f_webp|q_auto(?::[^/]+)?|c_limit,[^/]+|c_lpad,[^/]+|c_pad,[^/]+|c_fit,[^/]+|w_\d+)\//;
 
 function stripLeadingTransforms(pathAfterUpload: string) {
   let after = pathAfterUpload;
@@ -17,16 +21,26 @@ function stripLeadingTransforms(pathAfterUpload: string) {
 export function themedProductImage(
   src: string,
   fillHex: string,
-  opts?: { width?: number; bgRemoval?: boolean; stage?: boolean }
+  opts?: {
+    width?: number;
+    bgRemoval?: boolean;
+    stage?: boolean;
+    /** Stage frame height ÷ width; defaults to the 4:5 card. */
+    frameRatio?: number;
+  }
 ): string {
   if (!src) return src;
 
   const cleanHex = fillHex.replace(/^#/, "").toUpperCase();
-  if (!/^[0-9A-F]{6}$/.test(cleanHex)) return src;
+  // 8-digit RGBA ("00000000") pads onto transparency.
+  if (!/^[0-9A-F]{6}(?:[0-9A-F]{2})?$/.test(cleanHex)) return src;
 
   const width = opts?.width ?? 640;
   const bgRemoval = opts?.bgRemoval === true;
   const stage = opts?.stage === true;
+  // next/image fetches upstream without an Accept header, so f_auto would hand
+  // it a JPEG and drop the alpha channel.
+  const format = cleanHex.length === 8 ? "f_webp" : "f_auto";
 
   try {
     const url = new URL(src, "https://res.cloudinary.com");
@@ -44,12 +58,12 @@ export function themedProductImage(
       // Trim leftover canvas, then center every subject in a shared 4:5 frame
       // so wide keyboards and tall guitars sit on the same midline.
       const frameW = width;
-      const frameH = Math.round(width * 1.25);
+      const frameH = Math.round(width * (opts?.frameRatio ?? 1.25));
       const limitW = Math.round(frameW * 0.92);
       const limitH = Math.round(frameH * 0.86);
-      transform = `e_background_removal/e_trim/c_fit,w_${limitW},h_${limitH}/c_lpad,w_${frameW},h_${frameH},b_rgb:${cleanHex},g_center/f_auto/q_auto:eco/`;
+      transform = `${UPSCALE_SMALL}e_background_removal/e_trim/c_fit,w_${limitW},h_${limitH}/c_lpad,w_${frameW},h_${frameH},b_rgb:${cleanHex},g_center/${SHARPEN}${format}/q_auto:good/`;
     } else if (bgRemoval) {
-      transform = `e_background_removal/b_rgb:${cleanHex}/f_auto/q_auto:eco/c_limit,w_${width}/`;
+      transform = `${UPSCALE_SMALL}e_background_removal/b_rgb:${cleanHex}/c_limit,w_${width}/${SHARPEN}${format}/q_auto:good/`;
     } else {
       transform = `f_auto/q_auto:eco/c_limit,w_${width}/`;
     }
@@ -82,7 +96,7 @@ export function fittedProductImage(src: string, opts?: { width?: number }): stri
 
     const before = url.pathname.slice(0, idx + marker.length);
     const after = stripLeadingTransforms(url.pathname.slice(idx + marker.length));
-    url.pathname = `${before}e_trim/c_fit,w_${fitW},h_${fitH}/c_lpad,w_${width},h_${height},b_auto:border/f_auto/q_auto:eco/${after}`;
+    url.pathname = `${before}${UPSCALE_SMALL}e_trim/c_fit,w_${fitW},h_${fitH}/c_lpad,w_${width},h_${height},b_auto:border/${SHARPEN}f_auto/q_auto:good/${after}`;
     return url.toString();
   } catch {
     return src;
