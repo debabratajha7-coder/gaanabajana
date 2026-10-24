@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { connectDB, isTransientDbError } from "@/lib/db";
+import { connectDB } from "@/lib/db";
 import { getProductBySlug } from "@/lib/products";
 import { Category } from "@/models/Category";
 import { ProductBuyBox } from "@/components/product/ProductBuyBox";
 import { ProductSecondary } from "@/components/product/ProductSecondary";
 import { ProductSecondarySkeleton } from "@/components/ui/Skeleton";
-import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
+import {
+  ClearSoftReload,
+  SoftReloadSkeleton,
+} from "@/components/ui/SoftReloadSkeleton";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { toPlain } from "@/lib/utils";
 import type { Types } from "mongoose";
@@ -24,14 +27,9 @@ export default async function ProductPage({
   try {
     product = await getProductBySlug(slug);
   } catch (err) {
-    const kind = isTransientDbError(err) ? "transient" : "fatal";
-    console.error(`product page ${kind} failure`, slug, err);
+    console.error("product page failure", slug, err);
     return (
-      <AutoRetry
-        title="Taking a moment…"
-        message="We’re loading this product. Hang tight — retrying automatically."
-        storageKey={`product:${slug}`}
-      />
+      <SoftReloadSkeleton variant="product" storageKey={`product:${slug}`} />
     );
   }
 
@@ -86,7 +84,7 @@ export default async function ProductPage({
 
   return (
     <>
-      <ClearAutoRetry storageKey={`product:${slug}`} />
+      <ClearSoftReload storageKey={`product:${slug}`} />
       <ProductBuyBox
         product={toPlain({
           _id: productId,

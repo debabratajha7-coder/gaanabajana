@@ -2,7 +2,10 @@ import { loadProducts } from "@/lib/catalog-query";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
-import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
+import {
+  ClearSoftReload,
+  SoftReloadSkeleton,
+} from "@/components/ui/SoftReloadSkeleton";
 
 export const revalidate = 60;
 
@@ -12,18 +15,12 @@ export default async function OpenBoxPage() {
     products = await loadProducts({ openBox: true }, 96);
   } catch (err) {
     console.error("open-box page failure", err);
-    return (
-      <AutoRetry
-        title="Taking a moment…"
-        message="We’re loading open-box gear. Retrying automatically."
-        storageKey="deals-open-box"
-      />
-    );
+    return <SoftReloadSkeleton variant="grid" storageKey="deals-open-box" />;
   }
 
   return (
     <div className="container-gb py-12">
-      <ClearAutoRetry storageKey="deals-open-box" />
+      <ClearSoftReload storageKey="deals-open-box" />
       <h1 className="font-[family-name:var(--font-display)] text-4xl">
         Open box gear
       </h1>

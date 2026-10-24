@@ -4,7 +4,10 @@ import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
-import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
+import {
+  ClearSoftReload,
+  SoftReloadSkeleton,
+} from "@/components/ui/SoftReloadSkeleton";
 
 export const revalidate = 60;
 
@@ -40,11 +43,7 @@ export default async function BrandPage({
   } catch (err) {
     console.error("brand page failure", slug, err);
     return (
-      <AutoRetry
-        title="Taking a moment…"
-        message="We’re loading this brand. Retrying automatically."
-        storageKey={`brand:${slug}`}
-      />
+      <SoftReloadSkeleton variant="collection" storageKey={`brand:${slug}`} />
     );
   }
 
@@ -53,7 +52,7 @@ export default async function BrandPage({
 
   return (
     <div className="container-gb py-12">
-      <ClearAutoRetry storageKey={`brand:${slug}`} />
+      <ClearSoftReload storageKey={`brand:${slug}`} />
       <h1 className="font-[family-name:var(--font-display)] text-4xl">{name}</h1>
       {products.length === 0 ? (
         <ComingSoonEmpty title="Products coming soon" categoryName={name} />

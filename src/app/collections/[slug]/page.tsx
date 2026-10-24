@@ -5,10 +5,12 @@ import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
-import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
+import {
+  ClearSoftReload,
+  SoftReloadSkeleton,
+} from "@/components/ui/SoftReloadSkeleton";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 
-/** Cache HTML briefly so most visits skip a cold Mongo hit. */
 export const revalidate = 60;
 
 async function loadCollection(slug: string) {
@@ -48,11 +50,7 @@ export default async function CollectionPage({
   } catch (err) {
     console.error("collection page failure", slug, err);
     return (
-      <AutoRetry
-        title="Taking a moment…"
-        message="We’re loading this collection. Retrying automatically."
-        storageKey={`collection:${slug}`}
-      />
+      <SoftReloadSkeleton variant="collection" storageKey={`collection:${slug}`} />
     );
   }
 
@@ -70,7 +68,7 @@ export default async function CollectionPage({
 
   return (
     <div className="container-gb py-10 sm:py-12">
-      <ClearAutoRetry storageKey={`collection:${slug}`} />
+      <ClearSoftReload storageKey={`collection:${slug}`} />
       <p className="eyebrow">Collection</p>
       <h1 className="display mt-2 text-3xl sm:text-4xl md:text-5xl">
         {category.name}

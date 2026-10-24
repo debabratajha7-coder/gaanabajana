@@ -3,7 +3,10 @@ import { withDbRetry } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
-import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
+import {
+  ClearSoftReload,
+  SoftReloadSkeleton,
+} from "@/components/ui/SoftReloadSkeleton";
 
 export const revalidate = 30;
 
@@ -42,9 +45,8 @@ export default async function SearchPage({
 
   if (dbFailed) {
     return (
-      <AutoRetry
-        title="Taking a moment…"
-        message="We’re loading search. Retrying automatically."
+      <SoftReloadSkeleton
+        variant="grid"
         storageKey={`search:${q || ""}`}
       />
     );
@@ -52,7 +54,7 @@ export default async function SearchPage({
 
   return (
     <div className="container-gb py-12">
-      <ClearAutoRetry storageKey={`search:${q || ""}`} />
+      <ClearSoftReload storageKey={`search:${q || ""}`} />
       <p className="eyebrow">Find gear</p>
       <h1 className="display mt-2 text-3xl sm:text-4xl">
         {q ? `Results for “${q}”` : "Search"}
