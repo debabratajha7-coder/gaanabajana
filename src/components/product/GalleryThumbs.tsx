@@ -183,7 +183,7 @@ export function GalleryThumbs({
             >
               {renderImg(
                 img,
-                "h-14 w-14 object-contain sm:h-[68px] sm:w-[68px] xl:h-[76px] xl:w-[76px]"
+                "h-14 w-14 object-cover object-center sm:h-[68px] sm:w-[68px] xl:h-[76px] xl:w-[76px]"
               )}
             </motion.button>
           );

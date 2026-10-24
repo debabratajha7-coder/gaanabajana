@@ -4,22 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Star } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { themedProductImage } from "@/lib/product-image";
+import { coverProductImage } from "@/lib/product-image";
 import type { ProductCardData } from "@/components/product/ProductCard";
-import { usePdpThemeOptional } from "@/components/product/PdpTheme";
 import { discountPercent, formatINR } from "@/lib/utils";
 
 type Tab = { id: string; label: string; href: string };
 
 const GRID_COUNT = 4;
-
-function readBestsellersFill() {
-  if (typeof document === "undefined") return "000000";
-  const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue("--bestsellers-band-fill")
-    .trim();
-  return raw || "000000";
-}
 
 function productImage(product: ProductCardData) {
   return product.images?.[0] || "/placeholder-product.jpg";
@@ -76,11 +67,9 @@ function SpotlightCard({
   product: ProductCardData;
   tabLabel: string;
 }) {
-  const src = themedProductImage(productImage(product), "00000000", {
+  const src = coverProductImage(productImage(product), {
     width: 960,
-    bgRemoval: true,
-    stage: true,
-    frameRatio: 0.8,
+    height: 768,
   });
   const mrp = product.mrp ?? product.price;
   const off = discountPercent(product.price, mrp);
@@ -94,17 +83,17 @@ function SpotlightCard({
       className="bestseller-card group/stage relative grid overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0b0b0b] md:grid-cols-[1.05fr_1fr]"
     >
       <div className="relative aspect-[5/4] w-full sm:aspect-[16/10] md:aspect-auto md:min-h-[24rem] lg:min-h-[27rem]">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_55%,rgba(255,138,154,0.22),rgba(255,138,154,0.05)_55%,transparent_75%)]"
-        />
         <Image
           src={src}
           alt={product.title}
           fill
           quality={75}
           sizes="(max-width: 768px) 92vw, 600px"
-          className="bestseller-img object-contain object-center p-2 sm:p-4"
+          className="bestseller-img object-cover object-center"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/20 md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-black/40"
         />
         <div className="absolute left-3 top-3 flex items-center gap-2 sm:left-5 sm:top-5">
           <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-black">
@@ -166,23 +155,20 @@ function SpotlightCard({
 
 function ProductTile({
   product,
-  fillHex,
   width,
   sizes,
   compact,
   delay,
 }: {
   product: ProductCardData;
-  fillHex: string;
   width: number;
   sizes: string;
   compact?: boolean;
   delay: number;
 }) {
-  const src = themedProductImage(productImage(product), fillHex, {
+  const src = coverProductImage(productImage(product), {
     width,
-    bgRemoval: true,
-    stage: true,
+    height: Math.round(width * 1.25),
   });
   const off = discountPercent(product.price, product.mrp ?? product.price);
 
@@ -195,14 +181,18 @@ function ProductTile({
       }`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-black ring-1 ring-inset ring-white/[0.08] transition group-hover/stage:ring-[#ff8a9a]/40">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-[#141414] ring-1 ring-inset ring-white/[0.08] transition group-hover/stage:ring-[#ff8a9a]/40">
         <Image
           src={src}
           alt={product.title}
           fill
           quality={75}
           sizes={sizes}
-          className="bestseller-img object-contain object-center"
+          className="bestseller-img object-cover object-center"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/25"
         />
         <div className="absolute inset-x-2 top-2 flex items-start justify-between gap-1 sm:inset-x-2.5 sm:top-2.5">
           <OffBadge off={off} />
@@ -210,7 +200,7 @@ function ProductTile({
         </div>
         <span
           aria-hidden
-          className="absolute bottom-2 right-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 backdrop-blur-sm transition duration-300 group-hover/stage:bg-[#ff8a9a] group-hover/stage:text-[#1a0a0d] [@media(hover:hover)]:translate-y-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/stage:translate-y-0 [@media(hover:hover)]:group-hover/stage:opacity-100"
+          className="absolute bottom-2 right-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white ring-1 ring-white/20 backdrop-blur-sm transition duration-300 group-hover/stage:bg-[#ff8a9a] group-hover/stage:text-[#1a0a0d] [@media(hover:hover)]:translate-y-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/stage:translate-y-0 [@media(hover:hover)]:group-hover/stage:opacity-100"
         >
           <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
         </span>
@@ -243,28 +233,8 @@ export function BestsellerTabs({
 }) {
   const first = tabs[0]?.id || "all";
   const [active, setActive] = useState(first);
-  const theme = usePdpThemeOptional();
-  const [bandFill, setBandFill] = useState("000000");
   const listRef = useRef<HTMLDivElement>(null);
   const userPicked = useRef(false);
-
-  useEffect(() => {
-    const sync = () => setBandFill(readBestsellersFill());
-    sync();
-    const obs = new MutationObserver(sync);
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    return () => obs.disconnect();
-  }, []);
-
-  const fillHex =
-    theme?.theme === "dark"
-      ? "000000"
-      : theme?.theme === "light"
-        ? "000000"
-        : bandFill;
 
   const items = useMemo(() => {
     return productsByTab[active] || productsByTab[first] || [];
@@ -347,7 +317,6 @@ export function BestsellerTabs({
                 <ProductTile
                   key={p._id}
                   product={p}
-                  fillHex={fillHex}
                   width={720}
                   sizes="(max-width: 1024px) 46vw, 280px"
                   delay={120 + i * 70}
@@ -370,7 +339,6 @@ export function BestsellerTabs({
                     <ProductTile
                       key={p._id}
                       product={p}
-                      fillHex={fillHex}
                       width={480}
                       sizes="(max-width: 640px) 42vw, 208px"
                       compact

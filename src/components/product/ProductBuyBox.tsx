@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { formatINR } from "@/lib/utils";
-import { themedProductImage } from "@/lib/product-image";
+import { coverProductImage } from "@/lib/product-image";
 import {
   buildAmbientPalette,
   extractImageColors,
@@ -68,20 +68,18 @@ function ThemedImg({
   src,
   alt,
   className,
-  fillHex,
   fetchPriority,
   style,
 }: {
   src: string;
   alt: string;
   className?: string;
-  fillHex: string;
   fetchPriority?: "high" | "low" | "auto";
   style?: CSSProperties;
 }) {
   const [failed, setFailed] = useState(false);
-  const themed = themedProductImage(src, fillHex, { bgRemoval: true });
-  const finalSrc = failed ? src : themed;
+  const cover = coverProductImage(src, { width: 900, height: 900 });
+  const finalSrc = failed ? src : cover;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -106,7 +104,7 @@ function ProductBuyBoxInner({
   product: Product;
   children?: ReactNode;
 }) {
-  const { theme, tokens } = usePdpTheme();
+  const { theme } = usePdpTheme();
   const { addItem } = useCart();
   const { toast } = useToast();
   const reduce = useReducedMotion() ?? false;
@@ -156,7 +154,6 @@ function ProductBuyBoxInner({
       ? variant.name
       : "";
 
-  const fillHex = tokens.imgBg;
   const isDark = theme === "dark";
 
   const [palette, setPalette] = useState(() =>
@@ -361,7 +358,7 @@ function ProductBuyBoxInner({
               activeImage={activeImage}
               onSelect={setActiveImage}
               renderImg={(src, className) => (
-                <ThemedImg src={src} alt="" fillHex={fillHex} className={className} />
+                <ThemedImg src={src} alt="" className={className} />
               )}
             />
           </Reveal>
@@ -372,10 +369,8 @@ function ProductBuyBoxInner({
                 <ThemedImg
                   src={image}
                   alt={product.title}
-                  fillHex={fillHex}
                   fetchPriority="high"
-                  className="aspect-square w-full object-contain p-4 sm:p-8"
-                  style={{ backgroundColor: tokens.page }}
+                  className="aspect-square w-full object-cover object-center"
                 />
               ) : (
                 <AnimatePresence mode="wait" initial={false}>
@@ -389,10 +384,8 @@ function ProductBuyBoxInner({
                     <ThemedImg
                       src={image}
                       alt={product.title}
-                      fillHex={fillHex}
                       fetchPriority="high"
-                      className="aspect-square w-full object-contain p-4 sm:p-8"
-                      style={{ backgroundColor: tokens.page }}
+                      className="aspect-square w-full object-cover object-center"
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -894,8 +887,7 @@ function ProductBuyBoxInner({
             <ThemedImg
               src={image}
               alt=""
-              fillHex={fillHex}
-              className="h-9 w-9 shrink-0 border object-contain sm:h-11 sm:w-11"
+                            className="h-9 w-9 shrink-0 border object-cover object-center sm:h-11 sm:w-11"
               style={{
                 borderColor: "var(--pdp-border)",
                 backgroundColor: "var(--pdp-panel)",

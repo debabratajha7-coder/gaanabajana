@@ -44,6 +44,9 @@ export async function POST(req: Request) {
     const form = await req.formData();
     const file = form.get("file");
     const alt = String(form.get("alt") || "").slice(0, 200);
+    // Default ON: bake cutout/upscale once at upload. Pass prepare=0 to skip.
+    const prepareRaw = String(form.get("prepare") ?? "1");
+    const prepareProduct = prepareRaw !== "0" && prepareRaw !== "false";
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "file required" }, { status: 400 });
     }
@@ -60,7 +63,9 @@ export async function POST(req: Request) {
       );
     }
     const buffer = Buffer.from(await file.arrayBuffer());
-    const uploaded = await uploadBuffer(buffer);
+    const uploaded = await uploadBuffer(buffer, "gaanabajana", {
+      prepareProduct,
+    });
     await connectDB();
     const media = await Media.create({
       publicId: uploaded.public_id,
@@ -70,7 +75,7 @@ export async function POST(req: Request) {
       format: uploaded.format,
       folder: "gaanabajana",
     });
-    return NextResponse.json({ media });
+    return NextResponse.json({ media, prepared: prepareProduct });
   } catch (e) {
     return authErrorResponse(e);
   }

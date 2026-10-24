@@ -5,41 +5,34 @@ import { useRouter } from "next/navigation";
 import { useState, type MouseEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { formatINR, discountPercent } from "@/lib/utils";
-import { fittedProductImage, themedProductImage } from "@/lib/product-image";
+import { coverProductImage } from "@/lib/product-image";
 import type { ProductCardData } from "@/lib/product-card";
-import { usePdpThemeOptional } from "@/components/product/PdpTheme";
-
 export type { ProductCardData, ProductColorOptionData } from "@/lib/product-card";
 
 const MAX_SWATCHES = 4;
 
 export function ProductCard({
   product,
-  appearance = "storefront",
 }: {
   product: ProductCardData;
+  /** @deprecated kept for call-site compatibility */
   appearance?: "storefront" | "pdp";
 }) {
   const router = useRouter();
   const reduce = useReducedMotion();
-  const pdp = usePdpThemeOptional();
   const colors = (product.colorOptions || []).filter((c) => c.name);
   const [selected, setSelected] = useState<number | null>(null);
   const [imgFailed, setImgFailed] = useState(false);
   const save = discountPercent(product.price, product.mrp);
-  const isPdp = appearance === "pdp";
 
   const rawPreview =
     selected !== null && colors[selected]?.images?.[0]
       ? colors[selected].images[0]
       : product.images?.[0] || "/placeholder-product.jpg";
 
-  const fillHex = pdp?.tokens.imgBg || "141414";
   const preview = imgFailed
     ? rawPreview
-    : isPdp
-      ? themedProductImage(rawPreview, fillHex, { width: 600, bgRemoval: true })
-      : fittedProductImage(rawPreview, { width: 600 });
+    : coverProductImage(rawPreview, { width: 600, height: 750 });
 
   const visible = colors.slice(0, MAX_SWATCHES);
   const extra = Math.max(0, colors.length - MAX_SWATCHES);
@@ -72,9 +65,7 @@ export function ProductCard({
             key={preview}
             src={preview}
             alt={product.title}
-            className={`h-full w-full object-contain transition duration-700 group-hover:scale-[1.03] ${
-              isPdp ? "p-3" : ""
-            }`}
+            className="h-full w-full object-cover object-center transition duration-700 group-hover:scale-[1.04]"
             loading="lazy"
             onError={() => setImgFailed(true)}
           />

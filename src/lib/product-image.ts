@@ -1,14 +1,11 @@
 /**
- * Cloudinary helpers. Use bgRemoval: true for cutout product/category art
- * (homepage, PDP). Always pair with a tight width so LCP stays sane.
+ * Cheap Cloudinary delivery only — resize / format / quality.
+ * Never run e_background_removal or e_upscale here (those burn credits
+ * on every page view). Bake AI once at upload via uploadProductImage().
  */
 
-/** AI upscale only when the source is too small for a retina tile. */
-const UPSCALE_SMALL = "if_iw_lt_700/e_upscale/if_end/";
-const SHARPEN = "e_sharpen:60/";
-
 const LEADING_TRANSFORM =
-  /^(?:if_[^/]+|e_upscale|e_sharpen(?::\d+)?|e_background_removal(?::[^/]+)?|e_trim(?::\d+)?|b_rgb:[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?|f_auto|f_jpg|f_png|f_webp|q_auto(?::[^/]+)?|c_limit,[^/]+|c_lpad,[^/]+|c_pad,[^/]+|c_fit,[^/]+|w_\d+)\//;
+  /^(?:if_[^/]+|e_upscale|e_sharpen(?::\d+)?|e_background_removal(?::[^/]+)?|e_trim(?::\d+)?|b_rgb:[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?|b_auto(?::[^/]+)?|f_auto|f_jpg|f_png|f_webp|q_auto(?::[^/]+)?|c_limit,[^/]+|c_fill,[^/]+|c_lpad,[^/]+|c_pad,[^/]+|c_fit,[^/]+|g_[^/]+|w_\d+|h_\d+)\//;
 
 function stripLeadingTransforms(pathAfterUpload: string) {
   let after = pathAfterUpload;
@@ -18,30 +15,11 @@ function stripLeadingTransforms(pathAfterUpload: string) {
   return after;
 }
 
-export function themedProductImage(
+function withCloudinaryTransform(
   src: string,
-  fillHex: string,
-  opts?: {
-    width?: number;
-    bgRemoval?: boolean;
-    stage?: boolean;
-    /** Stage frame height ÷ width; defaults to the 4:5 card. */
-    frameRatio?: number;
-  }
+  transform: string
 ): string {
-  if (!src) return src;
-
-  const cleanHex = fillHex.replace(/^#/, "").toUpperCase();
-  // 8-digit RGBA ("00000000") pads onto transparency.
-  if (!/^[0-9A-F]{6}(?:[0-9A-F]{2})?$/.test(cleanHex)) return src;
-
-  const width = opts?.width ?? 640;
-  const bgRemoval = opts?.bgRemoval === true;
-  const stage = opts?.stage === true;
-  // next/image fetches upstream without an Accept header, so f_auto would hand
-  // it a JPEG and drop the alpha channel.
-  const format = cleanHex.length === 8 ? "f_webp" : "f_auto";
-
+  if (!src || src.startsWith("/")) return src;
   try {
     const url = new URL(src, "https://res.cloudinary.com");
     if (!url.hostname.includes("cloudinary.com")) return src;
@@ -52,21 +30,6 @@ export function themedProductImage(
 
     const before = url.pathname.slice(0, idx + marker.length);
     const after = stripLeadingTransforms(url.pathname.slice(idx + marker.length));
-
-    let transform: string;
-    if (bgRemoval && stage) {
-      // Trim leftover canvas, then center every subject in a shared 4:5 frame
-      // so wide keyboards and tall guitars sit on the same midline.
-      const frameW = width;
-      const frameH = Math.round(width * (opts?.frameRatio ?? 1.25));
-      const limitW = Math.round(frameW * 0.92);
-      const limitH = Math.round(frameH * 0.86);
-      transform = `${UPSCALE_SMALL}e_background_removal/e_trim/c_fit,w_${limitW},h_${limitH}/c_lpad,w_${frameW},h_${frameH},b_rgb:${cleanHex},g_center/${SHARPEN}${format}/q_auto:good/`;
-    } else if (bgRemoval) {
-      transform = `${UPSCALE_SMALL}e_background_removal/b_rgb:${cleanHex}/c_limit,w_${width}/${SHARPEN}${format}/q_auto:good/`;
-    } else {
-      transform = `f_auto/q_auto:eco/c_limit,w_${width}/`;
-    }
     url.pathname = `${before}${transform}${after}`;
     return url.toString();
   } catch {
@@ -75,32 +38,63 @@ export function themedProductImage(
 }
 
 /**
- * Fit the whole product inside a 4:5 card (no AI). Trims the photo's empty
- * margin, scales it into the frame, and pads with the photo's own border colour
- * so wide keyboards and tall guitars both show edge to edge without cropping.
+ * Editorial cover crop for cards / tiles (photos with real backgrounds).
+ * Cheap: no AI.
  */
-export function fittedProductImage(src: string, opts?: { width?: number }): string {
-  if (!src || src.startsWith("/")) return src;
+export function coverProductImage(
+  src: string,
+  opts?: { width?: number; height?: number }
+): string {
+  const width = opts?.width ?? 600;
+  const height = opts?.height ?? Math.round(width * 1.25);
+  return withCloudinaryTransform(
+    src,
+    `c_fill,g_auto,w_${width},h_${height}/f_auto/q_auto:good/`
+  );
+}
+
+/**
+ * Fit whole product in frame without cropping (cutouts or tall subjects).
+ * Cheap: no AI. Pads with a soft neutral so uneven photos still look tidy.
+ */
+export function fittedProductImage(
+  src: string,
+  opts?: { width?: number; fillHex?: string }
+): string {
   const width = opts?.width ?? 600;
   const height = Math.round(width * 1.25);
-  const fitW = Math.round(width * 0.9);
-  const fitH = Math.round(height * 0.8);
+  const fill = (opts?.fillHex || "121212").replace(/^#/, "").toUpperCase();
+  const pad =
+    /^[0-9A-F]{6}$/.test(fill) ? `b_rgb:${fill}` : "b_auto:border";
+  return withCloudinaryTransform(
+    src,
+    `c_pad,w_${width},h_${height},${pad},g_center/f_auto/q_auto:good/`
+  );
+}
 
-  try {
-    const url = new URL(src, "https://res.cloudinary.com");
-    if (!url.hostname.includes("cloudinary.com")) return src;
-
-    const marker = "/upload/";
-    const idx = url.pathname.indexOf(marker);
-    if (idx === -1) return src;
-
-    const before = url.pathname.slice(0, idx + marker.length);
-    const after = stripLeadingTransforms(url.pathname.slice(idx + marker.length));
-    url.pathname = `${before}${UPSCALE_SMALL}e_trim/c_fit,w_${fitW},h_${fitH}/c_lpad,w_${width},h_${height},b_auto:border/${SHARPEN}f_auto/q_auto:good/${after}`;
-    return url.toString();
-  } catch {
-    return src;
+/**
+ * @deprecated Prefer coverProductImage / fittedProductImage.
+ * Kept so older call sites keep compiling; ignores AI flags and only resizes.
+ */
+export function themedProductImage(
+  src: string,
+  fillHex: string,
+  opts?: {
+    width?: number;
+    bgRemoval?: boolean;
+    stage?: boolean;
+    frameRatio?: number;
   }
+): string {
+  const width = opts?.width ?? 640;
+  if (opts?.stage) {
+    const ratio = opts.frameRatio ?? 1.25;
+    return coverProductImage(src, {
+      width,
+      height: Math.round(width * ratio),
+    });
+  }
+  return fittedProductImage(src, { width, fillHex });
 }
 
 /** Lightweight Cloudinary / Unsplash resize (no AI). */
@@ -122,21 +116,10 @@ export function optimizedRemoteImage(
       return url.toString();
     }
 
-    const url = new URL(src, "https://res.cloudinary.com");
-    if (!url.hostname.includes("cloudinary.com")) return src;
-
-    const marker = "/upload/";
-    const idx = url.pathname.indexOf(marker);
-    if (idx === -1) return src;
-
-    const before = url.pathname.slice(0, idx + marker.length);
-    let after = url.pathname.slice(idx + marker.length);
-    after = after.replace(
-      /^(?:[^/]*e_background_removal[^/]*\/)?(?:b_rgb:[0-9A-Fa-f]{6}\/)?(?:f_auto\/)?(?:q_auto(?::[^/]+)?\/)?(?:c_limit,w_\d+\/|w_\d+\/)?/,
-      ""
+    return withCloudinaryTransform(
+      src,
+      `f_auto/q_${quality}/c_limit,w_${width}/`
     );
-    url.pathname = `${before}f_auto/q_${quality}/c_limit,w_${width}/${after}`;
-    return url.toString();
   } catch {
     return src;
   }

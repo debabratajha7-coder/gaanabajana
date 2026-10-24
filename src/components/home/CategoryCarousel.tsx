@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { categoryImage } from "@/lib/catalog-media";
-import { themedProductImage } from "@/lib/product-image";
-import { usePdpThemeOptional } from "@/components/product/PdpTheme";
+import { coverProductImage } from "@/lib/product-image";
 
 type Cat = {
   _id: string;
@@ -15,21 +14,10 @@ type Cat = {
   description?: string;
 };
 
-function CategoryImg({
-  src,
-  alt,
-  fillHex,
-}: {
-  src: string;
-  alt: string;
-  fillHex: string;
-}) {
+function CategoryImg({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
-  const themed = themedProductImage(src, fillHex, {
-    width: 480,
-    bgRemoval: true,
-  });
-  const finalSrc = failed ? src : themed;
+  const cover = coverProductImage(src, { width: 480, height: 480 });
+  const finalSrc = failed ? src : cover;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -37,7 +25,7 @@ function CategoryImg({
       key={finalSrc}
       src={finalSrc}
       alt={alt}
-      className="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-[1.06]"
+      className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
       loading="lazy"
       decoding="async"
       onError={() => setFailed(true)}
@@ -47,9 +35,6 @@ function CategoryImg({
 
 export function CategoryCarousel({ categories }: { categories: Cat[] }) {
   const ref = useRef<HTMLDivElement>(null);
-  const theme = usePdpThemeOptional();
-  /** Must equal --bg-soft so cutouts blend into the tile well */
-  const fillHex = theme?.theme === "dark" ? "1A1A1A" : "EFECE8";
 
   function scroll(dir: -1 | 1) {
     ref.current?.scrollBy({ left: dir * 280, behavior: "smooth" });
@@ -84,20 +69,26 @@ export function CategoryCarousel({ categories }: { categories: Cat[] }) {
           <Link
             key={String(c._id)}
             href={`/collections/${c.slug}`}
-            className={`group flex min-h-11 flex-col items-center rounded-2xl text-center transition-transform duration-150 active:scale-[0.97] md:w-[168px] md:shrink-0 md:snap-start ${
+            className={`group flex min-h-11 flex-col rounded-2xl text-left transition-transform duration-150 active:scale-[0.97] md:w-[176px] md:shrink-0 md:snap-start ${
               i === categories.length - 1 && categories.length % 3 === 1
                 ? "min-[360px]:max-md:col-start-2"
                 : ""
             }`}
           >
-            <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-[var(--bg-soft)] p-2.5 ring-1 ring-inset ring-[var(--line)] transition group-hover:ring-[color-mix(in_oklab,var(--accent)_45%,transparent)] sm:p-3.5 md:p-4">
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[var(--bg-soft)] ring-1 ring-inset ring-[var(--line)]">
               <CategoryImg
                 src={categoryImage(c.slug, c.image)}
                 alt={c.name}
-                fillHex={fillHex}
               />
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent"
+              />
+              <p className="absolute inset-x-0 bottom-0 p-2.5 text-[12.5px] font-semibold leading-tight text-white sm:p-3 sm:text-sm md:hidden">
+                {c.name}
+              </p>
             </div>
-            <p className="mt-2 line-clamp-2 px-0.5 text-[12.5px] font-semibold leading-tight text-[var(--fg)] transition group-hover:text-[var(--accent)] sm:text-sm md:mt-3">
+            <p className="mt-2.5 hidden px-0.5 text-sm font-semibold leading-tight text-[var(--fg)] transition group-hover:text-[var(--accent)] md:block">
               {c.name}
             </p>
             {c.description ? (
