@@ -12,7 +12,7 @@ export function AutoRetry({
   title = "Taking a moment…",
   message = "We’re waking the catalog up. This usually only takes a second.",
   maxAttempts = 3,
-  delayMs = 1500,
+  delayMs = 2500,
   storageKey,
 }: {
   title?: string;

@@ -1,24 +1,25 @@
 import Link from "next/link";
-import { connectDB, isTransientDbError, resetDBCache } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
 import { mapColorOptions } from "@/lib/product-card";
 import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 async function searchProducts(q: string) {
-  await connectDB();
-  return Product.find({
-    isActive: true,
-    $or: [
-      { title: { $regex: q, $options: "i" } },
-      { tags: { $regex: q, $options: "i" } },
-    ],
-  })
-    .populate("brand", "name")
-    .limit(48)
-    .lean();
+  return withDbRetry(`search:${q}`, () =>
+    Product.find({
+      isActive: true,
+      $or: [
+        { title: { $regex: q, $options: "i" } },
+        { tags: { $regex: q, $options: "i" } },
+      ],
+    })
+      .populate("brand", "name")
+      .limit(48)
+      .lean()
+  );
 }
 
 export default async function SearchPage({
@@ -34,24 +35,7 @@ export default async function SearchPage({
     try {
       products = await searchProducts(q);
     } catch (err) {
-      if (isTransientDbError(err)) {
-        try {
-          resetDBCache();
-          products = await searchProducts(q);
-        } catch (retryErr) {
-          console.error("search page transient failure", retryErr);
-          dbFailed = true;
-        }
-      } else {
-        console.error("search page failure", err);
-        dbFailed = true;
-      }
-    }
-  } else {
-    try {
-      await connectDB();
-    } catch (err) {
-      console.error("search page connect failure", err);
+      console.error("search page failure", err);
       dbFailed = true;
     }
   }

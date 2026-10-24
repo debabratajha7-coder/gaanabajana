@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { connectDB, isTransientDbError, resetDBCache } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -8,29 +8,31 @@ import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
 import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
 
-export const dynamic = "force-dynamic";
+/** Cache HTML briefly so most visits skip a cold Mongo hit. */
+export const revalidate = 60;
 
 async function loadCollection(slug: string) {
-  await connectDB();
-  const category = await Category.findOne({ slug, isActive: true }).lean();
-  if (!category) {
-    return { category: null as null, children: [] as [], products: [] as [] };
-  }
+  return withDbRetry(`collection:${slug}`, async () => {
+    const category = await Category.findOne({ slug, isActive: true }).lean();
+    if (!category) {
+      return { category: null as null, children: [] as [], products: [] as [] };
+    }
 
-  const children = await Category.find({
-    parent: category._id,
-    isActive: true,
-  }).lean();
-  const ids = await resolveCatalogCategoryIds(category);
-  const products = await Product.find({
-    isActive: true,
-    categories: { $in: ids },
-  })
-    .populate("brand", "name")
-    .sort({ createdAt: -1 })
-    .lean();
+    const children = await Category.find({
+      parent: category._id,
+      isActive: true,
+    }).lean();
+    const ids = await resolveCatalogCategoryIds(category);
+    const products = await Product.find({
+      isActive: true,
+      categories: { $in: ids },
+    })
+      .populate("brand", "name")
+      .sort({ createdAt: -1 })
+      .lean();
 
-  return { category, children, products };
+    return { category, children, products };
+  });
 }
 
 export default async function CollectionPage({
@@ -44,30 +46,14 @@ export default async function CollectionPage({
   try {
     data = await loadCollection(slug);
   } catch (err) {
-    if (isTransientDbError(err)) {
-      try {
-        resetDBCache();
-        data = await loadCollection(slug);
-      } catch (retryErr) {
-        console.error("collection page transient failure", slug, retryErr);
-        return (
-          <AutoRetry
-            title="Taking a moment…"
-            message="We’re loading this collection. Retrying automatically."
-            storageKey={`collection:${slug}`}
-          />
-        );
-      }
-    } else {
-      console.error("collection page failure", slug, err);
-      return (
-        <AutoRetry
-          title="Taking a moment…"
-          message="We’re loading this collection. Retrying automatically."
-          storageKey={`collection:${slug}`}
-        />
-      );
-    }
+    console.error("collection page failure", slug, err);
+    return (
+      <AutoRetry
+        title="Taking a moment…"
+        message="We’re loading this collection. Retrying automatically."
+        storageKey={`collection:${slug}`}
+      />
+    );
   }
 
   const { category, children, products } = data;
@@ -98,13 +84,13 @@ export default async function CollectionPage({
       {children.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">
           {children.map((c) => (
-            <a
+            <Link
               key={String(c._id)}
               href={`/collections/${c.slug}`}
-              className="rounded-full border border-[var(--line)] px-3.5 py-1.5 text-sm text-[var(--fg-muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              className="rounded-full border border-[var(--line)] px-3 py-1.5 text-sm hover:border-[var(--line-strong)]"
             >
               {c.name}
-            </a>
+            </Link>
           ))}
         </div>
       )}
@@ -112,7 +98,7 @@ export default async function CollectionPage({
       {products.length === 0 ? (
         <ComingSoonEmpty categoryName={category.name} />
       ) : (
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {products.map((p) => (
             <ProductCard
               key={String(p._id)}
@@ -128,12 +114,12 @@ export default async function CollectionPage({
                     | { name?: string; swatch?: string; images?: string[] }[]
                     | undefined
                 ),
+                brandName:
+                  (p.brand as { name?: string } | null | undefined)?.name ||
+                  null,
                 ratingAvg: p.ratingAvg,
                 ratingCount: p.ratingCount,
-                brandName:
-                  p.brand && typeof p.brand === "object" && "name" in p.brand
-                    ? String((p.brand as { name?: string }).name || "")
-                    : null,
+                onSale: p.onSale,
               }}
             />
           ))}

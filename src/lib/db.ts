@@ -19,8 +19,8 @@ const cached: MongooseCache = global.mongooseCache ?? {
 
 global.mongooseCache = cached;
 
-const CONNECT_ATTEMPTS = 3;
-const BACKOFF_MS = [300, 800, 1500];
+const CONNECT_ATTEMPTS = 4;
+const BACKOFF_MS = [400, 900, 1600, 2400];
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -54,8 +54,10 @@ async function connectOnce() {
       bufferCommands: false,
       maxPoolSize: 5,
       minPoolSize: 0,
-      serverSelectionTimeoutMS: 10_000,
-      socketTimeoutMS: 20_000,
+      serverSelectionTimeoutMS: 12_000,
+      socketTimeoutMS: 25_000,
+      // Atlas free tier often pauses; give cold wake a bit more room.
+      connectTimeoutMS: 12_000,
     });
   }
 
@@ -98,7 +100,36 @@ export function isTransientDbError(err: unknown) {
   if (!err) return false;
   const msg = err instanceof Error ? err.message : String(err);
   const name = err instanceof Error ? err.name : "";
-  return /timed out|timeout|ECONNREFUSED|ENOTFOUND|ECONNRESET|not connected|buffering timed out|ServerSelectionError|MongoNetworkError|MongoServerSelectionError|topology|closed|PoolCleared/i.test(
+  return /timed out|timeout|ECONNREFUSED|ENOTFOUND|ECONNRESET|not connected|buffering timed out|ServerSelectionError|MongoNetworkError|MongoServerSelectionError|topology|closed|PoolCleared|MongoExpiredSessionError|not master|please retry|TransientTransactionError/i.test(
     `${name} ${msg}`
   );
+}
+
+/**
+ * Run a catalog query with connect + a few retries.
+ * Cuts down on the storefront "Taking a moment…" screen during Atlas wakeups.
+ */
+export async function withDbRetry<T>(
+  label: string,
+  fn: () => Promise<T>,
+  attempts = 3
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      if (i > 0) {
+        resetDBCache();
+        await sleep(BACKOFF_MS[i - 1] ?? 1000);
+      }
+      await connectDB();
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      console.error(`${label} attempt ${i + 1}/${attempts}`, err);
+      if (!isTransientDbError(err) && i >= 1) break;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(`${label} failed`);
 }

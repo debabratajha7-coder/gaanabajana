@@ -1,4 +1,4 @@
-import { connectDB, isTransientDbError, resetDBCache } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { Product } from "@/models/Product";
 
 export type CatalogProduct = {
@@ -20,19 +20,10 @@ export async function loadProducts(
   filter: Record<string, unknown>,
   limit = 48
 ): Promise<CatalogProduct[]> {
-  const run = async () => {
-    await connectDB();
+  return withDbRetry("catalog:loadProducts", async () => {
     return (await Product.find({ isActive: true, ...filter })
       .populate("brand", "name")
       .limit(limit)
       .lean()) as CatalogProduct[];
-  };
-
-  try {
-    return await run();
-  } catch (err) {
-    if (!isTransientDbError(err)) throw err;
-    resetDBCache();
-    return run();
-  }
+  });
 }

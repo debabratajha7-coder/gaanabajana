@@ -5,7 +5,7 @@ import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
 import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function DealsPage() {
   let products;

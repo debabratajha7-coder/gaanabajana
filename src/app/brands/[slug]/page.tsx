@@ -1,4 +1,4 @@
-import { connectDB, isTransientDbError, resetDBCache } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { Brand } from "@/models/Brand";
 import { Product } from "@/models/Product";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -6,7 +6,7 @@ import { mapColorOptions } from "@/lib/product-card";
 import { ComingSoonEmpty } from "@/components/ui/ComingSoonEmpty";
 import { AutoRetry, ClearAutoRetry } from "@/components/ui/AutoRetry";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 function titleFromSlug(slug: string) {
   return slug
@@ -16,14 +16,15 @@ function titleFromSlug(slug: string) {
 }
 
 async function loadBrand(slug: string) {
-  await connectDB();
-  const brand = await Brand.findOne({ slug, isActive: true }).lean();
-  const products = brand
-    ? await Product.find({ brand: brand._id, isActive: true })
-        .populate("brand", "name")
-        .lean()
-    : [];
-  return { brand, products };
+  return withDbRetry(`brand:${slug}`, async () => {
+    const brand = await Brand.findOne({ slug, isActive: true }).lean();
+    const products = brand
+      ? await Product.find({ brand: brand._id, isActive: true })
+          .populate("brand", "name")
+          .lean()
+      : [];
+    return { brand, products };
+  });
 }
 
 export default async function BrandPage({
@@ -37,30 +38,14 @@ export default async function BrandPage({
   try {
     data = await loadBrand(slug);
   } catch (err) {
-    if (isTransientDbError(err)) {
-      try {
-        resetDBCache();
-        data = await loadBrand(slug);
-      } catch (retryErr) {
-        console.error("brand page transient failure", slug, retryErr);
-        return (
-          <AutoRetry
-            title="Taking a moment…"
-            message="We’re loading this brand. Retrying automatically."
-            storageKey={`brand:${slug}`}
-          />
-        );
-      }
-    } else {
-      console.error("brand page failure", slug, err);
-      return (
-        <AutoRetry
-          title="Taking a moment…"
-          message="We’re loading this brand. Retrying automatically."
-          storageKey={`brand:${slug}`}
-        />
-      );
-    }
+    console.error("brand page failure", slug, err);
+    return (
+      <AutoRetry
+        title="Taking a moment…"
+        message="We’re loading this brand. Retrying automatically."
+        storageKey={`brand:${slug}`}
+      />
+    );
   }
 
   const { brand, products } = data;
@@ -89,9 +74,12 @@ export default async function BrandPage({
                     | { name?: string; swatch?: string; images?: string[] }[]
                     | undefined
                 ),
-                brandName: name,
+                brandName:
+                  (p.brand as { name?: string } | null | undefined)?.name ||
+                  null,
                 ratingAvg: p.ratingAvg,
                 ratingCount: p.ratingCount,
+                onSale: p.onSale,
               }}
             />
           ))}
