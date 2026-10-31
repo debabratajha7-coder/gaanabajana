@@ -7,7 +7,6 @@ import {
   ClearSoftReload,
   SoftReloadSkeleton,
 } from "@/components/ui/SoftReloadSkeleton";
-import { storefrontImageFilter } from "@/lib/product-media";
 
 export const revalidate = 30;
 
@@ -15,7 +14,6 @@ async function searchProducts(q: string) {
   return withDbRetry(`search:${q}`, () =>
     Product.find({
       isActive: true,
-      ...storefrontImageFilter(),
       $or: [
         { title: { $regex: q, $options: "i" } },
         { tags: { $regex: q, $options: "i" } },

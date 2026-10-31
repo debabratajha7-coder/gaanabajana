@@ -1,6 +1,5 @@
 import { withDbRetry } from "@/lib/db";
 import { Product } from "@/models/Product";
-import { storefrontImageFilter } from "@/lib/product-media";
 
 export type CatalogProduct = {
   _id: unknown;
@@ -24,7 +23,6 @@ export async function loadProducts(
   return withDbRetry("catalog:loadProducts", async () => {
     return (await Product.find({
       isActive: true,
-      ...storefrontImageFilter(),
       ...filter,
     })
       .populate("brand", "name")

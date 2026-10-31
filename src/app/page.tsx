@@ -22,11 +22,7 @@ import {
   resolveGoogleReviewsUrl,
 } from "@/lib/google-reviews";
 import { optimizedRemoteImage } from "@/lib/product-image";
-import {
-  productHasStorefrontImage,
-  storefrontImageFilter,
-  withUsableProductImages,
-} from "@/lib/product-media";
+import { withUsableProductImages } from "@/lib/product-media";
 
 /** Cache homepage HTML/data briefly — big TTFB win vs force-dynamic. */
 export const revalidate = 60;
@@ -108,7 +104,7 @@ export default async function HomePage() {
     await connectDB();
     settings = await getSiteSettings();
     const [featuredDocs, parentDocs, brandDocs, postDocs] = await Promise.all([
-      Product.find({ isActive: true, featured: true, ...storefrontImageFilter() })
+      Product.find({ isActive: true, featured: true })
         .populate("brand", "name slug")
         .limit(24)
         .lean(),
@@ -140,7 +136,6 @@ export default async function HomePage() {
         const filter = {
           isActive: true,
           categories: { $in: ids },
-          ...storefrontImageFilter(),
         };
         const [docs, count] = await Promise.all([
           Product.find(filter)
@@ -150,9 +145,9 @@ export default async function HomePage() {
             .lean(),
           Product.countDocuments(filter),
         ]);
-        productsByTab[String(cat._id)] = docs
-          .filter(productHasStorefrontImage)
-          .map((p) => toCard({ ...p, brand: p.brand as LeanBrand }));
+        productsByTab[String(cat._id)] = docs.map((p) =>
+          toCard({ ...p, brand: p.brand as LeanBrand })
+        );
         countsByTab[String(cat._id)] = count;
       })
     );

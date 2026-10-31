@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { connectDB } from "@/lib/db";
 import { getProductBySlug } from "@/lib/products";
 import { Category } from "@/models/Category";
@@ -11,10 +12,50 @@ import {
   SoftReloadSkeleton,
 } from "@/components/ui/SoftReloadSkeleton";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { getSiteUrl } from "@/lib/site-url";
+import { usableProductImages } from "@/lib/product-media";
 import { toPlain } from "@/lib/utils";
 import type { Types } from "mongoose";
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const product = await getProductBySlug(slug);
+    if (!product) return { title: "Product not found" };
+
+    const brand = product.brand as { name?: string } | null;
+    const title =
+      product.seoTitle ||
+      [product.title, brand?.name].filter(Boolean).join(" · ");
+    const description =
+      product.seoDescription ||
+      product.shortDescription ||
+      `Buy ${product.title} online at Gaanabajana.`;
+    const image = usableProductImages(product.images)[0];
+    const url = `${getSiteUrl()}/products/${product.slug}`;
+
+    return {
+      title,
+      description,
+      alternates: { canonical: url },
+      openGraph: {
+        title,
+        description,
+        url,
+        type: "website",
+        ...(image ? { images: [{ url: image }] } : {}),
+      },
+    };
+  } catch {
+    return { title: "Product" };
+  }
+}
 
 export default async function ProductPage({
   params,
@@ -46,7 +87,43 @@ export default async function ProductPage({
     );
   }
 
+  const images = usableProductImages(product.images);
   const brand = product.brand as { name?: string; slug?: string } | null;
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description:
+      product.shortDescription ||
+      product.seoDescription ||
+      product.title,
+    image: images,
+    sku: product.slug,
+    brand: brand?.name
+      ? { "@type": "Brand", name: brand.name }
+      : undefined,
+    offers: {
+      "@type": "Offer",
+      url: `${getSiteUrl()}/products/${product.slug}`,
+      priceCurrency: "INR",
+      price: product.price,
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+    ...(product.ratingCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.ratingAvg,
+            reviewCount: product.ratingCount,
+          },
+        }
+      : {}),
+  };
+
   const cats = (product.categories || []) as Array<{
     _id: Types.ObjectId;
     name?: string;
@@ -84,6 +161,12 @@ export default async function ProductPage({
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productJsonLd),
+        }}
+      />
       <ClearSoftReload storageKey={`product:${slug}`} />
       <ProductBuyBox
         product={toPlain({
@@ -94,7 +177,7 @@ export default async function ProductPage({
           mrp: product.mrp,
           description: sanitizeHtml(product.description || ""),
           shortDescription: product.shortDescription,
-          images: product.images || [],
+          images,
           colorOptions: ((product.colorOptions || []) as Array<{
             name?: string;
             swatch?: string;

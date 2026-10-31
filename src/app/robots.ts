@@ -4,16 +4,25 @@ import { getSiteUrl } from "@/lib/site-url";
 const SITE_URL = getSiteUrl();
 
 /**
- * Wide open for indexing (client / GSC pressure).
- * Admin & APIs stay behind auth — no need to block crawlers here for now.
- * Tighten Disallow list later once Search Console shows the homepage as indexed.
+ * Allow crawling of the storefront; keep auth/cart/admin out of the index.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: [
+        "/admin",
+        "/api",
+        "/account",
+        "/checkout",
+        "/cart",
+        "/login",
+        "/register",
+        "/track-order",
+      ],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

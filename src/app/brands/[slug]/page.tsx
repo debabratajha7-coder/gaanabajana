@@ -8,7 +8,6 @@ import {
   ClearSoftReload,
   SoftReloadSkeleton,
 } from "@/components/ui/SoftReloadSkeleton";
-import { storefrontImageFilter } from "@/lib/product-media";
 
 export const revalidate = 60;
 
@@ -26,7 +25,6 @@ async function loadBrand(slug: string) {
       ? await Product.find({
           brand: brand._id,
           isActive: true,
-          ...storefrontImageFilter(),
         })
           .populate("brand", "name")
           .lean()

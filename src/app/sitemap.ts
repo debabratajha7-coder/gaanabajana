@@ -1,13 +1,13 @@
 import type { MetadataRoute } from "next";
-import { connectDB } from "@/lib/db";
+import { withDbRetry } from "@/lib/db";
 import { Product } from "@/models/Product";
 import { Category } from "@/models/Category";
 import { Brand } from "@/models/Brand";
 import { BlogPost } from "@/models/BlogPost";
 import { getSiteUrl } from "@/lib/site-url";
 
-/** Cache for an hour so Google gets a fast, stable response. */
-export const revalidate = 3600;
+/** Cache briefly so Google gets a fast response; short enough after catalog edits. */
+export const revalidate = 600;
 
 const SITE_URL = getSiteUrl();
 
@@ -19,7 +19,7 @@ const POLICY_SLUGS = [
   "terms",
 ] as const;
 
-/** Public static routes (excludes admin, account, checkout). */
+/** Indexable static routes only — skip cart/auth noise. */
 const STATIC_ROUTES: {
   path: string;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
@@ -34,21 +34,21 @@ const STATIC_ROUTES: {
   { path: "/deals", changeFrequency: "daily", priority: 0.8 },
   { path: "/deals/sale", changeFrequency: "daily", priority: 0.75 },
   { path: "/deals/open-box", changeFrequency: "daily", priority: 0.75 },
-  { path: "/track-order", changeFrequency: "monthly", priority: 0.4 },
-  { path: "/cart", changeFrequency: "weekly", priority: 0.3 },
-  { path: "/login", changeFrequency: "yearly", priority: 0.2 },
-  { path: "/register", changeFrequency: "yearly", priority: 0.2 },
 ];
 
 type LeanSlug = {
+  _id?: unknown;
   slug: string;
   updatedAt?: Date;
   publishedAt?: Date;
 };
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+type LeanProduct = LeanSlug & {
+  brand?: unknown;
+  categories?: unknown[];
+};
 
+function staticEntries(now: Date): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
     url: `${SITE_URL}${route.path === "/" ? "" : route.path}`,
     lastModified: now,
@@ -65,23 +65,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  try {
-    await connectDB();
+  return entries;
+}
 
-    const [products, categories, brands, posts] = await Promise.all([
-      Product.find({ isActive: true })
-        .select("slug updatedAt")
-        .lean<LeanSlug[]>(),
-      Category.find({ isActive: true })
-        .select("slug updatedAt")
-        .lean<LeanSlug[]>(),
-      Brand.find({ isActive: true })
-        .select("slug updatedAt")
-        .lean<LeanSlug[]>(),
+async function loadCatalogEntries(now: Date): Promise<MetadataRoute.Sitemap> {
+  return withDbRetry("sitemap:catalog", async () => {
+    const products = await Product.find({ isActive: true })
+      .select("slug updatedAt brand categories")
+      .lean<LeanProduct[]>();
+
+    const categoryIds = new Set<string>();
+    const brandIds = new Set<string>();
+    for (const p of products) {
+      for (const id of p.categories || []) {
+        if (id) categoryIds.add(String(id));
+      }
+      if (p.brand) brandIds.add(String(p.brand));
+    }
+
+    const [categories, brands, posts] = await Promise.all([
+      categoryIds.size
+        ? Category.find({
+            isActive: true,
+            _id: { $in: [...categoryIds] },
+          })
+            .select("slug updatedAt")
+            .lean<LeanSlug[]>()
+        : Promise.resolve([] as LeanSlug[]),
+      brandIds.size
+        ? Brand.find({
+            isActive: true,
+            _id: { $in: [...brandIds] },
+          })
+            .select("slug updatedAt")
+            .lean<LeanSlug[]>()
+        : Promise.resolve([] as LeanSlug[]),
       BlogPost.find({ published: true })
         .select("slug updatedAt publishedAt")
         .lean<LeanSlug[]>(),
     ]);
+
+    const entries: MetadataRoute.Sitemap = [];
 
     for (const p of products) {
       if (!p.slug) continue;
@@ -89,7 +113,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${SITE_URL}/products/${p.slug}`,
         lastModified: p.updatedAt || now,
         changeFrequency: "weekly",
-        priority: 0.8,
+        priority: 0.9,
       });
     }
 
@@ -122,7 +146,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       });
     }
+
+    return entries;
+  });
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
+  const entries = staticEntries(now);
+
+  try {
+    entries.push(...(await loadCatalogEntries(now)));
   } catch (err) {
+    // Always return a valid sitemap — never 500 Googlebots.
     console.error("[sitemap] Failed to load dynamic routes:", err);
   }
 
