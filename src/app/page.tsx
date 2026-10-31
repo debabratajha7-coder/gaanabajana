@@ -22,6 +22,11 @@ import {
   resolveGoogleReviewsUrl,
 } from "@/lib/google-reviews";
 import { optimizedRemoteImage } from "@/lib/product-image";
+import {
+  productHasStorefrontImage,
+  storefrontImageFilter,
+  withUsableProductImages,
+} from "@/lib/product-media";
 
 /** Cache homepage HTML/data briefly — big TTFB win vs force-dynamic. */
 export const revalidate = 60;
@@ -61,18 +66,19 @@ function toCard(p: {
   brand?: LeanBrand;
   onSale?: boolean;
 }): ProductCardData {
+  const safe = withUsableProductImages(p);
   return {
-    _id: String(p._id),
-    title: p.title,
-    slug: p.slug,
-    price: p.price,
-    mrp: p.mrp,
-    images: p.images,
-    colorOptions: mapColorOptions(p.colorOptions),
-    ratingAvg: p.ratingAvg,
-    ratingCount: p.ratingCount,
-    brandName: p.brand?.name || null,
-    onSale: p.onSale,
+    _id: String(safe._id),
+    title: safe.title,
+    slug: safe.slug,
+    price: safe.price,
+    mrp: safe.mrp,
+    images: safe.images,
+    colorOptions: mapColorOptions(safe.colorOptions),
+    ratingAvg: safe.ratingAvg,
+    ratingCount: safe.ratingCount,
+    brandName: safe.brand?.name || null,
+    onSale: safe.onSale,
   };
 }
 
@@ -102,7 +108,7 @@ export default async function HomePage() {
     await connectDB();
     settings = await getSiteSettings();
     const [featuredDocs, parentDocs, brandDocs, postDocs] = await Promise.all([
-      Product.find({ isActive: true, featured: true })
+      Product.find({ isActive: true, featured: true, ...storefrontImageFilter() })
         .populate("brand", "name slug")
         .limit(24)
         .lean(),
@@ -131,7 +137,11 @@ export default async function HomePage() {
           name: cat.name,
           slug: cat.slug,
         });
-        const filter = { isActive: true, categories: { $in: ids } };
+        const filter = {
+          isActive: true,
+          categories: { $in: ids },
+          ...storefrontImageFilter(),
+        };
         const [docs, count] = await Promise.all([
           Product.find(filter)
             .populate("brand", "name slug")
@@ -140,9 +150,9 @@ export default async function HomePage() {
             .lean(),
           Product.countDocuments(filter),
         ]);
-        productsByTab[String(cat._id)] = docs.map((p) =>
-          toCard({ ...p, brand: p.brand as LeanBrand })
-        );
+        productsByTab[String(cat._id)] = docs
+          .filter(productHasStorefrontImage)
+          .map((p) => toCard({ ...p, brand: p.brand as LeanBrand }));
         countsByTab[String(cat._id)] = count;
       })
     );

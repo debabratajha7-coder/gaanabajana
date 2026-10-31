@@ -10,6 +10,7 @@ import {
   SoftReloadSkeleton,
 } from "@/components/ui/SoftReloadSkeleton";
 import { resolveCatalogCategoryIds } from "@/lib/catalog-scope";
+import { storefrontImageFilter } from "@/lib/product-media";
 
 export const revalidate = 60;
 
@@ -28,6 +29,7 @@ async function loadCollection(slug: string) {
     const products = await Product.find({
       isActive: true,
       categories: { $in: ids },
+      ...storefrontImageFilter(),
     })
       .populate("brand", "name")
       .sort({ createdAt: -1 })

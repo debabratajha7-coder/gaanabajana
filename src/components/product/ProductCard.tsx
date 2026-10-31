@@ -6,6 +6,7 @@ import { useState, type MouseEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { formatINR, discountPercent } from "@/lib/utils";
 import { coverProductImage } from "@/lib/product-image";
+import { usableProductImages } from "@/lib/product-media";
 import type { ProductCardData } from "@/lib/product-card";
 export type { ProductCardData, ProductColorOptionData } from "@/lib/product-card";
 
@@ -25,10 +26,12 @@ export function ProductCard({
   const [imgFailed, setImgFailed] = useState(false);
   const save = discountPercent(product.price, product.mrp);
 
+  const colorImgs =
+    selected !== null ? usableProductImages(colors[selected]?.images) : [];
   const rawPreview =
-    selected !== null && colors[selected]?.images?.[0]
-      ? colors[selected].images[0]
-      : product.images?.[0] || "/placeholder-product.jpg";
+    colorImgs[0] ||
+    usableProductImages(product.images)[0] ||
+    "/placeholder-product.jpg";
 
   const preview = imgFailed
     ? rawPreview

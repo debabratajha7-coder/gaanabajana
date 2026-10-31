@@ -6,6 +6,7 @@ import { ArrowRight, ArrowUpRight, Star } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { coverProductImage } from "@/lib/product-image";
 import type { ProductCardData } from "@/components/product/ProductCard";
+import { usableProductImages } from "@/lib/product-media";
 import { discountPercent, formatINR } from "@/lib/utils";
 
 type Tab = { id: string; label: string; href: string };
@@ -13,7 +14,7 @@ type Tab = { id: string; label: string; href: string };
 const GRID_COUNT = 4;
 
 function productImage(product: ProductCardData) {
-  return product.images?.[0] || "/placeholder-product.jpg";
+  return usableProductImages(product.images)[0] || "/placeholder-product.jpg";
 }
 
 function RatingChip({ product }: { product: ProductCardData }) {
